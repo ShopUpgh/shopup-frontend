@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHOPUP - Africa's Fastest Growing Marketplace</title>
+    <link rel="stylesheet" href="storefront-styles.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="/" style="text-decoration: none; color: inherit;">
+                    <h1>🛍️ SHOPUP</h1>
+                </a>
+            </div>
+            <div class="nav-search">
+                <input type="text" id="searchInput" placeholder="Search products, sellers..." onkeyup="debounceSearch()">
+                <button onclick="performSearch()" title="Search">🔍</button>
+            </div>
+            <div class="nav-right">
+                <div class="nav-stats">
+                    <span title="Products available">📦 <span id="productCount">0</span></span>
+                    <span title="Active sellers">👥 <span id="sellerCount">0</span></span>
+                </div>
+                <a href="cart.html" class="cart-link" title="Shopping Cart">
+                    🛒 <span id="cartCount" class="badge">0</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section with Gradient Background -->
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <div class="hero-text">
+                <h2>Welcome to SHOPUP</h2>
+                <p>Discover thousands of products from trusted African sellers</p>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number" id="heroProductCount">0</span>
+                        <span class="stat-label">Products</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number" id="heroSellerCount">0</span>
+                        <span class="stat-label">Sellers</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">24/7</span>
+                        <span class="stat-label">Support</span>
+                    </div>
+                </div>
+                <button class="cta-button" onclick="document.getElementById('filterSection').scrollIntoView({behavior: 'smooth'})">
+                    Start Shopping →
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Sellers Section -->
+    <section class="featured-sellers">
+        <div class="container">
+            <div class="section-header">
+                <h2>⭐ Featured Sellers</h2>
+                <p>Trusted merchants with excellent ratings</p>
+            </div>
+            <div id="sellersList" class="sellers-grid">
+                <!-- Dynamically loaded -->
+            </div>
+            <div class="sellers-loading">Loading sellers...</div>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="categories-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>🏷️ Shop by Category</h2>
+                <p>Find exactly what you're looking for</p>
+            </div>
+            <div class="categories-grid" id="categoriesGrid">
+                <!-- Dynamically loaded -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Advanced Filter Section -->
+    <section id="filterSection" class="filter-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Browse & Filter Products</h2>
+                <p>Find your perfect products with our advanced filters</p>
+            </div>
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label>📁 Category:</label>
+                    <select id="categoryFilter" onchange="applyFilters()">
+                        <option value="">All Categories</option>
+                        <option value="fashion">👗 Fashion & Clothing</option>
+                        <option value="electronics">💻 Electronics</option>
+                        <option value="food">🍕 Food & Beverages</option>
+                        <option value="beauty">💄 Beauty & Cosmetics</option>
+                        <option value="home">🏠 Home & Living</option>
+                        <option value="sports">⚽ Sports & Fitness</option>
+                        <option value="books">📚 Books & Stationery</option>
+                        <option value="toys">🧸 Toys & Kids</option>
+                        <option value="automotive">🚗 Automotive</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>💰 Price Range:</label>
+                    <select id="priceFilter" onchange="applyFilters()">
+                        <option value="">All Prices</option>
+                        <option value="0-50">Under 50 GH₵</option>
+                        <option value="50-200">50-200 GH₵</option>
+                        <option value="200-500">200-500 GH₵</option>
+                        <option value="500+">500+ GH₵</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>⬇️ Sort by:</label>
+                    <select id="sortFilter" onchange="applyFilters()">
+                        <option value="newest">Newest First</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="popular">Most Popular</option>
+                        <option value="rating">Highest Rated</option>
+                    </select>
+                </div>
+
+                <button class="filter-reset" onclick="resetFilters()">🔄 Reset All Filters</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search Results Info -->
+    <section class="results-info">
+        <div class="container">
+            <p id="resultsInfo" style="color: #666;">Loading products...</p>
+        </div>
+    </section>
+
+    <!-- Products Grid Section -->
+    <section class="products-section">
+        <div class="container">
+            <div id="productsList" class="products-grid">
+                <!-- Dynamically loaded -->
+            </div>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">🔍</div>
+                <h3>No products found</h3>
+                <p>Try adjusting your filters or search terms</p>
+                <button class="reset-btn" onclick="resetFilters()">Clear Filters</button>
+            </div>
+            <div id="loadingState" class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading products...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section class="newsletter">
+        <div class="container">
+            <div class="newsletter-content">
+                <div class="newsletter-text">
+                    <h3>📬 Stay Updated</h3>
+                    <p>Get the latest deals, new products, and exclusive offers straight to your inbox</p>
+                </div>
+                <div class="newsletter-form">
+                    <input type="email" placeholder="Enter your email address" id="newsletterEmail" required>
+                    <button onclick="subscribeNewsletter()" class="subscribe-btn">Subscribe →</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Badges Section -->
+    <section class="trust-section">
+        <div class="container">
+            <div class="trust-grid">
+                <div class="trust-item">
+                    <div class="trust-icon">✅</div>
+                    <h4>Verified Sellers</h4>
+                    <p>All sellers verified for quality</p>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon">🛡️</div>
+                    <h4>Secure Payments</h4>
+                    <p>Your transactions are protected</p>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon">⏱️</div>
+                    <h4>Fast Delivery</h4>
+                    <p>Quick shipping across Ghana</p>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon">💬</div>
+                    <h4>24/7 Support</h4>
+                    <p>We're here to help anytime</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h4>About SHOPUP</h4>
+                    <ul>
+                        <li><a href="#about">About Us</a></li>
+                        <li><a href="#careers">Careers</a></li>
+                        <li><a href="#press">Press & Media</a></li>
+                        <li><a href="#blog">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>For Sellers</h4>
+                    <ul>
+                        <li><a href="dashboard.html">Seller Dashboard</a></li>
+                        <li><a href="#pricing">Pricing Plans</a></li>
+                        <li><a href="#support">Support Center</a></li>
+                        <li><a href="#sell">Start Selling</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Customer Support</h4>
+                    <ul>
+                        <li><a href="#faq">FAQ</a></li>
+                        <li><a href="#contact">Contact Us</a></li>
+                        <li><a href="#shipping">Shipping Info</a></li>
+                        <li><a href="#returns">Returns</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#terms">Terms & Conditions</a></li>
+                        <li><a href="#privacy">Privacy Policy</a></li>
+                        <li><a href="#cookies">Cookie Policy</a></li>
+                        <li><a href="#disclaimer">Disclaimer</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-bottom-left">
+                    <p>&copy; 2025 SHOPUP. All rights reserved.</p>
+                    <p style="font-style: italic; margin-top: 5px;">Powered by Commerce, Guided by Conscience</p>
+                </div>
+                <div class="social-links">
+                    <a href="#facebook" title="Facebook">f</a>
+                    <a href="#twitter" title="Twitter">𝕏</a>
+                    <a href="#instagram" title="Instagram">📸</a>
+                    <a href="#linkedin" title="LinkedIn">in</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="storefront-script.js"></script>
+</body>
+</html>

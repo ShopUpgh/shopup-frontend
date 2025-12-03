@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bitkey Setup – God Mode</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+      color: #e0f7ff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(10, 15, 35, 0.95);
+      padding: 40px;
+      border-radius: 20px;
+      border: 2px solid #f59e0b;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 0 40px rgba(245, 158, 11, 0.3);
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: #f59e0b;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      margin-bottom: 30px;
+      font-size: 0.95rem;
+    }
+
+    .warning {
+      background: rgba(245, 158, 11, 0.1);
+      border-left: 4px solid #f59e0b;
+      padding: 15px;
+      margin-bottom: 25px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .warning strong {
+      color: #f59e0b;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #cbd5e1;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 8px;
+      color: #e0f7ff;
+      font-size: 0.95rem;
+      font-family: 'Courier New', monospace;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .helper-text {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-top: 6px;
+    }
+
+    .helper-text code {
+      background: rgba(15, 23, 42, 0.8);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #f59e0b;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      border: none;
+      border-radius: 999px;
+      color: #0a0e27;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      text-align: center;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .status.hidden {
+      display: none;
+    }
+
+    .status.success {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid #22c55e;
+      color: #22c55e;
+    }
+
+    .status.error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid #ef4444;
+      color: #ef4444;
+    }
+
+    .status.info {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid #3b82f6;
+      color: #3b82f6;
+    }
+
+    .instructions {
+      background: rgba(15, 23, 42, 0.6);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .instructions h3 {
+      color: #f59e0b;
+      margin-bottom: 12px;
+      font-size: 1.1rem;
+    }
+
+    .instructions ol {
+      padding-left: 20px;
+    }
+
+    .instructions li {
+      margin-bottom: 8px;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+
+    .instructions code {
+      background: rgba(245, 158, 11, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #f59e0b;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔐 Bitkey Setup</h1>
+    <p class="subtitle">God Mode Nuclear Approval Device</p>
+
+    <div class="warning">
+      <strong>⚠️ FOUNDER ONLY</strong><br>
+      This page registers your Bitkey hardware wallet for approving critical platform actions (kill switch, treasury moves, owner changes).
+    </div>
+
+    <div class="instructions">
+      <h3>How to Get Your Bitkey Details:</h3>
+      <ol>
+        <li>Open the <strong>Bitkey app</strong> on your phone</li>
+        <li>Go to <strong>Settings</strong> → <strong>Device Info</strong></li>
+        <li>Find your <strong>Serial Number</strong> (8-12 characters)</li>
+        <li>Go to <strong>Security</strong> → <strong>Export Public Key</strong></li>
+        <li>Copy the <strong>Public Key</strong> (starts with <code>02</code> or <code>03</code>)</li>
+      </ol>
+    </div>
+
+    <form id="bitkeyForm">
+      <div class="form-group">
+        <label for="bitkeySerial">Bitkey Serial Number</label>
+        <input 
+          type="text" 
+          id="bitkeySerial" 
+          placeholder="e.g., BK12345678"
+          required
+          pattern="[A-Z0-9]{8,12}"
+        >
+        <p class="helper-text">8-12 alphanumeric characters (found in Bitkey app)</p>
+      </div>
+
+      <div class="form-group">
+        <label for="bitkeyPublicKey">Bitkey Public Key</label>
+        <textarea 
+          id="bitkeyPublicKey" 
+          placeholder="Paste your Bitkey public key here (hex format)"
+          required
+        ></textarea>
+        <p class="helper-text">
+          Starts with <code>02</code> or <code>03</code>, 66 hex characters total
+        </p>
+      </div>
+
+      <button type="submit" id="registerBtn">
+        🔐 Register Bitkey
+      </button>
+    </form>
+
+    <div class="status hidden" id="status"></div>
+  </div>
+
+  <script>
+    // Initialize Supabase
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Replace with your URL
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Replace with your key
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+
+    // Check authentication on load
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session) {
+        showStatus('❌ Please log in as God Mode owner first', 'error');
+        document.getElementById('bitkeyForm').style.display = 'none';
+        return;
+      }
+
+      currentUser = session.user;
+      
+      // Check if user is God Mode owner
+      const { data: godUser, error: godError } = await supabase
+        .from('god_mode_users')
+        .select('id, bitkey_serial, bitkey_public_key')
+        .eq('user_id', currentUser.id)
+        .single();
+
+      if (godError || !godUser) {
+        showStatus('❌ You are not configured as a God Mode owner', 'error');
+        document.getElementById('bitkeyForm').style.display = 'none';
+        return;
+      }
+
+      // Check if Bitkey already registered
+      if (godUser.bitkey_serial && godUser.bitkey_public_key) {
+        showStatus(
+          `✅ Bitkey already registered: ${godUser.bitkey_serial}`,
+          'success'
+        );
+        document.getElementById('bitkeySerial').value = godUser.bitkey_serial;
+        document.getElementById('bitkeyPublicKey').value = godUser.bitkey_public_key;
+      }
+    });
+
+    // Handle form submission
+    document.getElementById('bitkeyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const btn = document.getElementById('registerBtn');
+      const serial = document.getElementById('bitkeySerial').value.trim().toUpperCase();
+      const publicKey = document.getElementById('bitkeyPublicKey').value.trim();
+
+      // Validate public key format
+      if (!publicKey.match(/^0[23][0-9a-fA-F]{64}$/)) {
+        showStatus(
+          '❌ Invalid public key format. Must be 66 hex characters starting with 02 or 03',
+          'error'
+        );
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '🔄 Registering...';
+      showStatus('Registering Bitkey to God Mode...', 'info');
+
+      try {
+        const { data, error } = await supabase
+          .from('god_mode_users')
+          .update({
+            bitkey_serial: serial,
+            bitkey_public_key: publicKey,
+            bitkey_registered_at: new Date().toISOString()
+          })
+          .eq('user_id', currentUser.id)
+          .select();
+
+        if (error) throw error;
+
+        showStatus(
+          `✅ Bitkey registered successfully! Serial: ${serial}`,
+          'success'
+        );
+        btn.textContent = '✓ Registered';
+
+        // Log action
+        await supabase.from('god_mode_actions').insert({
+          god_user_id: data[0].id,
+          action_type: 'bitkey.registered',
+          action_description: `Bitkey ${serial} registered for nuclear approvals`,
+          severity: 'high'
+        });
+
+      } catch (error) {
+        console.error('Registration error:', error);
+        showStatus(`❌ Registration failed: ${error.message}`, 'error');
+        btn.disabled = false;
+        btn.textContent = '🔐 Register Bitkey';
+      }
+    });
+
+    function showStatus(message, type) {
+      const status = document.getElementById('status');
+      status.textContent = message;
+      status.className = `status ${type}`;
+      status.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

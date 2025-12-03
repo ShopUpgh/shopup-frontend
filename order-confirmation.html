@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmed - SHOPUP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Navigation */
+        .navbar {
+            background: white;
+            padding: 16px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: center;
+        }
+
+        .navbar h1 {
+            font-size: 24px;
+            background: linear-gradient(135deg, #10b981, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Success Card */
+        .success-card {
+            background: white;
+            border-radius: 12px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .success-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-message h2 {
+            font-size: 28px;
+            color: #111827;
+            margin-bottom: 10px;
+        }
+
+        .success-message p {
+            color: #6b7280;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        /* Order Number */
+        .order-number-section {
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+        }
+
+        .order-number-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .order-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #10b981;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+        }
+
+        /* Order Details */
+        .order-details {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .details-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #111827;
+            font-weight: 600;
+            text-align: right;
+            flex: 1;
+            margin-left: 15px;
+        }
+
+        /* Order Items */
+        .order-items {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .items-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+        }
+
+        .item-row:last-child {
+            border-bottom: none;
+        }
+
+        .item-name {
+            color: #111827;
+            font-weight: 600;
+        }
+
+        .item-qty {
+            color: #6b7280;
+            margin: 0 10px;
+        }
+
+        .item-price {
+            color: #111827;
+            font-weight: 600;
+            text-align: right;
+            min-width: 80px;
+        }
+
+        /* Price Summary */
+        .price-summary {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 14px;
+        }
+
+        .price-label {
+            color: #6b7280;
+        }
+
+        .price-value {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-top: 2px solid #f3f4f6;
+            border-bottom: 2px solid #f3f4f6;
+            margin: 10px 0;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .total-row .price-label {
+            color: #111827;
+        }
+
+        .total-row .price-value {
+            color: #10b981;
+            font-size: 18px;
+        }
+
+        /* Delivery Address */
+        .delivery-section {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .delivery-label {
+            font-size: 12px;
+            color: #1e40af;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .delivery-address {
+            font-size: 14px;
+            color: #1e3a8a;
+            line-height: 1.6;
+        }
+
+        /* Next Steps */
+        .next-steps {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .steps-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 15px;
+        }
+
+        .step {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .step:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .step-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: #dbeafe;
+            color: #1e40af;
+            border-radius: 50%;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .step-content p {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 200ms;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #111827;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-full {
+            grid-column: 1 / -1;
+        }
+
+        /* Important Notice */
+        .notice {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #92400e;
+            line-height: 1.6;
+        }
+
+        .notice-title {
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .footer a {
+            color: #10b981;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .success-card {
+                padding: 25px 20px;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-row,
+            .item-row,
+            .price-row {
+                font-size: 13px;
+            }
+
+            .order-number {
+                font-size: 20px;
+            }
+        }
+
+        /* Loading animation */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #10b981;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <div class="navbar">
+        <h1>🛍️ SHOPUP</h1>
+    </div>
+
+    <div class="container">
+        <!-- Success Message -->
+        <div class="success-card">
+            <div class="success-icon">✅</div>
+            <div class="success-message">
+                <h2>Order Confirmed!</h2>
+                <p>Thank you for your purchase. Your order has been received and is being processed.</p>
+            </div>
+        </div>
+
+        <!-- Order Number -->
+        <div class="order-number-section">
+            <div class="order-number-label">Order Number</div>
+            <div class="order-number" id="orderNumber">ORD-2025-00001</div>
+        </div>
+
+        <!-- Important Notice -->
+        <div class="notice">
+            <div class="notice-title">📧 Confirmation Email</div>
+            <div>A detailed confirmation email has been sent to your email address. Please check your inbox and spam folder.</div>
+        </div>
+
+        <!-- Order Details -->
+        <div class="order-details">
+            <div class="details-title">Order Details</div>
+            <div class="detail-row">
+                <span class="detail-label">Order Date</span>
+                <span class="detail-value" id="orderDate">Nov 15, 2025</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Payment Method</span>
+                <span class="detail-value" id="paymentMethod">MTN Mobile Money</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Delivery Address</span>
+                <span class="detail-value" id="addressSummary">Accra, Greater Accra</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Estimated Delivery</span>
+                <span class="detail-value">2-5 business days</span>
+            </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="order-items">
+            <div class="items-title">Items Ordered</div>
+            <div id="orderItemsList">
+                <div class="item-row">
+                    <span class="item-name">Product Name</span>
+                    <span class="item-qty">x1</span>
+                    <span class="item-price">GH₵ 100.00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Price Summary -->
+        <div class="price-summary">
+            <div class="price-row">
+                <span class="price-label">Subtotal</span>
+                <span class="price-value" id="subtotal">GH₵ 100.00</span>
+            </div>
+            <div class="price-row">
+                <span class="price-label">Shipping</span>
+                <span class="price-value" id="shipping">Free</span>
+            </div>
+            <div class="price-row">
+                <span class="price-label">Tax (15%)</span>
+                <span class="price-value" id="tax">GH₵ 15.00</span>
+            </div>
+            <div class="total-row">
+                <span class="price-label">Total</span>
+                <span class="price-value" id="total">GH₵ 115.00</span>
+            </div>
+        </div>
+
+        <!-- Delivery Address -->
+        <div class="delivery-section" id="deliverySection">
+            <div class="delivery-label">📍 Delivery Address</div>
+            <div class="delivery-address" id="fullDeliveryAddress">
+                123 Main Street<br>
+                Accra, Greater Accra<br>
+                Ghana
+            </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="next-steps">
+            <div class="steps-title">What Happens Next?</div>
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h4>Payment Processing</h4>
+                    <p>Your payment is being processed. You'll receive a confirmation shortly.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h4>Order Confirmation</h4>
+                    <p>Once confirmed, the seller will prepare your order for shipment.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h4>Shipment</h4>
+                    <p>Your order will be shipped and you'll receive a tracking number.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h4>Delivery</h4>
+                    <p>Your order will be delivered to your address within 2-5 business days.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="button-group">
+            <button class="btn btn-primary" onclick="trackOrder()">📍 Track Order</button>
+            <button class="btn btn-secondary" onclick="continueShopping()">🛍️ Continue Shopping</button>
+        </div>
+
+        <!-- Contact Support -->
+        <div class="notice" style="background: #dbeafe; border-left-color: #3b82f6; color: #1e40af;">
+            <div class="notice-title">💬 Need Help?</div>
+            <div>
+                Contact our support team at <strong>support@shopup.gh</strong> or call <strong>+233 XXX XXXX</strong>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Thank you for shopping with SHOPUP!</p>
+            <p style="margin-top: 10px;">
+                <a href="#">View Order Status</a> | 
+                <a href="#">Contact Support</a> | 
+                <a href="#">FAQ</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ORDER CONFIRMATION PAGE
+         * Display order details to customer after successful checkout
+         */
+
+        console.log('📋 Order Confirmation Page Loaded');
+
+        // Get order data from session/URL
+        document.addEventListener('DOMContentLoaded', () => {
+            loadOrderData();
+        });
+
+        function loadOrderData() {
+            try {
+                // Get order from sessionStorage (set by checkout)
+                const orderData = sessionStorage.getItem('lastOrder');
+                
+                if (orderData) {
+                    const order = JSON.parse(orderData);
+                    displayOrderData(order);
+                    console.log('✅ Order data loaded from session');
+                } else {
+                    console.log('ℹ️ No order data found - showing template');
+                }
+            } catch (error) {
+                console.error('❌ Error loading order data:', error);
+            }
+        }
+
+        function displayOrderData(order) {
+            // Order number
+            document.getElementById('orderNumber').textContent = order.orderNumber || 'ORD-2025-00001';
+
+            // Order date
+            const orderDate = new Date(order.createdAt || new Date());
+            document.getElementById('orderDate').textContent = orderDate.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+
+            // Payment method
+            const paymentMethods = {
+                mtn: 'MTN Mobile Money',
+                vodafone: 'Vodafone Cash',
+                bank: 'Bank Transfer',
+                cod: 'Cash on Delivery'
+            };
+            document.getElementById('paymentMethod').textContent = 
+                paymentMethods[order.paymentMethod] || order.paymentMethod;
+
+            // Address summary
+            document.getElementById('addressSummary').textContent = 
+                `${order.deliveryCity}, ${order.deliveryRegion}`;
+
+            // Full delivery address
+            document.getElementById('fullDeliveryAddress').innerHTML = `
+                ${order.deliveryAddress}<br>
+                ${order.deliveryCity}, ${order.deliveryRegion}<br>
+                Ghana
+            `;
+
+            // Order items
+            if (order.items && order.items.length > 0) {
+                const itemsHtml = order.items.map(item => `
+                    <div class="item-row">
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-qty">x${item.quantity}</span>
+                        <span class="item-price">GH₵ ${(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                `).join('');
+                document.getElementById('orderItemsList').innerHTML = itemsHtml;
+            }
+
+            // Pricing
+            document.getElementById('subtotal').textContent = `GH₵ ${order.subtotal.toFixed(2)}`;
+            document.getElementById('tax').textContent = `GH₵ ${order.tax.toFixed(2)}`;
+            document.getElementById('total').textContent = `GH₵ ${order.total.toFixed(2)}`;
+
+            // Shipping
+            const shippingText = order.shipping > 0 ? `GH₵ ${order.shipping.toFixed(2)}` : 'Free';
+            document.getElementById('shipping').textContent = shippingText;
+
+            console.log('🎨 Order data displayed');
+        }
+
+        function trackOrder() {
+            // Placeholder for order tracking
+            const orderNumber = document.getElementById('orderNumber').textContent;
+            console.log('📍 Tracking order:', orderNumber);
+            
+            // In real app, this would navigate to order tracking page
+            alert('Order tracking feature coming soon!\nOrder: ' + orderNumber);
+        }
+
+        function continueShopping() {
+            console.log('🛍️ Redirecting to homepage');
+            window.location.href = 'storefront-index.html';
+        }
+
+        // Print receipt
+        function printReceipt() {
+            window.print();
+        }
+
+        console.log('✨ Order Confirmation Ready');
+    </script>
+</body>
+</html>

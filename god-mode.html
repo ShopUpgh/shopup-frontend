@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ GOD MODE</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #00ff00;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Matrix-style background */
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            z-index: 0;
+        }
+
+        .god-mode-container {
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            width: 90%;
+            background: rgba(0, 20, 0, 0.95);
+            border: 3px solid #00ff00;
+            border-radius: 0;
+            padding: 40px;
+            box-shadow: 
+                0 0 20px #00ff00,
+                inset 0 0 20px rgba(0, 255, 0, 0.1);
+            animation: pulse-border 3s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { box-shadow: 0 0 20px #00ff00, inset 0 0 20px rgba(0, 255, 0, 0.1); }
+            50% { box-shadow: 0 0 40px #00ff00, inset 0 0 30px rgba(0, 255, 0, 0.2); }
+        }
+
+        .crown {
+            text-align: center;
+            font-size: 5em;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #00ff00;
+            letter-spacing: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            color: #00cc00;
+        }
+
+        .owner-info {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #00ff00;
+            background: rgba(0, 255, 0, 0.05);
+        }
+
+        .owner-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .status {
+            color: #00cc00;
+            font-size: 0.9em;
+        }
+
+        .auth-section {
+            margin-bottom: 30px;
+        }
+
+        .auth-step {
+            background: rgba(0, 255, 0, 0.05);
+            border: 1px solid #00ff00;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .auth-step h3 {
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .auth-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-indicator {
+            font-size: 2em;
+        }
+
+        .status-indicator.pending { color: #666; }
+        .status-indicator.success { color: #00ff00; }
+        .status-indicator.failed { color: #ff0000; }
+
+        .yubikey-zone {
+            border: 2px dashed #00ff00;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+        }
+
+        .yubikey-zone:hover {
+            background: rgba(0, 255, 0, 0.1);
+            border-style: solid;
+        }
+
+        .yubikey-zone.active {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { background: rgba(0, 255, 0, 0.1); }
+            50% { background: rgba(0, 255, 0, 0.3); }
+        }
+
+        .yubikey-icon {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: #00ff00;
+            color: #000;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #00cc00;
+            box-shadow: 0 0 20px #00ff00;
+        }
+
+        .btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .god-menu {
+            display: none;
+        }
+
+        .god-menu.active {
+            display: block;
+        }
+
+        .menu-item {
+            background: rgba(0, 255, 0, 0.05);
+            border: 1px solid #00ff00;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-item:hover {
+            background: rgba(0, 255, 0, 0.2);
+            transform: translateX(10px);
+        }
+
+        .menu-icon {
+            font-size: 2em;
+        }
+
+        .menu-text {
+            flex: 1;
+        }
+
+        .menu-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .menu-desc {
+            font-size: 0.85em;
+            color: #00cc00;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid;
+            text-align: center;
+        }
+
+        .alert-error {
+            background: rgba(255, 0, 0, 0.1);
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        .alert-success {
+            background: rgba(0, 255, 0, 0.1);
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .terminal-text {
+            font-size: 0.85em;
+            opacity: 0.7;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .blink {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <canvas class="matrix-bg" id="matrix"></canvas>
+
+    <div class="god-mode-container">
+        <div id="alertContainer"></div>
+
+        <!-- Authentication Screen -->
+        <div id="authScreen">
+            <div class="crown">👑</div>
+            <h1>⚡ GOD MODE</h1>
+            <div class="subtitle">Sovereign Access Protocol</div>
+
+            <div class="owner-info">
+                <div class="owner-name">Founder: Al (Alden's Innovations)</div>
+                <div class="status">Status: <span id="accessStatus">Authenticating...</span></div>
+            </div>
+
+            <div class="auth-section">
+                <!-- Step 1: YubiKey -->
+                <div class="auth-step">
+                    <div class="auth-status">
+                        <h3>🔑 Layer 1: YubiKey Authentication</h3>
+                        <div class="status-indicator pending" id="yubikeyStatus">⏳</div>
+                    </div>
+                    <div class="yubikey-zone" id="yubikeyZone">
+                        <div class="yubikey-icon">🔐</div>
+                        <div>Hold YubiKey against device for 5 seconds</div>
+                        <div style="font-size: 0.85em; margin-top: 10px; color: #00cc00;">
+                            NFC or USB-C supported
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Biometric -->
+                <div class="auth-step">
+                    <div class="auth-status">
+                        <h3>👆 Layer 2: Biometric Verification</h3>
+                        <div class="status-indicator pending" id="biometricStatus">⏳</div>
+                    </div>
+                    <button class="btn" id="biometricBtn" disabled onclick="verifyBiometric()">
+                        Scan Fingerprint
+                    </button>
+                </div>
+
+                <!-- Step 3: Bitkey (Optional) -->
+                <div class="auth-step">
+                    <div class="auth-status">
+                        <h3>🔐 Layer 3: Bitkey Confirmation (Optional)</h3>
+                        <div class="status-indicator pending" id="bitkeyStatus">⏳</div>
+                    </div>
+                    <div style="font-size: 0.9em; color: #00cc00; margin-top: 10px;">
+                        Additional hardware security layer
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn" id="activateBtn" disabled onclick="activateGodMode()">
+                ⚡ ACTIVATE GOD MODE
+            </button>
+
+            <div class="terminal-text">
+                > System: ShopUp Platform v1.0<br>
+                > Security Level: CLASSIFIED<br>
+                > Access: OWNER ONLY<br>
+                > <span class="blink">█</span>
+            </div>
+        </div>
+
+        <!-- God Mode Menu -->
+        <div id="godMenu" class="god-menu">
+            <div class="crown">👑</div>
+            <h1>⚡ GOD MODE</h1>
+            <div class="subtitle">Sell on Your Terms.</div>
+
+            <div class="owner-info">
+                <div class="owner-name">Founder: Al</div>
+                <div class="status">Status: <span style="color: #00ff00;">Sovereign Access Active</span></div>
+            </div>
+
+            <div class="menu-item" onclick="impersonateUser()">
+                <div class="menu-icon">👤</div>
+                <div class="menu-text">
+                    <div class="menu-title">Impersonate Any User</div>
+                    <div class="menu-desc">View platform as any user instantly</div>
+                </div>
+            </div>
+
+            <div class="menu-item" onclick="openDatabase()">
+                <div class="menu-icon">🗄️</div>
+                <div class="menu-text">
+                    <div class="menu-title">Database Access</div>
+                    <div class="menu-desc">Edit/delete any record across platform</div>
+                </div>
+            </div>
+
+            <div class="menu-item" onclick="featureFlags()">
+                <div class="menu-icon">🎛️</div>
+                <div class="menu-text">
+                    <div class="menu-title">Global Feature Flags</div>
+                    <div class="menu-desc">Toggle features platform-wide</div>
+                </div>
+            </div>
+
+            <div class="menu-item" onclick="revenueWarRoom()">
+                <div class="menu-icon">💰</div>
+                <div class="menu-text">
+                    <div class="menu-title">Revenue War Room</div>
+                    <div class="menu-desc">Real-time revenue, churn, top earners</div>
+                </div>
+            </div>
+
+            <div class="menu-item" onclick="emergencyBroadcast()">
+                <div class="menu-icon">📢</div>
+                <div class="menu-text">
+                    <div class="menu-title">Emergency Broadcast</div>
+                    <div class="menu-desc">Push SMS + banner to all users</div>
+                </div>
+            </div>
+
+            <div class="menu-item" onclick="auditLog()">
+                <div class="menu-icon">📋</div>
+                <div class="menu-text">
+                    <div class="menu-title">Hidden Audit Log</div>
+                    <div class="menu-desc">Every action by any admin, ever</div>
+                </div>
+            </div>
+
+            <div class="menu-item" style="border-color: #ff0000;" onclick="killSwitch()">
+                <div class="menu-icon">☢️</div>
+                <div class="menu-text">
+                    <div class="menu-title" style="color: #ff0000;">Platform Kill Switch</div>
+                    <div class="menu-desc" style="color: #ff6666;">Shutdown entire platform in 3 seconds</div>
+                </div>
+            </div>
+
+            <button class="btn" style="background: #ff0000; margin-top: 20px;" onclick="deactivateGodMode()">
+                🚪 EXIT GOD MODE
+            </button>
+        </div>
+    </div>
+
+    <script src="god-mode-script.js"></script>
+</body>
+</html>

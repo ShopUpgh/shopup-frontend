@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ShopUp Seller</title>
+    <link rel="stylesheet" href="dashboard-styles.css">
+    <link rel="stylesheet" href="dashboard-fixes.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="top-nav">
+        <div class="nav-left">
+            <h1 class="logo">ShopUp</h1>
+            <span class="store-name" id="storeName">Loading...</span>
+        </div>
+        <div class="nav-right">
+            <button class="btn-icon" id="notificationBtn" title="Notifications">
+                🔔
+                <span class="notification-badge">3</span>
+            </button>
+            <div class="user-menu">
+                <button class="user-button" id="userMenuBtn">
+                    <span class="user-avatar">👤</span>
+                    <span class="user-name" id="userName">Seller</span>
+                    <span class="dropdown-arrow">▼</span>
+                </button>
+                <div class="user-dropdown" id="userDropdown">
+                    <a href="#" id="viewStore">👁️ View My Store</a>
+                    <a href="#" id="settings">⚙️ Settings</a>
+                    <a href="#" id="help">❓ Help Center</a>
+                    <hr>
+                    <a href="#" id="logoutBtn">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item active">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+                <a href="products.html" class="nav-item">
+                    <span class="nav-icon">📦</span>
+                    <span class="nav-text">Products</span>
+                    <span class="nav-badge" id="productCount">0</span>
+                </a>
+                <a href="orders.html" class="nav-item">
+                    <span class="nav-icon">🛒</span>
+                    <span class="nav-text">Orders</span>
+                    <span class="nav-badge new" id="orderCount">0</span>
+                </a>
+                <a href="customers.html" class="nav-item">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">Customers</span>
+                </a>
+                <a href="analytics.html" class="nav-item">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">Analytics</span>
+                </a>
+                <a href="marketing.html" class="nav-item">
+                    <span class="nav-icon">📢</span>
+                    <span class="nav-text">Marketing</span>
+                </a>
+                <a href="settings.html" class="nav-item">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">Settings</span>
+                </a>
+            </nav>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h3>Quick Actions</h3>
+                <button class="quick-action-btn" id="addProductBtn">
+                    ➕ Add Product
+                </button>
+                <button class="quick-action-btn" id="shareStoreBtn">
+                    🔗 Share Store
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Welcome Header -->
+            <header class="page-header">
+                <div>
+                    <h2>Welcome back, <span id="sellerName">Seller</span>! 👋</h2>
+                    <p class="subtitle">Here's what's happening with your store today</p>
+                </div>
+                <button class="btn-primary" id="addProductBtnTop">
+                    ➕ Add New Product
+                </button>
+            </header>
+
+            <!-- Stats Overview Cards -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Total Sales</h3>
+                        <span class="stat-icon">💰</span>
+                    </div>
+                    <div class="stat-value" id="totalSales">GH₵ 0.00</div>
+                    <div class="stat-change positive">
+                        <span>↗️ +0%</span>
+                        <span>vs last month</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Orders</h3>
+                        <span class="stat-icon">🛒</span>
+                    </div>
+                    <div class="stat-value" id="totalOrders">0</div>
+                    <div class="stat-change positive">
+                        <span>↗️ +0%</span>
+                        <span>vs last month</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Products</h3>
+                        <span class="stat-icon">📦</span>
+                    </div>
+                    <div class="stat-value" id="totalProducts">0</div>
+                    <div class="stat-info">
+                        <span id="activeProducts">0</span> active
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Customers</h3>
+                        <span class="stat-icon">👥</span>
+                    </div>
+                    <div class="stat-value" id="totalCustomers">0</div>
+                    <div class="stat-info">
+                        <span id="newCustomers">0</span> new this month
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Activity Section -->
+            <section class="content-grid">
+                <!-- Recent Orders -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3>Recent Orders</h3>
+                        <a href="orders.html" class="view-all">View All →</a>
+                    </div>
+                    <div class="orders-list" id="recentOrders">
+                        <!-- Empty state -->
+                        <div class="empty-state">
+                            <div class="empty-icon">📦</div>
+                            <h4>No orders yet</h4>
+                            <p>When customers place orders, they'll appear here</p>
+                            <button class="btn-secondary" id="addFirstProduct">Add Your First Product</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3>Store Performance</h3>
+                    </div>
+                    <div class="performance-list">
+                        <div class="performance-item">
+                            <span class="perf-label">Store Views</span>
+                            <span class="perf-value">0</span>
+                        </div>
+                        <div class="performance-item">
+                            <span class="perf-label">Conversion Rate</span>
+                            <span class="perf-value">0%</span>
+                        </div>
+                        <div class="performance-item">
+                            <span class="perf-label">Average Order</span>
+                            <span class="perf-value">GH₵ 0.00</span>
+                        </div>
+                        <div class="performance-item">
+                            <span class="perf-label">Customer Rating</span>
+                            <span class="perf-value">⭐ 0.0</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Getting Started Section -->
+            <section class="content-card getting-started" id="gettingStarted">
+                <div class="card-header">
+                    <h3>🚀 Get Started with ShopUp</h3>
+                    <button class="btn-text" id="dismissGettingStarted">Dismiss</button>
+                </div>
+                <div class="checklist">
+                    <div class="checklist-item completed">
+                        <span class="checkbox">✓</span>
+                        <div class="checklist-content">
+                            <h4>Create your account</h4>
+                            <p>Welcome to ShopUp!</p>
+                        </div>
+                    </div>
+                    <div class="checklist-item" id="addProductCheck">
+                        <span class="checkbox">○</span>
+                        <div class="checklist-content">
+                            <h4>Add your first product</h4>
+                            <p>Start by adding products to your store</p>
+                            <button class="btn-link" onclick="window.location.href='add-product.html'">Add Product →</button>
+                        </div>
+                    </div>
+                    <div class="checklist-item" id="customizeCheck">
+                        <span class="checkbox">○</span>
+                        <div class="checklist-content">
+                            <h4>Customize your store</h4>
+                            <p>Make your store unique with your branding</p>
+                            <button class="btn-link" onclick="window.location.href='settings.html'">Customize →</button>
+                        </div>
+                    </div>
+                    <div class="checklist-item" id="shareCheck">
+                        <span class="checkbox">○</span>
+                        <div class="checklist-content">
+                            <h4>Share your store</h4>
+                            <p>Get your first customers by sharing your store link</p>
+                            <button class="btn-link" id="shareStoreLink">Share Store →</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Store Link Card -->
+            <section class="content-card store-link-card">
+                <div class="card-header">
+                    <h3>🔗 Your Store Link</h3>
+                </div>
+                <div class="store-link-container">
+                    <input 
+                        type="text" 
+                        id="storeUrl" 
+                        value="https://shopupgh.com/store/your-store" 
+                        readonly
+                        class="store-link-input"
+                    >
+                    <button class="btn-copy" id="copyLinkBtn">
+                        📋 Copy
+                    </button>
+                </div>
+                <div class="share-buttons">
+                    <button class="share-btn whatsapp" id="shareWhatsApp">
+                        <span>📱</span> WhatsApp
+                    </button>
+                    <button class="share-btn facebook" id="shareFacebook">
+                        <span>📘</span> Facebook
+                    </button>
+                    <button class="share-btn twitter" id="shareTwitter">
+                        <span>🐦</span> Twitter
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script src="shared-nav.js"></script>
+    <script src="dashboard-script.js"></script>
+    <script src="products-generator.js"></script>
+</body>
+</html>

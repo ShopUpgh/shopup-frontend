@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders - Seller Dashboard - SHOPUP</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #f3f4f6;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        .navbar {
+            background: white;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar h1 {
+            font-size: 20px;
+            background: linear-gradient(135deg, #10b981, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-header h2 {
+            font-size: 28px;
+            color: #111827;
+            margin-bottom: 10px;
+        }
+
+        .page-header p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Orders Table */
+        .orders-table-wrapper {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 20px;
+            border-bottom: 2px solid #f3f4f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h3 {
+            font-size: 16px;
+            color: #111827;
+            font-weight: 700;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 200ms;
+        }
+
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #059669;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #111827;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* Orders List */
+        .orders-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .order-item {
+            padding: 20px;
+            border-bottom: 1px solid #f3f4f6;
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 120px;
+            gap: 15px;
+            align-items: center;
+            transition: all 200ms;
+        }
+
+        .order-item:hover {
+            background: #f9fafb;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .order-number {
+            font-size: 14px;
+            font-weight: 700;
+            color: #111827;
+            font-family: 'Courier New', monospace;
+        }
+
+        .order-customer {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .order-date {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .order-items-count {
+            font-size: 14px;
+            color: #111827;
+            font-weight: 600;
+        }
+
+        .order-total {
+            font-size: 16px;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 100px;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-confirmed {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-shipped {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-delivered {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-cancelled {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+
+        /* Action Dropdown */
+        .action-menu {
+            position: relative;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+
+        .action-menu:hover .dropdown {
+            display: block;
+        }
+
+        .dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            min-width: 150px;
+            z-index: 10;
+        }
+
+        .dropdown a {
+            display: block;
+            padding: 10px 15px;
+            color: #111827;
+            text-decoration: none;
+            font-size: 13px;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 200ms;
+        }
+
+        .dropdown a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown a:hover {
+            background: #f9fafb;
+            color: #10b981;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            color: #111827;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .order-item {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .order-info {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .filter-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f4f6;
+            border-top-color: #10b981;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <div class="navbar">
+        <h1>🛍️ SHOPUP Seller Dashboard</h1>
+    </div>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h2>📦 Your Orders</h2>
+            <p>Manage and track all your customer orders</p>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label>Status</label>
+                <select id="statusFilter" onchange="applyFilters()">
+                    <option value="">All Orders</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Date Range</label>
+                <input type="date" id="dateFilter" onchange="applyFilters()">
+            </div>
+            <div class="filter-group">
+                <label>Search</label>
+                <input type="text" id="searchFilter" placeholder="Order # or customer..." onkeyup="applyFilters()">
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📦</div>
+                <div class="stat-value" id="totalOrders">0</div>
+                <div class="stat-label">Total Orders</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-value" id="pendingOrders">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value" id="deliveredOrders">0</div>
+                <div class="stat-label">Delivered</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-value" id="totalRevenue">GH₵0</div>
+                <div class="stat-label">Revenue</div>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="orders-table-wrapper">
+            <div class="table-header">
+                <h3>Recent Orders</h3>
+                <div class="table-actions">
+                    <button class="btn btn-secondary" onclick="exportOrders()">📊 Export</button>
+                    <button class="btn btn-primary" onclick="refreshOrders()">🔄 Refresh</button>
+                </div>
+            </div>
+
+            <div class="orders-list" id="ordersList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 15px;">Loading orders...</p>
+                </div>
+            </div>
+
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-icon">📭</div>
+                <h3>No orders found</h3>
+                <p>No orders match your filters. Try adjusting your search criteria.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="supabase-config.js"></script>
+    <script src="order-management-script.js"></script>
+
+    <script>
+        /**
+         * SELLER ORDER MANAGEMENT DASHBOARD
+         * Display orders with filtering, status updates, and actions
+         * Integrates with order-management-script.js for Supabase backend
+         */
+
+        console.log('📦 Seller Order Dashboard Loaded');
+
+        let allOrders = [];
+        let filteredOrders = [];
+        let currentUser = null;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🔐 Checking authentication...');
+            await initializePage();
+        });
+
+        /**
+         * Initialize page - check auth and load orders
+         */
+        async function initializePage() {
+            try {
+                // Get current user
+                const { data: { user }, error } = await supabase.auth.getUser();
+
+                if (error || !user) {
+                    console.warn('⚠️ Not authenticated, showing demo data');
+                    // Demo mode - show sample data
+                    loadSampleOrders();
+                    return;
+                }
+
+                currentUser = user;
+                console.log('✅ Authenticated as:', user.email);
+
+                // Load real orders from Supabase
+                await loadOrdersFromSupabase();
+
+            } catch (error) {
+                console.error('❌ Initialization error:', error);
+                loadSampleOrders();
+            }
+        }
+
+        /**
+         * Load orders from Supabase database
+         */
+        async function loadOrdersFromSupabase() {
+            try {
+                console.log('📥 Loading orders from Supabase...');
+
+                const result = await getSellerOrders(currentUser.id);
+
+                if (!result.success) {
+                    console.warn('⚠️ Could not load orders:', result.error);
+                    loadSampleOrders();
+                    return;
+                }
+
+                allOrders = result.data || [];
+                console.log('✅ Loaded', allOrders.length, 'orders from Supabase');
+
+                filteredOrders = [...allOrders];
+                updateStats();
+                displayOrders();
+
+            } catch (error) {
+                console.error('❌ Error loading orders:', error);
+                loadSampleOrders();
+            }
+        }
+
+        /**
+         * Load sample/demo orders (fallback for demo mode)
+         */
+        function loadSampleOrders() {
+            console.log('📥 Loading sample orders (demo mode)...');
+
+            allOrders = [
+                {
+                    id: '1',
+                    order_number: 'ORD-2025-00001',
+                    customer_name: 'John Doe',
+                    customer_email: 'john@example.com',
+                    customer_phone: '0244123456',
+                    total: 250.00,
+                    order_status: 'pending',
+                    payment_status: 'completed',
+                    created_at: new Date().toISOString(),
+                    items: [
+                        { product_name: 'Product 1', quantity: 1, unit_price: 150 },
+                        { product_name: 'Product 2', quantity: 1, unit_price: 100 }
+                    ]
+                },
+                {
+                    id: '2',
+                    order_number: 'ORD-2025-00002',
+                    customer_name: 'Jane Smith',
+                    customer_email: 'jane@example.com',
+                    customer_phone: '0554789456',
+                    total: 99.99,
+                    order_status: 'shipped',
+                    payment_status: 'completed',
+                    created_at: new Date(Date.now() - 86400000).toISOString(),
+                    tracking_number: 'TRK123456789',
+                    items: [
+                        { product_name: 'Product 3', quantity: 1, unit_price: 99.99 }
+                    ]
+                }
+            ];
+
+            filteredOrders = [...allOrders];
+            updateStats();
+            displayOrders();
+            console.log('✅ Sample orders loaded');
+        }
+
+        /**
+         * Display orders in the table
+         */
+        function displayOrders() {
+            const container = document.getElementById('ordersList');
+            const emptyState = document.getElementById('emptyState');
+
+            if (filteredOrders.length === 0) {
+                container.innerHTML = '';
+                emptyState.style.display = 'block';
+                console.log('ℹ️ No orders to display');
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            const ordersHtml = filteredOrders.map(order => {
+                const itemsCount = order.items?.length || 0;
+                const orderDate = new Date(order.created_at).toLocaleDateString();
+                const orderNumber = order.order_number || 'N/A';
+                const customerName = order.customer_name || 'Unknown';
+                const status = order.order_status || 'pending';
+                const paymentStatus = order.payment_status || 'pending';
+
+                return `
+                    <div class="order-item">
+                        <div class="order-info">
+                            <div class="order-number">${orderNumber}</div>
+                            <div class="order-customer">👤 ${customerName}</div>
+                            <div class="order-date">${orderDate}</div>
+                        </div>
+                        <div>
+                            <div class="order-items-count">${itemsCount} item${itemsCount > 1 ? 's' : ''}</div>
+                        </div>
+                        <div>
+                            <div class="order-total">GH₵ ${order.total.toFixed(2)}</div>
+                        </div>
+                        <div>
+                            <span class="status-badge status-${status}">${status}</span>
+                        </div>
+                        <div>
+                            <span class="status-badge status-${paymentStatus}">${paymentStatus === 'completed' ? '✓ Paid' : '⏳ Pending'}</span>
+                        </div>
+                        <div class="action-menu">
+                            <button class="action-btn">⋮</button>
+                            <div class="dropdown">
+                                <a href="#" onclick="viewOrder('${order.id}'); return false;">👁️ View</a>
+                                <a href="#" onclick="shipOrder('${order.id}'); return false;">📦 Ship</a>
+                                <a href="#" onclick="contactCustomer('${order.id}'); return false;">💬 Contact</a>
+                                <a href="#" onclick="cancelOrder('${order.id}'); return false;">❌ Cancel</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = ordersHtml;
+            console.log('🎨 Displayed', filteredOrders.length, 'orders');
+        }
+
+        /**
+         * Update stats cards
+         */
+        function updateStats() {
+            const total = filteredOrders.length;
+            const pending = filteredOrders.filter(o => o.order_status === 'pending').length;
+            const delivered = filteredOrders.filter(o => o.order_status === 'delivered').length;
+            const revenue = filteredOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+
+            document.getElementById('totalOrders').textContent = total;
+            document.getElementById('pendingOrders').textContent = pending;
+            document.getElementById('deliveredOrders').textContent = delivered;
+            document.getElementById('totalRevenue').textContent = `GH₵${revenue.toFixed(0)}`;
+
+            console.log('📊 Stats updated:', { total, pending, delivered, revenue });
+        }
+
+        /**
+         * Apply filters to orders list
+         */
+        function applyFilters() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+
+            filteredOrders = allOrders.filter(order => {
+                const statusMatch = !statusFilter || order.order_status === statusFilter;
+                const searchMatch = !searchFilter ||
+                    (order.order_number || '').toLowerCase().includes(searchFilter) ||
+                    (order.customer_name || '').toLowerCase().includes(searchFilter) ||
+                    (order.customer_email || '').toLowerCase().includes(searchFilter);
+
+                return statusMatch && searchMatch;
+            });
+
+            updateStats();
+            displayOrders();
+            console.log('🔍 Filters applied, showing', filteredOrders.length, 'orders');
+        }
+
+        /**
+         * View order details
+         */
+        async function viewOrder(orderId) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) {
+                console.warn('⚠️ Order not found');
+                return;
+            }
+
+            console.log('👁️ Viewing order:', order);
+
+            const itemsText = (order.items || [])
+                .map(item => `${item.product_name} × ${item.quantity} = GH₵ ${(item.unit_price * item.quantity).toFixed(2)}`)
+                .join('\n');
+
+            alert(`📦 Order ${order.order_number}\n\nCustomer: ${order.customer_name}\nPhone: ${order.customer_phone}\n\nItems:\n${itemsText || 'No items'}\n\nTotal: GH₵ ${order.total.toFixed(2)}\nStatus: ${order.order_status}`);
+        }
+
+        /**
+         * Mark order as shipped
+         */
+        async function shipOrder(orderId) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) {
+                console.warn('⚠️ Order not found');
+                return;
+            }
+
+            console.log('📦 Shipping order:', order);
+
+            const trackingNumber = 'TRK' + Math.random().toString().substring(2, 11);
+
+            try {
+                // Update order status using order-management-script.js
+                const result = await updateOrderStatus(
+                    order.id,
+                    'shipped',
+                    `Order shipped with tracking number ${trackingNumber}`
+                );
+
+                if (result.success) {
+                    order.order_status = 'shipped';
+                    order.tracking_number = trackingNumber;
+
+                    updateStats();
+                    displayOrders();
+
+                    // Update navigation badge
+                    if (window.updateNavigationCounts) {
+                        await window.updateNavigationCounts();
+                    }
+
+                    alert(`✅ Order marked as shipped!\nTracking: ${trackingNumber}`);
+                    console.log('✅ Order updated in Supabase');
+                } else {
+                    throw new Error(result.error);
+                }
+
+            } catch (error) {
+                console.error('❌ Error updating order:', error);
+                alert('❌ Failed to update order: ' + error.message);
+            }
+        }
+
+        /**
+         * Contact customer
+         */
+        function contactCustomer(orderId) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) {
+                console.warn('⚠️ Order not found');
+                return;
+            }
+
+            console.log('💬 Contacting customer:', order);
+            alert(`Contact Customer\n\nName: ${order.customer_name}\nPhone: ${order.customer_phone}\nEmail: ${order.customer_email}\n\nOrder: ${order.order_number}`);
+        }
+
+        /**
+         * Cancel order
+         */
+        async function cancelOrder(orderId) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) {
+                console.warn('⚠️ Order not found');
+                return;
+            }
+
+            if (!confirm(`Cancel order ${order.order_number}?`)) {
+                return;
+            }
+
+            console.log('❌ Cancelling order:', order);
+
+            try {
+                // Update order status using order-management-script.js
+                const result = await updateOrderStatus(
+                    order.id,
+                    'cancelled',
+                    'Order cancelled by seller'
+                );
+
+                if (result.success) {
+                    order.order_status = 'cancelled';
+
+                    updateStats();
+                    displayOrders();
+
+                    // Update navigation badge
+                    if (window.updateNavigationCounts) {
+                        await window.updateNavigationCounts();
+                    }
+
+                    alert('✅ Order cancelled');
+                    console.log('✅ Order cancelled in Supabase');
+                } else {
+                    throw new Error(result.error);
+                }
+
+            } catch (error) {
+                console.error('❌ Error cancelling order:', error);
+                alert('❌ Failed to cancel order: ' + error.message);
+            }
+        }
+
+        /**
+         * Refresh orders list
+         */
+        async function refreshOrders() {
+            console.log('🔄 Refreshing orders...');
+
+            if (currentUser) {
+                await loadOrdersFromSupabase();
+            } else {
+                loadSampleOrders();
+            }
+
+            alert('✅ Orders refreshed');
+        }
+
+        /**
+         * Export orders to CSV
+         */
+        function exportOrders() {
+            console.log('📊 Exporting orders...');
+
+            if (filteredOrders.length === 0) {
+                alert('No orders to export');
+                return;
+            }
+
+            const csvRows = [
+                'Order Number,Customer,Email,Phone,Items,Total,Status,Date'
+            ];
+
+            filteredOrders.forEach(order => {
+                const itemCount = order.items?.length || 0;
+                const date = new Date(order.created_at).toLocaleDateString();
+                csvRows.push(`"${order.order_number}","${order.customer_name}","${order.customer_email}","${order.customer_phone}",${itemCount},"GH₵ ${order.total.toFixed(2)}","${order.order_status}","${date}"`);
+            });
+
+            const csv = csvRows.join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `orders-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+
+            console.log('✅ Orders exported');
+        }
+
+        console.log('✨ Seller Dashboard Ready');
+    </script>
+</body>
+</html>

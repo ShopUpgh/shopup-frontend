@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Product - ShopUp Seller</title>
+    <link rel="stylesheet" href="dashboard-styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        .product-form-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .form-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+        }
+
+        .form-section h3 {
+            color: #2d8a3e;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #2d8a3e;
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 0.3rem;
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .image-upload-area {
+            border: 2px dashed #e0e0e0;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .image-upload-area:hover {
+            border-color: #2d8a3e;
+            background: #f9fef9;
+        }
+
+        .image-upload-area.dragover {
+            border-color: #2d8a3e;
+            background: #e8f5e9;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .image-preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .image-preview {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .remove-image {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .remove-image:hover {
+            background: rgba(229,57,53,0.9);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        .btn-cancel {
+            background: white;
+            color: #666;
+            border: 2px solid #e0e0e0;
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-cancel:hover {
+            border-color: #999;
+            color: #333;
+        }
+
+        .btn-save {
+            background: #2d8a3e;
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-save:hover {
+            background: #236d31;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(45, 138, 62, 0.3);
+        }
+
+        .btn-save:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Button Fixes */
+        .btn-save,
+        .btn-cancel {
+            position: relative;
+            z-index: 10;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        .form-actions {
+            position: relative;
+            z-index: 10;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation (same as dashboard) -->
+    <nav class="top-nav">
+        <div class="nav-left">
+            <h1 class="logo">ShopUp</h1>
+            <span class="store-name" id="storeName">Loading...</span>
+        </div>
+        <div class="nav-right">
+            <a href="dashboard.html" class="btn-secondary" style="text-decoration: none; padding: 0.5rem 1rem;">← Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="main-content" style="max-width: 1200px; margin: 0 auto;">
+        <header class="page-header">
+            <div>
+                <h2>➕ Add New Product</h2>
+                <p class="subtitle">Fill in the details below to add a product to your store</p>
+            </div>
+        </header>
+
+        <div class="product-form-container">
+            <form id="productForm">
+                <!-- Product Images -->
+                <div class="form-section">
+                    <h3>📸 Product Images</h3>
+                    <div class="form-group">
+                        <label>Upload Images</label>
+                        <div class="image-upload-area" id="imageUploadArea">
+                            <div class="upload-icon">📷</div>
+                            <p><strong>Click to upload</strong> or drag and drop</p>
+                            <small>PNG, JPG up to 5MB each (Max 5 images)</small>
+                            <input type="file" id="imageInput" accept="image/*" multiple hidden>
+                        </div>
+                        <div class="image-preview-container" id="imagePreview"></div>
+                    </div>
+                </div>
+
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h3>📝 Basic Information</h3>
+                    
+                    <div class="form-group">
+                        <label for="productName">Product Name *</label>
+                        <input 
+                            type="text" 
+                            id="productName" 
+                            name="productName" 
+                            placeholder="e.g., Blue Cotton T-Shirt" 
+                            required
+                        >
+                        <small>Give your product a clear, descriptive name</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description *</label>
+                        <textarea 
+                            id="description" 
+                            name="description" 
+                            placeholder="Describe your product, its features, and benefits..."
+                            required
+                        ></textarea>
+                        <small>Help customers understand what makes this product special</small>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Category *</label>
+                            <select id="category" name="category" required>
+                                <option value="">Select category</option>
+                                <option value="fashion">Fashion & Clothing</option>
+                                <option value="electronics">Electronics</option>
+                                <option value="food">Food & Beverages</option>
+                                <option value="beauty">Beauty & Cosmetics</option>
+                                <option value="home">Home & Living</option>
+                                <option value="sports">Sports & Fitness</option>
+                                <option value="books">Books & Stationery</option>
+                                <option value="toys">Toys & Kids</option>
+                                <option value="automotive">Automotive</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="condition">Condition *</label>
+                            <select id="condition" name="condition" required>
+                                <option value="new">New</option>
+                                <option value="used">Used - Like New</option>
+                                <option value="used-good">Used - Good</option>
+                                <option value="refurbished">Refurbished</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing & Inventory -->
+                <div class="form-section">
+                    <h3>💰 Pricing & Inventory</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="price">Price (GH₵) *</label>
+                            <input 
+                                type="number" 
+                                id="price" 
+                                name="price" 
+                                placeholder="0.00" 
+                                step="0.01"
+                                min="0"
+                                required
+                            >
+                            <small>Enter your selling price</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="comparePrice">Compare at Price (GH₵)</label>
+                            <input 
+                                type="number" 
+                                id="comparePrice" 
+                                name="comparePrice" 
+                                placeholder="0.00" 
+                                step="0.01"
+                                min="0"
+                            >
+                            <small>Optional: Show customers they're getting a deal</small>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="quantity">Quantity in Stock *</label>
+                            <input 
+                                type="number" 
+                                id="quantity" 
+                                name="quantity" 
+                                placeholder="0" 
+                                min="0"
+                                required
+                            >
+                            <small>How many do you have available?</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sku">SKU (Stock Keeping Unit)</label>
+                            <input 
+                                type="text" 
+                                id="sku" 
+                                name="sku" 
+                                placeholder="Optional"
+                            >
+                            <small>For your internal tracking</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping -->
+                <div class="form-section">
+                    <h3>🚚 Shipping</h3>
+                    
+                    <div class="form-group">
+                        <label for="shippingNote">Shipping Information</label>
+                        <textarea 
+                            id="shippingNote" 
+                            name="shippingNote" 
+                            placeholder="e.g., Free delivery in Accra, GH₵ 10 for other regions, Ready to ship within 24 hours"
+                            rows="3"
+                        ></textarea>
+                        <small>Let customers know about shipping costs and times</small>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn-save" id="saveBtn">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script src="add-product-script.js"></script>
+</body>
+</html>

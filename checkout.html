@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - ShopUp</title>
+    <link rel="stylesheet" href="storefront-styles.css">
+    <style>
+        .checkout-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .checkout-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+        }
+
+        .checkout-form {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid var(--border);
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-section h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--gray-900);
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--gray-900);
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .checkout-sidebar {
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .order-summary {
+            background: var(--gray-50);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .order-summary h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--gray-900);
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .summary-item.total {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+            margin-top: 12px;
+        }
+
+        .items-list {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .items-list h4 {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .item-row:last-child {
+            border-bottom: none;
+        }
+
+        .item-name {
+            flex: 1;
+            color: var(--gray-900);
+            font-weight: 500;
+        }
+
+        .item-qty {
+            color: var(--text-light);
+            margin: 0 8px;
+        }
+
+        .item-price {
+            color: var(--gray-900);
+            font-weight: 600;
+            text-align: right;
+            min-width: 60px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            background: var(--primary-dark);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-submit.loading::after {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-left: 8px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #7f1d1d;
+            border: 1px solid #fca5a5;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        @media (max-width: 768px) {
+            .checkout-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .checkout-sidebar {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="index.html">
+                    <h1>🛍️ ShopUp</h1>
+                </a>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="cart.html">← Back to Cart</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="checkout-container">
+        <h1 style="margin-bottom: 30px; color: var(--gray-900);">🔒 Checkout</h1>
+
+        <div class="checkout-grid">
+            <!-- Left: Checkout Form -->
+            <div>
+                <div id="alertContainer"></div>
+
+                <form id="checkoutForm" class="checkout-form">
+                    <!-- Customer Information -->
+                    <div class="form-section">
+                        <h2>👤 Customer Information</h2>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fullName">Full Name *</label>
+                                <input type="text" id="fullName" name="fullName" required placeholder="John Doe">
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email Address *</label>
+                                <input type="email" id="email" name="email" required placeholder="john@example.com">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="phone">Phone Number *</label>
+                                <input type="tel" id="phone" name="phone" required placeholder="024 123 4567">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Address -->
+                    <div class="form-section">
+                        <h2>📍 Delivery Address</h2>
+
+                        <div class="form-row full">
+                            <div class="form-group">
+                                <label for="address">Street Address *</label>
+                                <input type="text" id="address" name="address" required placeholder="123 Main Street">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="city">City *</label>
+                                <input type="text" id="city" name="city" required placeholder="Accra">
+                            </div>
+                            <div class="form-group">
+                                <label for="region">Region *</label>
+                                <input type="text" id="region" name="region" required placeholder="Greater Accra">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="postal">Postal Code</label>
+                                <input type="text" id="postal" name="postal" placeholder="GA 001">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="form-section">
+                        <h2>💳 Payment Method</h2>
+
+                        <div class="form-row full">
+                            <div class="form-group">
+                                <label for="paymentMethod">Select Payment Method *</label>
+                                <select id="paymentMethod" name="paymentMethod" required>
+                                    <option value="">-- Choose a payment method --</option>
+                                    <option value="mtn">MTN Mobile Money</option>
+                                    <option value="vodafone">Vodafone Cash</option>
+                                    <option value="bank">Bank Transfer</option>
+                                    <option value="cod">Cash on Delivery</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Special Instructions -->
+                    <div class="form-section">
+                        <h2>📝 Special Instructions (Optional)</h2>
+
+                        <div class="form-row full">
+                            <div class="form-group">
+                                <label for="instructions">Delivery Notes</label>
+                                <textarea id="instructions" name="instructions" placeholder="E.g., Leave at gate, call before delivery, etc."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terms & Conditions -->
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label style="display: flex; gap: 10px; font-weight: 600; margin: 0;">
+                                <input type="checkbox" id="termsAccepted" name="termsAccepted" required style="margin: 0; width: auto;">
+                                I agree to the <a href="#" style="color: var(--primary); text-decoration: none;">Terms & Conditions</a>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="button" id="submitButton" class="btn-submit">
+                        ✓ Place Order
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right: Order Summary -->
+            <div class="checkout-sidebar">
+                <div class="order-summary">
+                    <h3>📦 Order Summary</h3>
+
+                    <div class="items-list">
+                        <h4>Items in Order</h4>
+                        <div id="itemsContainer">
+                            <!-- Dynamically loaded -->
+                        </div>
+                    </div>
+
+                    <div class="summary-item">
+                        <span>Subtotal:</span>
+                        <span id="subtotalAmount">GH₵ 0.00</span>
+                    </div>
+
+                    <div class="summary-item">
+                        <span>Tax (15%):</span>
+                        <span id="taxAmount">GH₵ 0.00</span>
+                    </div>
+
+                    <div class="summary-item">
+                        <span>Shipping:</span>
+                        <span id="shippingAmount">GH₵ 5.00</span>
+                    </div>
+
+                    <div class="summary-item total">
+                        <span>Total Amount:</span>
+                        <span id="totalAmount">GH₵ 0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 ShopUp. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="supabase-config.js"></script>
+    <script src="order-management-script.js"></script>
+
+    <script>
+        // ============================================
+        // CHECKOUT PAGE SCRIPT
+        // ============================================
+
+        let cart = [];
+        const SHIPPING_FEE = 5.00;
+        const TAX_RATE = 0.15; // 15%
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🛒 Checkout page loaded');
+            loadCart();
+            displayOrderSummary();
+            setupFormHandlers();
+        });
+
+        /**
+         * Load cart from localStorage
+         */
+        function loadCart() {
+            try {
+                const saved = localStorage.getItem('shopup_cart');
+                cart = saved ? JSON.parse(saved) : [];
+                console.log('✅ Cart loaded:', cart.length, 'items');
+            } catch (error) {
+                console.error('❌ Error loading cart:', error);
+                cart = [];
+            }
+        }
+
+        /**
+         * Display order summary on checkout page
+         */
+        function displayOrderSummary() {
+            // Display items
+            const itemsContainer = document.getElementById('itemsContainer');
+            if (cart.length === 0) {
+                itemsContainer.innerHTML = '<p style="color: var(--text-light);">Cart is empty</p>';
+                return;
+            }
+
+            let itemsHTML = '';
+            cart.forEach(item => {
+                const lineTotal = item.price * item.quantity;
+                itemsHTML += `
+                    <div class="item-row">
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-qty">×${item.quantity}</span>
+                        <span class="item-price">GH₵ ${lineTotal.toFixed(2)}</span>
+                    </div>
+                `;
+            });
+            itemsContainer.innerHTML = itemsHTML;
+
+            // Calculate totals
+            updateTotals();
+        }
+
+        /**
+         * Update total price calculations
+         */
+        function updateTotals() {
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const tax = subtotal * TAX_RATE;
+            const total = subtotal + tax + SHIPPING_FEE;
+
+            document.getElementById('subtotalAmount').textContent = `GH₵ ${subtotal.toFixed(2)}`;
+            document.getElementById('taxAmount').textContent = `GH₵ ${tax.toFixed(2)}`;
+            document.getElementById('totalAmount').textContent = `GH₵ ${total.toFixed(2)}`;
+        }
+
+        /**
+         * Setup form event handlers
+         */
+        function setupFormHandlers() {
+            const submitButton = document.getElementById('submitButton');
+            submitButton.addEventListener('click', submitOrder);
+
+            // Real-time total updates (for future use)
+            document.getElementById('paymentMethod').addEventListener('change', updateTotals);
+        }
+
+        /**
+         * Submit order to database
+         */
+        async function submitOrder(event) {
+            event.preventDefault();
+            console.log('📝 Submitting order...');
+
+            try {
+                // 1. Validate cart
+                if (!cart || cart.length === 0) {
+                    showAlert('Your cart is empty. Add items before checkout.', 'error');
+                    return;
+                }
+
+                // 2. Get form data
+                const form = document.getElementById('checkoutForm');
+                const formData = new FormData(form);
+
+                // 3. Validate required fields
+                const fullName = formData.get('fullName')?.trim();
+                const email = formData.get('email')?.trim();
+                const phone = formData.get('phone')?.trim();
+                const address = formData.get('address')?.trim();
+                const city = formData.get('city')?.trim();
+                const region = formData.get('region')?.trim();
+                const paymentMethod = formData.get('paymentMethod');
+                const termsAccepted = document.getElementById('termsAccepted').checked;
+
+                if (!fullName || !email || !phone || !address || !city || !region || !paymentMethod) {
+                    showAlert('Please fill in all required fields.', 'error');
+                    return;
+                }
+
+                if (!termsAccepted) {
+                    showAlert('Please accept the terms and conditions.', 'error');
+                    return;
+                }
+
+                // 4. Disable button during submission
+                const submitButton = document.getElementById('submitButton');
+                submitButton.disabled = true;
+                submitButton.textContent = '⏳ Processing...';
+
+                // 5. Calculate totals
+                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const tax = subtotal * TAX_RATE;
+                const total = subtotal + tax + SHIPPING_FEE;
+
+                // 6. Prepare order data
+                const orderData = {
+                    customer_name: fullName,
+                    customer_email: email,
+                    customer_phone: phone,
+                    delivery_address: address,
+                    delivery_city: city,
+                    delivery_region: region,
+                    delivery_postal: formData.get('postal') || '',
+                    payment_method: paymentMethod,
+                    special_instructions: formData.get('instructions') || '',
+                    subtotal: subtotal,
+                    tax: tax,
+                    shipping_fee: SHIPPING_FEE,
+                    total: total,
+                    notes: `${cart.length} items from checkout`
+                };
+
+                console.log('📦 Order data prepared:', {
+                    items: cart.length,
+                    total: total,
+                    customer: fullName
+                });
+
+                // 7. Get current user for seller_id
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                if (userError || !user) {
+                    console.warn('⚠️ No authenticated user, using default seller_id');
+                    // For demo: use a default seller_id (in production, this would be required)
+                    orderData.seller_id = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'; // Demo UUID
+                } else {
+                    orderData.seller_id = user.id;
+                }
+
+                // 8. Create order using order-management-script.js
+                const result = await createOrder(orderData);
+
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to create order');
+                }
+
+                const order = result.data;
+                console.log('✅ Order created successfully:', order.order_number);
+
+                // 9. Add items to order
+                const orderItems = cart.map(item => ({
+                    order_id: order.id,
+                    product_id: item.id || 'unknown',
+                    seller_id: order.seller_id,
+                    product_name: item.name,
+                    product_sku: item.sku || '',
+                    quantity: item.quantity,
+                    unit_price: item.price,
+                    product_category: item.category || 'General'
+                }));
+
+                const itemsResult = await addOrderItems(order.id, orderItems);
+                if (!itemsResult.success) {
+                    console.warn('⚠️ Warning adding items:', itemsResult.error);
+                    // Don't fail - order was created
+                }
+
+                console.log('✅ Order items added:', orderItems.length);
+
+                // 10. Clear cart
+                localStorage.removeItem('shopup_cart');
+                console.log('✅ Cart cleared');
+
+                // 11. Save order to session for confirmation page
+                sessionStorage.setItem('lastOrder', JSON.stringify(order));
+                console.log('✅ Order saved to session');
+
+                // 12. Update navigation badges
+                if (window.updateNavigationCounts) {
+                    console.log('📡 Updating navigation badges...');
+                    await window.updateNavigationCounts();
+                }
+
+                // 13. Redirect to confirmation page
+                console.log('🎉 Redirecting to confirmation page...');
+                setTimeout(() => {
+                    window.location.href = 'order-confirmation.html';
+                }, 500);
+
+            } catch (error) {
+                console.error('❌ Order submission error:', error);
+                showAlert(`Error placing order: ${error.message}`, 'error');
+
+                // Re-enable button
+                const submitButton = document.getElementById('submitButton');
+                submitButton.disabled = false;
+                submitButton.textContent = '✓ Place Order';
+            }
+        }
+
+        /**
+         * Show alert message
+         * @param {string} message - Alert message
+         * @param {string} type - 'error' or 'success'
+         */
+        function showAlert(message, type = 'error') {
+            const container = document.getElementById('alertContainer');
+            const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
+            const icon = type === 'error' ? '❌' : '✅';
+
+            const alertHTML = `
+                <div class="alert ${alertClass}">
+                    ${icon} ${message}
+                </div>
+            `;
+
+            container.innerHTML = alertHTML;
+
+            // Auto-hide success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    container.innerHTML = '';
+                }, 5000);
+            }
+
+            // Scroll to alert
+            container.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details - ShopUp</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 20px 0;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2d8a3e;
+            text-decoration: none;
+        }
+
+        .back-link {
+            color: #2d8a3e;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .order-header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .order-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .order-number {
+            font-size: 1.8em;
+            color: #2d3748;
+            font-weight: 700;
+        }
+
+        .order-status {
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-confirmed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-processing {
+            background: #cfe2ff;
+            color: #084298;
+        }
+
+        .status-shipped {
+            background: #d3f9d8;
+            color: #0f5132;
+        }
+
+        .status-delivered {
+            background: #d1e7dd;
+            color: #0a3622;
+        }
+
+        .status-cancelled {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .order-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta-label {
+            color: #718096;
+            font-size: 0.85em;
+            margin-bottom: 5px;
+        }
+
+        .meta-value {
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .tracking-timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .tracking-step {
+            position: relative;
+            padding-bottom: 30px;
+        }
+
+        .tracking-step:last-child {
+            padding-bottom: 0;
+        }
+
+        .tracking-step::before {
+            content: '';
+            position: absolute;
+            left: -32px;
+            top: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #e2e8f0;
+        }
+
+        .tracking-step.completed::before {
+            background: #10b981;
+            box-shadow: 0 0 0 3px #10b981;
+        }
+
+        .tracking-step::after {
+            content: '';
+            position: absolute;
+            left: -25px;
+            top: 16px;
+            width: 2px;
+            height: 100%;
+            background: #e2e8f0;
+        }
+
+        .tracking-step:last-child::after {
+            display: none;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .step-date {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .items-table th {
+            text-align: left;
+            padding: 12px;
+            background: #f7fafc;
+            color: #718096;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .items-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .items-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .product-name {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .price-summary {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+
+        .price-row.total {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #2d8a3e;
+            padding-top: 15px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .address-box {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            line-height: 1.8;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            font-size: 1em;
+        }
+
+        .btn-primary {
+            background: #2d8a3e;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #e53935;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .items-table {
+                font-size: 0.9em;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="customer-dashboard.html" class="logo">
+                <span>🛍️</span>
+                <span>ShopUp</span>
+            </a>
+            <a href="customer-orders.html" class="back-link">← Back to Orders</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="order-header">
+            <div class="order-title">
+                <h1 class="order-number" id="orderNumber">Loading...</h1>
+                <div class="order-status" id="orderStatus">-</div>
+            </div>
+
+            <div class="order-meta">
+                <div class="meta-item">
+                    <div class="meta-label">Order Date</div>
+                    <div class="meta-value" id="orderDate">-</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Payment Method</div>
+                    <div class="meta-value" id="paymentMethod">-</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Total Amount</div>
+                    <div class="meta-value" id="totalAmount">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Tracking -->
+        <div class="section">
+            <h2>📍 Order Tracking</h2>
+            <div class="tracking-timeline" id="trackingTimeline">
+                <!-- Timeline will load here -->
+            </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="section">
+            <h2>📦 Items</h2>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="orderItems">
+                    <!-- Items will load here -->
+                </tbody>
+            </table>
+
+            <div class="price-summary">
+                <div class="price-row">
+                    <span>Subtotal</span>
+                    <span id="subtotal">GH₵ 0.00</span>
+                </div>
+                <div class="price-row">
+                    <span>Delivery Fee</span>
+                    <span id="deliveryFee">GH₵ 0.00</span>
+                </div>
+                <div class="price-row">
+                    <span>Tax</span>
+                    <span id="tax">GH₵ 0.00</span>
+                </div>
+                <div class="price-row total">
+                    <span>Total</span>
+                    <span id="total">GH₵ 0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delivery Address -->
+        <div class="section">
+            <h2>🏠 Delivery Address</h2>
+            <div class="address-box" id="deliveryAddress">
+                Loading...
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="section">
+            <div class="btn-group" id="orderActions">
+                <!-- Actions will load here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="customer-order-details-script.js"></script>
+</body>
+</html>

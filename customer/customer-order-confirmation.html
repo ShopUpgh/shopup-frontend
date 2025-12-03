@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmed - ShopUp</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #10b981;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .order-number {
+            color: #10b981;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        p {
+            color: #718096;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .order-details {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #718096;
+        }
+
+        .detail-value {
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #10b981;
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #059669;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #10b981;
+            border: 2px solid #10b981;
+        }
+
+        .btn-secondary:hover {
+            background: #f0fdf4;
+        }
+
+        @media (max-width: 600px) {
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="success-icon">✓</div>
+            
+            <h1>Order Confirmed!</h1>
+            <p>Thank you for your purchase</p>
+            
+            <div class="order-number" id="orderNumber">
+                Loading...
+            </div>
+            
+            <p>We've sent a confirmation email with your order details.</p>
+            
+            <div class="order-details" id="orderDetails">
+                <!-- Order details will load here -->
+            </div>
+            
+            <div class="button-group">
+                <a href="customer-dashboard.html" class="btn btn-primary">View My Orders</a>
+                <a href="shop.html" class="btn btn-secondary">Continue Shopping</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('orderId');
+            const reference = urlParams.get('reference');
+            
+            if (!orderId) {
+                document.getElementById('orderNumber').textContent = 'No order found';
+                return;
+            }
+            
+            // Load order details
+            await loadOrderDetails(orderId);
+        });
+
+        async function loadOrderDetails(orderId) {
+            try {
+                let attempts = 0;
+                while (!window.supabase && attempts < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                const { data: order, error } = await window.supabase
+                    .from('orders')
+                    .select('*')
+                    .eq('id', orderId)
+                    .single();
+                
+                if (error) throw error;
+                
+                document.getElementById('orderNumber').textContent = order.order_number;
+                
+                document.getElementById('orderDetails').innerHTML = `
+                    <div class="detail-row">
+                        <span class="detail-label">Order Date</span>
+                        <span class="detail-value">${new Date(order.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Payment Method</span>
+                        <span class="detail-value">${formatPaymentMethod(order.payment_method)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Delivery Address</span>
+                        <span class="detail-value">${order.delivery_city}, ${order.delivery_region}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Total Amount</span>
+                        <span class="detail-value">GH₵ ${parseFloat(order.total).toFixed(2)}</span>
+                    </div>
+                `;
+                
+                // Clear cart
+                sessionStorage.removeItem('cart');
+                
+            } catch (error) {
+                console.error('Error loading order:', error);
+                document.getElementById('orderDetails').innerHTML = '<p>Could not load order details</p>';
+            }
+        }
+
+        function formatPaymentMethod(method) {
+            const methods = {
+                'card': 'Card Payment',
+                'mobile_money': 'Mobile Money',
+                'bank_transfer': 'Bank Transfer',
+                'cash_on_delivery': 'Cash on Delivery'
+            };
+            return methods[method] || method;
+        }
+    </script>
+</body>
+</html>
