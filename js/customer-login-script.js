@@ -3,8 +3,6 @@
 
 console.log('Customer login script loaded');
 
-let supabaseClient = null;
-
 // Wait for Supabase to initialize and safely check session
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Login page loaded');
@@ -22,13 +20,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    supabaseClient = window.supabase;
     console.log('Supabase ready for login');
 
     // Safer existing-session check
     try {
-        if (supabaseClient.auth && supabaseClient.auth.getSession) {
-            const { data: { session }, error } = await supabaseClient.auth.getSession();
+        if (supabase.auth && supabase.auth.getSession) {
+            const { data: { session }, error } = await supabase.auth.getSession();
 
             if (error) {
                 console.error('Session check error (login):', error);
@@ -44,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } else {
                     console.warn('Logged in but not customer role, signing out…');
                     showError('Please use the seller login page.');
-                    await supabaseClient.auth.signOut();
+                    await supabase.auth.signOut();
                 }
             }
         }
@@ -70,7 +67,7 @@ function setupFormSubmission() {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        if (!supabaseClient) {
+        if (!supabase) {
             showError('System error. Please refresh the page.');
             return;
         }
@@ -78,7 +75,7 @@ function setupFormSubmission() {
         // Get form data
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
-        const rememberMe = document.getElementById('rememberMe').checked;
+        const rememberMe = document.getElementById('rememberMe').checked; // reserved for future use
 
         // Validate
         if (!email || !password) {
@@ -95,7 +92,7 @@ function setupFormSubmission() {
 
         try {
             // Sign in with Supabase
-            const { data, error } = await supabaseClient.auth.signInWithPassword({
+            const { data, error } = await supabase.auth.signInWithPassword({
                 email: email,
                 password: password
             });
@@ -113,7 +110,7 @@ function setupFormSubmission() {
 
             if (!isCustomer) {
                 // Not a customer
-                await supabaseClient.auth.signOut();
+                await supabase.auth.signOut();
                 showError('This account is not registered as a customer. Please use the seller login.');
                 return;
             }
@@ -160,7 +157,7 @@ function setupFormSubmission() {
 // Check user role
 async function checkUserRole(userId) {
     try {
-        const { data, error } = await supabaseClient
+        const { data, error } = await supabase
             .from('user_roles')
             .select('role')
             .eq('user_id', userId)
@@ -168,7 +165,8 @@ async function checkUserRole(userId) {
             .eq('is_active', true)
             .single();
 
-        if (error && error.code !== 'PGRST116') { // ignore "no rows"
+        // PGRST116 = "Results contain 0 rows" in PostgREST; not a hard error for us
+        if (error && error.code !== 'PGRST116') {
             console.error('Error checking role:', error);
             return false;
         }
@@ -183,7 +181,7 @@ async function checkUserRole(userId) {
 // Update last login time
 async function updateLastLogin(userId) {
     try {
-        const { error } = await supabaseClient
+        const { error } = await supabase
             .from('customer_profiles')
             .update({ last_login_at: new Date().toISOString() })
             .eq('user_id', userId);
@@ -199,7 +197,7 @@ async function updateLastLogin(userId) {
 // Log login attempt
 async function logLoginAttempt(userId, email, success) {
     try {
-        const { error } = await supabaseClient
+        const { error } = await supabase
             .from('login_history')
             .insert([{
                 user_id: userId,
