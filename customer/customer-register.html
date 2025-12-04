@@ -1,262 +1,466 @@
-// Customer Registration Script for ShopUp Ghana
-console.log('Customer registration script loaded');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - ShopUp</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-// Wait for DOM and Supabase to be ready
-document.addEventListener('DOMContentLoaded', async function() {
-    console.log('Registration page loaded');
-    
-    // Check if Supabase is loaded
-    if (typeof supabase === 'undefined') {
-        console.error('❌ Supabase not loaded!');
-        showAlert('System error. Please refresh the page.', 'error');
-        return;
-    }
-    
-    console.log('✅ Supabase ready for registration');
-    
-    // Get form elements
-    const form = document.getElementById('registerForm');
-    const submitBtn = document.getElementById('registerBtn');
-    const loading = document.getElementById('loading');
-    
-    // Password strength checker
-    const passwordInput = document.getElementById('password');
-    const strengthBar = document.getElementById('passwordStrengthBar');
-    const strengthContainer = document.getElementById('passwordStrength');
-    
-    if (passwordInput && strengthBar) {
-        passwordInput.addEventListener('input', function() {
-            const password = this.value;
-            let strength = 0;
-            
-            if (password.length >= 8) strength += 25;
-            if (password.match(/[a-z]/)) strength += 25;
-            if (password.match(/[A-Z]/)) strength += 25;
-            if (password.match(/[0-9]/)) strength += 25;
-            
-            strengthContainer.classList.add('show');
-            strengthBar.className = 'password-strength-bar';
-            
-            if (strength <= 25) {
-                strengthBar.classList.add('weak');
-            } else if (strength <= 50) {
-                strengthBar.classList.add('medium');
-            } else {
-                strengthBar.classList.add('strong');
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .register-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .logo-text {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2d8a3e;
+            margin-bottom: 5px;
+        }
+
+        .tagline {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .required {
+            color: #e53935;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #2d8a3e;
+        }
+
+        input.error {
+            border-color: #e53935;
+        }
+
+        .error-message {
+            color: #e53935;
+            font-size: 0.85em;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .password-strength {
+            margin-top: 8px;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .password-strength.show {
+            display: block;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s;
+        }
+
+        .password-strength-bar.weak {
+            width: 33%;
+            background: #e53935;
+        }
+
+        .password-strength-bar.medium {
+            width: 66%;
+            background: #fb8c00;
+        }
+
+        .password-strength-bar.strong {
+            width: 100%;
+            background: #43a047;
+        }
+
+        .password-hint {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 10px;
+            margin-top: 3px;
+        }
+
+        .checkbox-label {
+            font-size: 0.9em;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .checkbox-label a {
+            color: #2d8a3e;
+            text-decoration: none;
+        }
+
+        .checkbox-label a:hover {
+            text-decoration: underline;
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 15px;
+            background: #2d8a3e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-register:hover {
+            background: #236d31;
+        }
+
+        .btn-register:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 25px 0;
+            position: relative;
+        }
+
+        .divider:before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: #e0e0e0;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 15px;
+            position: relative;
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        .social-login {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .btn-social {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-social:hover {
+            border-color: #2d8a3e;
+            background: #f5f9f6;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 25px;
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .login-link a {
+            color: #2d8a3e;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #43a047;
+        }
+
+        .alert-error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #e53935;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2d8a3e;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .register-container {
+                padding: 30px 20px;
             }
-        });
-    }
-    
-    // Form submission
-    if (form) {
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            console.log('Form submitted');
-            
-            // Clear previous alerts
-            hideAlerts();
-            
-            // Get form data
-            const formData = {
-                firstName: document.getElementById('firstName').value.trim(),
-                lastName: document.getElementById('lastName').value.trim(),
-                email: document.getElementById('email').value.trim(),
-                phone: document.getElementById('phone').value.trim(),
-                password: document.getElementById('password').value,
-                confirmPassword: document.getElementById('confirmPassword').value,
-                termsAccepted: document.getElementById('terms').checked,
-                marketingConsent: document.getElementById('marketing').checked
-            };
-            
-            // Validate form
-            if (!validateForm(formData)) {
-                return;
+
+            .logo-text {
+                font-size: 1.5em;
             }
-            
-            // Show loading
-            submitBtn.disabled = true;
-            loading.classList.add('show');
-            
-            try {
-                console.log('Attempting to create account...');
-                
-                // Sign up user
-                const { data, error } = await supabase.auth.signUp({
-                    email: formData.email,
-                    password: formData.password,
-                    options: {
-                        data: {
-                            first_name: formData.firstName,
-                            last_name: formData.lastName,
-                            phone: formData.phone,
-                            full_name: `${formData.firstName} ${formData.lastName}`
-                        }
-                    }
-                });
-                
-                if (error) {
-                    console.error('Signup error:', error);
-                    throw error;
-                }
-                
-                console.log('✅ User created:', data.user.id);
-                
-                // Check if email confirmation is required
-                if (data.user && !data.session) {
-                    showSuccess('✅ Account created! Please check your email to verify your account.');
-                    
-                    // Create profile anyway
-                    await createProfile(data.user.id, formData);
-                    
-                    // Redirect to login after 3 seconds
-                    setTimeout(() => {
-                        window.location.href = 'customer-login.html';
-                    }, 3000);
-                    return;
-                }
-                
-                // Create customer profile
-                await createProfile(data.user.id, formData);
-                
-                console.log('✅ Registration complete!');
-                showSuccess('✅ Account created successfully! Redirecting to dashboard...');
-                
-                // Redirect to dashboard
-                setTimeout(() => {
-                    window.location.href = 'customer-dashboard.html';
-                }, 1500);
-                
-            } catch (error) {
-                console.error('Registration error:', error);
-                showAlert(error.message || 'Failed to create account. Please try again.', 'error');
-                submitBtn.disabled = false;
-                loading.classList.remove('show');
+
+            h2 {
+                font-size: 1.5em;
             }
-        });
-    }
-});
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="logo-section">
+            <div class="logo">🛍️</div>
+            <div class="logo-text">ShopUp</div>
+            <p class="tagline">Start shopping from local sellers</p>
+        </div>
 
-// Create customer profile in database
-async function createProfile(userId, formData) {
-    console.log('Creating customer profile...');
-    
-    const { error: profileError } = await supabase
-        .from('customer_profiles')
-        .insert({
-            user_id: userId,
-            full_name: `${formData.firstName} ${formData.lastName}`,
-            phone: formData.phone,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-        });
-    
-    if (profileError) {
-        console.error('Profile creation error:', profileError);
-        throw new Error('Failed to create profile: ' + profileError.message);
-    }
-    
-    console.log('✅ Customer profile created');
-}
+        <h2>Create Account</h2>
+        <p class="subtitle">Join ShopUp and discover amazing products</p>
 
-// Validate form
-function validateForm(data) {
-    let isValid = true;
-    
-    // Validate first name
-    if (!data.firstName || data.firstName.length < 2) {
-        showFieldError('firstName', 'First name must be at least 2 characters');
-        isValid = false;
-    }
-    
-    // Validate last name
-    if (!data.lastName || data.lastName.length < 2) {
-        showFieldError('lastName', 'Last name must be at least 2 characters');
-        isValid = false;
-    }
-    
-    // Validate email
-    if (!data.email || !isValidEmail(data.email)) {
-        showFieldError('email', 'Please enter a valid email address');
-        isValid = false;
-    }
-    
-    // Validate phone
-    if (!data.phone || data.phone.length < 10) {
-        showFieldError('phone', 'Please enter a valid phone number');
-        isValid = false;
-    }
-    
-    // Validate password
-    if (!data.password || data.password.length < 8) {
-        showFieldError('password', 'Password must be at least 8 characters');
-        isValid = false;
-    }
-    
-    // Validate password confirmation
-    if (data.password !== data.confirmPassword) {
-        showFieldError('confirmPassword', 'Passwords do not match');
-        isValid = false;
-    }
-    
-    // Validate terms
-    if (!data.termsAccepted) {
-        showAlert('Please accept the Terms of Service', 'error');
-        isValid = false;
-    }
-    
-    return isValid;
-}
+        <!-- Alert Messages -->
+        <div class="alert alert-success" id="successAlert"></div>
+        <div class="alert alert-error" id="errorAlert"></div>
 
-// Validate email format
-function isValidEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-}
+        <!-- Registration Form -->
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="firstName">First Name <span class="required">*</span></label>
+                <input 
+                    type="text" 
+                    id="firstName" 
+                    name="firstName" 
+                    required 
+                    placeholder="John"
+                    autocomplete="given-name"
+                >
+                <div class="error-message" id="firstNameError">Please enter your first name</div>
+            </div>
 
-// Show field error
-function showFieldError(fieldId, message) {
-    const field = document.getElementById(fieldId);
-    const errorElement = document.getElementById(fieldId + 'Error');
-    
-    if (field) {
-        field.classList.add('error');
-    }
-    
-    if (errorElement) {
-        errorElement.textContent = message;
-        errorElement.classList.add('show');
-    }
-}
+            <div class="form-group">
+                <label for="lastName">Last Name <span class="required">*</span></label>
+                <input 
+                    type="text" 
+                    id="lastName" 
+                    name="lastName" 
+                    required 
+                    placeholder="Doe"
+                    autocomplete="family-name"
+                >
+                <div class="error-message" id="lastNameError">Please enter your last name</div>
+            </div>
 
-// Show alert
-function showAlert(message, type) {
-    const alertElement = document.getElementById(type === 'error' ? 'errorAlert' : 'successAlert');
-    if (alertElement) {
-        alertElement.textContent = message;
-        alertElement.classList.add('show');
-        
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-            alertElement.classList.remove('show');
-        }, 5000);
-    }
-}
+            <div class="form-group">
+                <label for="email">Email Address <span class="required">*</span></label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    required 
+                    placeholder="john@example.com"
+                    autocomplete="email"
+                >
+                <div class="error-message" id="emailError">Please enter a valid email address</div>
+            </div>
 
-// Show success message
-function showSuccess(message) {
-    showAlert(message, 'success');
-}
+            <div class="form-group">
+                <label for="phone">Phone Number <span class="required">*</span></label>
+                <input 
+                    type="tel" 
+                    id="phone" 
+                    name="phone" 
+                    required 
+                    placeholder="+233 24 123 4567"
+                    autocomplete="tel"
+                >
+                <div class="error-message" id="phoneError">Please enter a valid phone number</div>
+            </div>
 
-// Hide all alerts
-function hideAlerts() {
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => alert.classList.remove('show'));
-    
-    const errors = document.querySelectorAll('.error-message');
-    errors.forEach(error => error.classList.remove('show'));
-    
-    const fields = document.querySelectorAll('input.error');
-    fields.forEach(field => field.classList.remove('error'));
-}
+            <div class="form-group">
+                <label for="password">Password <span class="required">*</span></label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    required 
+                    placeholder="Create a strong password"
+                    autocomplete="new-password"
+                >
+                <div class="password-strength" id="passwordStrength">
+                    <div class="password-strength-bar" id="passwordStrengthBar"></div>
+                </div>
+                <p class="password-hint">At least 8 characters with uppercase, lowercase, and numbers</p>
+                <div class="error-message" id="passwordError">Password must be at least 8 characters</div>
+            </div>
 
-console.log('✅ Customer registration script loaded');
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password <span class="required">*</span></label>
+                <input 
+                    type="password" 
+                    id="confirmPassword" 
+                    name="confirmPassword" 
+                    required 
+                    placeholder="Re-enter your password"
+                    autocomplete="new-password"
+                >
+                <div class="error-message" id="confirmPasswordError">Passwords do not match</div>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label for="terms" class="checkbox-label">
+                    I agree to the <a href="terms.html" target="_blank">Terms of Service</a> 
+                    and <a href="privacy.html" target="_blank">Privacy Policy</a>
+                </label>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="marketing" name="marketing" checked>
+                <label for="marketing" class="checkbox-label">
+                    Send me updates about new products and special offers
+                </label>
+            </div>
+
+            <button type="submit" class="btn-register" id="registerBtn">
+                Create Account
+            </button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Creating your account...</p>
+            </div>
+        </form>
+
+        <div class="login-link">
+            Already have an account? <a href="customer-login.html">Log in</a>
+        </div>
+    </div>
+
+    <script src="customer-register-script.js"></script>
+</body>
+</html>
