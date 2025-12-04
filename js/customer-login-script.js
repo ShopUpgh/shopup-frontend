@@ -5,129 +5,154 @@ console.log('Customer login script loaded');
 
 let supabaseClient = null;
 
-// Wait for Supabase to initialize
+// Wait for Supabase to initialize and safely check session
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Login page loaded');
-    
-    // Wait for Supabase
+
+    // Wait for Supabase on window (up to ~5 seconds)
     let attempts = 0;
     while (!window.supabase && attempts < 50) {
         await new Promise(resolve => setTimeout(resolve, 100));
         attempts++;
     }
-    
+
     if (!window.supabase) {
-        showError('Unable to connect. Please refresh the page.');
+        console.error('❌ Supabase not loaded on window');
+        showError('System error. Please refresh the page.');
         return;
     }
-    
+
     supabaseClient = window.supabase;
     console.log('Supabase ready for login');
-    
-    // Check if already logged in
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) {
-        // Check if user is customer
-        const isCustomer = await checkUserRole(session.user.id);
-        if (isCustomer) {
-            // Already logged in as customer, redirect to dashboard
-            window.location.href = 'customer-dashboard.html';
-        } else {
-            // Logged in but not as customer
-            showError('Please use the seller login page.');
-            await supabaseClient.auth.signOut();
+
+    // Safer existing-session check
+    try {
+        if (supabaseClient.auth && supabaseClient.auth.getSession) {
+            const { data: { session }, error } = await supabaseClient.auth.getSession();
+
+            if (error) {
+                console.error('Session check error (login):', error);
+            } else if (session && session.user) {
+                console.log('Session found, verifying customer role…');
+
+                const isCustomer = await checkUserRole(session.user.id);
+
+                if (isCustomer) {
+                    console.log('User already logged in as customer, redirecting…');
+                    window.location.href = 'customer-dashboard.html'; // correct, we're in /customer/
+                    return;
+                } else {
+                    console.warn('Logged in but not customer role, signing out…');
+                    showError('Please use the seller login page.');
+                    await supabaseClient.auth.signOut();
+                }
+            }
         }
-        return;
+    } catch (err) {
+        console.warn('Could not check session on login:', err);
     }
-    
-    // Setup form submission
+
+    // Setup form submission after session handling
     setupFormSubmission();
-    
-    // Check for URL parameters (e.g., email from registration)
+
+    // Handle URL parameters (prefill email, show messages)
     checkURLParameters();
 });
 
 // Setup form submission
 function setupFormSubmission() {
     const form = document.getElementById('loginForm');
-    
+    if (!form) {
+        console.error('❌ loginForm not found');
+        return;
+    }
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
+        if (!supabaseClient) {
+            showError('System error. Please refresh the page.');
+            return;
+        }
+
         // Get form data
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
         const rememberMe = document.getElementById('rememberMe').checked;
-        
+
         // Validate
         if (!email || !password) {
             showError('Please enter both email and password');
             return;
         }
-        
+
         // Disable button and show loading
         const loginBtn = document.getElementById('loginBtn');
         const loading = document.getElementById('loading');
-        
-        loginBtn.disabled = true;
-        loading.classList.add('show');
-        
+
+        if (loginBtn) loginBtn.disabled = true;
+        if (loading) loading.classList.add('show');
+
         try {
             // Sign in with Supabase
             const { data, error } = await supabaseClient.auth.signInWithPassword({
                 email: email,
                 password: password
             });
-            
+
             if (error) throw error;
-            
+
             console.log('Login successful:', data);
-            
+
+            if (!data.user) {
+                throw new Error('No user returned from login.');
+            }
+
             // Verify user is a customer
             const isCustomer = await checkUserRole(data.user.id);
-            
+
             if (!isCustomer) {
                 // Not a customer
                 await supabaseClient.auth.signOut();
                 showError('This account is not registered as a customer. Please use the seller login.');
                 return;
             }
-            
+
             // Update last login time
             await updateLastLogin(data.user.id);
-            
+
             // Log login attempt
             await logLoginAttempt(data.user.id, email, true);
-            
+
             // Show success
             showSuccess('Login successful! Redirecting...');
-            
+
             // Redirect to customer dashboard
             setTimeout(() => {
-                window.location.href = 'customer-dashboard.html';
+                window.location.href = 'customer-dashboard.html'; // correct relative path
             }, 1000);
-            
+
         } catch (error) {
             console.error('Login error:', error);
-            
+
             // Log failed attempt
             await logLoginAttempt(null, email, false);
-            
+
             let errorMessage = 'Login failed. Please check your credentials.';
-            
-            if (error.message.includes('Invalid login credentials')) {
+
+            if (error.message?.includes('Invalid login credentials')) {
                 errorMessage = 'Invalid email or password. Please try again.';
-            } else if (error.message.includes('Email not confirmed')) {
+            } else if (error.message?.includes('Email not confirmed')) {
                 errorMessage = 'Please verify your email address before logging in.';
-            } else if (error.message.includes('User not found')) {
+            } else if (error.message?.includes('User not found')) {
                 errorMessage = 'No account found with this email address.';
             }
-            
+
             showError(errorMessage);
-            
+
         } finally {
-            loginBtn.disabled = false;
-            loading.classList.remove('show');
+            if (loginBtn) loginBtn.disabled = false;
+            if (loading) loading.classList.remove('show');
         }
     });
 }
@@ -142,13 +167,13 @@ async function checkUserRole(userId) {
             .eq('role', 'customer')
             .eq('is_active', true)
             .single();
-        
-        if (error) {
+
+        if (error && error.code !== 'PGRST116') { // ignore "no rows"
             console.error('Error checking role:', error);
             return false;
         }
-        
-        return data !== null;
+
+        return !!data;
     } catch (error) {
         console.error('Error in checkUserRole:', error);
         return false;
@@ -162,7 +187,7 @@ async function updateLastLogin(userId) {
             .from('customer_profiles')
             .update({ last_login_at: new Date().toISOString() })
             .eq('user_id', userId);
-        
+
         if (error) {
             console.error('Error updating last login:', error);
         }
@@ -174,7 +199,7 @@ async function updateLastLogin(userId) {
 // Log login attempt
 async function logLoginAttempt(userId, email, success) {
     try {
-        const { error} = await supabaseClient
+        const { error } = await supabaseClient
             .from('login_history')
             .insert([{
                 user_id: userId,
@@ -182,7 +207,7 @@ async function logLoginAttempt(userId, email, success) {
                 success: success,
                 user_agent: navigator.userAgent
             }]);
-        
+
         if (error) {
             console.error('Error logging login attempt:', error);
         }
@@ -191,24 +216,23 @@ async function logLoginAttempt(userId, email, success) {
     }
 }
 
-// Check URL parameters
+// Check URL parameters (prefill email, show messages)
 function checkURLParameters() {
     const urlParams = new URLSearchParams(window.location.search);
-    
+
     // Pre-fill email if provided
     const email = urlParams.get('email');
     if (email) {
-        document.getElementById('email').value = email;
+        const emailInput = document.getElementById('email');
+        if (emailInput) emailInput.value = email;
     }
-    
+
     // Show message if provided
     const message = urlParams.get('message');
-    if (message) {
-        if (message === 'registered') {
-            showSuccess('Account created successfully! Please log in.');
-        } else if (message === 'reset') {
-            showSuccess('Password reset successfully! Please log in with your new password.');
-        }
+    if (message === 'registered') {
+        showSuccess('Account created successfully! Please log in.');
+    } else if (message === 'reset') {
+        showSuccess('Password reset successfully! Please log in with your new password.');
     }
 }
 
@@ -216,12 +240,13 @@ function checkURLParameters() {
 function showSuccess(message) {
     const successAlert = document.getElementById('successAlert');
     const errorAlert = document.getElementById('errorAlert');
-    
-    errorAlert.classList.remove('show');
-    successAlert.textContent = message;
-    successAlert.classList.add('show');
-    
-    // Scroll to top
+
+    if (errorAlert) errorAlert.classList.remove('show');
+    if (successAlert) {
+        successAlert.textContent = message;
+        successAlert.classList.add('show');
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -229,12 +254,13 @@ function showSuccess(message) {
 function showError(message) {
     const errorAlert = document.getElementById('errorAlert');
     const successAlert = document.getElementById('successAlert');
-    
-    successAlert.classList.remove('show');
-    errorAlert.textContent = message;
-    errorAlert.classList.add('show');
-    
-    // Scroll to top
+
+    if (successAlert) successAlert.classList.remove('show');
+    if (errorAlert) {
+        errorAlert.textContent = message;
+        errorAlert.classList.add('show');
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
