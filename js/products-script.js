@@ -100,25 +100,33 @@ function displayProducts(products) {
         return;
     }
     
-    productGrid.innerHTML = products.map(product => `
-        <div class="product-card" data-product-id="${product.id}">
-            <div class="product-image">
-                ${product.image_url ?
-                    `<img src="${product.image_url}" alt="${product.name}">` :
-                    `<div class="no-image">No Image</div>`
-                }
-            </div>
-            <div class="product-info">
-                <h3>${product.name}</h3>
-                <p class="product-price">GH₵ ${parseFloat(product.price).toFixed(2)}</p>
-                <p class="product-stock">Stock: ${product.stock_quantity}</p>
-                <div class="product-actions">
-                    <button onclick="editProduct('${product.id}')" class="btn-edit">Edit</button>
-                    <button onclick="deleteProduct('${product.id}')" class="btn-delete">Delete</button>
+    // SECURITY: Sanitize product data before display
+    productGrid.innerHTML = products.map(product => {
+        const safeName = typeof sanitizeHTML === 'function' ? sanitizeHTML(product.name) : product.name;
+        const safePrice = parseFloat(product.price).toFixed(2);
+        const safeStock = parseInt(product.stock_quantity, 10) || 0;
+        const safeImageUrl = product.image_url ? (typeof sanitizeHTML === 'function' ? sanitizeHTML(product.image_url) : product.image_url) : '';
+        
+        return `
+            <div class="product-card" data-product-id="${product.id}">
+                <div class="product-image">
+                    ${safeImageUrl ?
+                        `<img src="${safeImageUrl}" alt="${safeName}">` :
+                        `<div class="no-image">No Image</div>`
+                    }
+                </div>
+                <div class="product-info">
+                    <h3>${safeName}</h3>
+                    <p class="product-price">GH₵ ${safePrice}</p>
+                    <p class="product-stock">Stock: ${safeStock}</p>
+                    <div class="product-actions">
+                        <button onclick="editProduct('${product.id}')" class="btn-edit">Edit</button>
+                        <button onclick="deleteProduct('${product.id}')" class="btn-delete">Delete</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // Setup add product form handler

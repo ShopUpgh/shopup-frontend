@@ -145,20 +145,24 @@ async function loadRecentOrders() {
         }
         
         // Clear empty state and show orders
+        // SECURITY: Sanitize order data before display
         orderList.innerHTML = orders.map(order => {
             const date = new Date(order.created_at).toLocaleDateString();
             const statusClass = `status-${order.order_status}`;
+            const safeOrderNumber = typeof sanitizeHTML === 'function' ? sanitizeHTML(order.order_number) : order.order_number;
+            const safeStatus = typeof sanitizeHTML === 'function' ? sanitizeHTML(order.order_status) : order.order_status;
+            const safeTotal = parseFloat(order.total).toFixed(2);
             
             return `
                 <div class="order-card">
                     <div class="order-info">
-                        <h3>Order #${order.order_number}</h3>
+                        <h3>Order #${safeOrderNumber}</h3>
                         <div class="order-details">
-                            ${date} • GH₵ ${parseFloat(order.total).toFixed(2)}
+                            ${date} • GH₵ ${safeTotal}
                         </div>
                     </div>
                     <div class="order-status ${statusClass}">
-                        ${order.order_status}
+                        ${safeStatus}
                     </div>
                 </div>
             `;

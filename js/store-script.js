@@ -34,16 +34,20 @@ function displayProducts(products) {
         return;
     }
     
+    // SECURITY: Sanitize product data before display
     container.innerHTML = products.map(product => {
         const hasImage = product.images && product.images.length > 0;
-        const imageHtml = hasImage ? `<img src="${product.images[0]}" alt="${product.name}">` : '📷';
+        const safeName = typeof sanitizeHTML === 'function' ? sanitizeHTML(product.name) : product.name;
+        const safePrice = parseFloat(product.price).toFixed(2);
+        const safeImageUrl = hasImage ? (typeof sanitizeHTML === 'function' ? sanitizeHTML(product.images[0]) : product.images[0]) : '';
+        const imageHtml = safeImageUrl ? `<img src="${safeImageUrl}" alt="${safeName}">` : '📷';
         
         return `
             <div class="product-card">
                 <div class="product-image">${imageHtml}</div>
                 <div class="product-info">
-                    <h3 class="product-name">${product.name}</h3>
-                    <div class="product-price">GH₵ ${product.price.toFixed(2)}</div>
+                    <h3 class="product-name">${safeName}</h3>
+                    <div class="product-price">GH₵ ${safePrice}</div>
                     <button class="btn-add-cart" onclick="addToCart('${product.id}')">🛒 Add to Cart</button>
                 </div>
             </div>
@@ -71,7 +75,8 @@ window.addToCart = function(productId) {
     
     saveCart();
     updateCartUI();
-    showToast(`✓ Added ${product.name}`);
+    const safeName = typeof sanitizeHTML === 'function' ? sanitizeHTML(product.name) : product.name;
+    showToast(`✓ Added ${safeName}`);
 };
 
 function updateCartUI() {
@@ -88,16 +93,24 @@ function updateCartUI() {
         return;
     }
     
-    cartItems.innerHTML = cart.map(item => `
-        <div class="cart-item">
-            <div class="cart-item-image">${item.image ? `<img src="${item.image}">` : '📷'}</div>
-            <div class="cart-item-details">
-                <div style="font-weight:600">${item.name}</div>
-                <div style="color:#2d8a3e">GH₵ ${item.price.toFixed(2)} × ${item.quantity}</div>
-                <button onclick="removeFromCart('${item.id}')" style="background:none;border:none;color:#e53935;cursor:pointer;margin-top:0.5rem">Remove</button>
+    // SECURITY: Sanitize cart item data
+    cartItems.innerHTML = cart.map(item => {
+        const safeName = typeof sanitizeHTML === 'function' ? sanitizeHTML(item.name) : item.name;
+        const safePrice = parseFloat(item.price).toFixed(2);
+        const safeQty = parseInt(item.quantity, 10);
+        const safeImage = item.image ? (typeof sanitizeHTML === 'function' ? sanitizeHTML(item.image) : item.image) : '';
+        
+        return `
+            <div class="cart-item">
+                <div class="cart-item-image">${safeImage ? `<img src="${safeImage}">` : '📷'}</div>
+                <div class="cart-item-details">
+                    <div style="font-weight:600">${safeName}</div>
+                    <div style="color:#2d8a3e">GH₵ ${safePrice} × ${safeQty}</div>
+                    <button onclick="removeFromCart('${item.id}')" style="background:none;border:none;color:#e53935;cursor:pointer;margin-top:0.5rem">Remove</button>
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 window.removeFromCart = function(productId) {

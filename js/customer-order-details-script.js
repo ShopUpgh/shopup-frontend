@@ -173,14 +173,22 @@ function displayItems() {
         return;
     }
     
-    tbody.innerHTML = orderData.order_items.map(item => `
-        <tr>
-            <td class="product-name">${item.product_name}</td>
-            <td>${item.quantity}</td>
-            <td>GH₵ ${parseFloat(item.unit_price).toFixed(2)}</td>
-            <td>GH₵ ${parseFloat(item.line_total).toFixed(2)}</td>
-        </tr>
-    `).join('');
+    // SECURITY: Sanitize product names before display
+    tbody.innerHTML = orderData.order_items.map(item => {
+        const safeName = typeof sanitizeHTML === 'function' ? sanitizeHTML(item.product_name) : item.product_name;
+        const safeQty = parseInt(item.quantity, 10);
+        const safeUnitPrice = parseFloat(item.unit_price).toFixed(2);
+        const safeLineTotal = parseFloat(item.line_total).toFixed(2);
+        
+        return `
+            <tr>
+                <td class="product-name">${safeName}</td>
+                <td>${safeQty}</td>
+                <td>GH₵ ${safeUnitPrice}</td>
+                <td>GH₵ ${safeLineTotal}</td>
+            </tr>
+        `;
+    }).join('');
     
     // Price summary
     document.getElementById('subtotal').textContent = `GH₵ ${parseFloat(orderData.subtotal).toFixed(2)}`;
@@ -192,12 +200,20 @@ function displayItems() {
 function displayAddress() {
     const addressBox = document.getElementById('deliveryAddress');
     
+    // SECURITY: Sanitize address data before display
+    const safeName = typeof sanitizeHTML === 'function' ? sanitizeHTML(orderData.customer_name) : orderData.customer_name;
+    const safePhone = typeof sanitizeHTML === 'function' ? sanitizeHTML(orderData.customer_phone) : orderData.customer_phone;
+    const safeAddress = typeof sanitizeHTML === 'function' ? sanitizeHTML(orderData.delivery_address) : orderData.delivery_address;
+    const safeCity = typeof sanitizeHTML === 'function' ? sanitizeHTML(orderData.delivery_city) : orderData.delivery_city;
+    const safeRegion = typeof sanitizeHTML === 'function' ? sanitizeHTML(orderData.delivery_region) : orderData.delivery_region;
+    const safePostal = orderData.delivery_postal ? (typeof sanitizeHTML === 'function' ? sanitizeHTML(orderData.delivery_postal) : orderData.delivery_postal) : '';
+    
     addressBox.innerHTML = `
-        <strong>${orderData.customer_name}</strong><br>
-        ${orderData.customer_phone}<br>
-        ${orderData.delivery_address}<br>
-        ${orderData.delivery_city}, ${orderData.delivery_region}
-        ${orderData.delivery_postal ? '<br>' + orderData.delivery_postal : ''}
+        <strong>${safeName}</strong><br>
+        ${safePhone}<br>
+        ${safeAddress}<br>
+        ${safeCity}, ${safeRegion}
+        ${safePostal ? '<br>' + safePostal : ''}
     `;
 }
 
