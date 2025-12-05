@@ -75,12 +75,19 @@ async function loadAddresses() {
         
         selectedAddress = addresses[0];
         
+        // SECURITY: Sanitize user-generated address content
+        const safeName = typeof sanitizeHTML === 'function' ? sanitizeHTML(selectedAddress.full_name) : selectedAddress.full_name;
+        const safePhone = typeof sanitizeHTML === 'function' ? sanitizeHTML(selectedAddress.phone) : selectedAddress.phone;
+        const safeStreet = typeof sanitizeHTML === 'function' ? sanitizeHTML(selectedAddress.street_address) : selectedAddress.street_address;
+        const safeCity = typeof sanitizeHTML === 'function' ? sanitizeHTML(selectedAddress.city) : selectedAddress.city;
+        const safeRegion = typeof sanitizeHTML === 'function' ? sanitizeHTML(selectedAddress.region) : selectedAddress.region;
+        
         section.innerHTML = `
             <div style="padding: 15px; background: #f7fafc; border-radius: 8px;">
-                <strong>${selectedAddress.full_name}</strong><br>
-                ${selectedAddress.phone}<br>
-                ${selectedAddress.street_address}<br>
-                ${selectedAddress.city}, ${selectedAddress.region}
+                <strong>${safeName}</strong><br>
+                ${safePhone}<br>
+                ${safeStreet}<br>
+                ${safeCity}, ${safeRegion}
             </div>
         `;
         
@@ -111,16 +118,23 @@ async function loadCart() {
 function displayCart() {
     const container = document.getElementById('cartItems');
     
-    container.innerHTML = cart.map(item => `
-        <div class="cart-item">
-            <div class="item-image">${item.image || '📦'}</div>
-            <div class="item-details">
-                <div class="item-name">${item.name}</div>
-                <div>Qty: ${item.quantity}</div>
-                <div class="item-price">GH₵ ${parseFloat(item.price).toFixed(2)}</div>
+    // SECURITY: Sanitize product names and other user content
+    container.innerHTML = cart.map(item => {
+        const safeName = typeof sanitizeHTML === 'function' ? sanitizeHTML(item.name) : item.name;
+        const safePrice = parseFloat(item.price).toFixed(2);
+        const safeQty = parseInt(item.quantity, 10);
+        
+        return `
+            <div class="cart-item">
+                <div class="item-image">${item.image || '📦'}</div>
+                <div class="item-details">
+                    <div class="item-name">${safeName}</div>
+                    <div>Qty: ${safeQty}</div>
+                    <div class="item-price">GH₵ ${safePrice}</div>
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function calculateTotals() {
