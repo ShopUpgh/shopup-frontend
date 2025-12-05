@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Addresses - ShopUp</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
+    <script src="../js/supabase-config.js"></script>
     <style>
         * {
             margin: 0;
@@ -32,6 +32,37 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 5px;
+        }
+
+        .nav-link {
+            padding: 8px 16px;
+            color: #666;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background: #f0f0f0;
+            color: #2d8a3e;
+        }
+
+        .nav-link.active {
+            background: #e8f5e9;
+            color: #2d8a3e;
+            font-weight: 600;
         }
 
         .logo {
@@ -292,10 +323,19 @@
 <body>
     <header class="header">
         <div class="header-container">
-            <a href="customer-dashboard.html" class="logo">
-                <span>🛍️</span>
-                <span>ShopUp</span>
-            </a>
+            <div class="header-left">
+                <a href="customer-dashboard.html" class="logo">
+                    <span>🛍️</span>
+                    <span>ShopUp</span>
+                </a>
+                <nav class="header-nav">
+                    <a href="customer-dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="customer-orders.html" class="nav-link">Orders</a>
+                    <a href="customer-profile.html" class="nav-link">Profile</a>
+                    <a href="customer-addresses.html" class="nav-link active">Addresses</a>
+                    <a href="../index.html" class="nav-link">Shop</a>
+                </nav>
+            </div>
         </div>
     </header>
 

@@ -33,6 +33,37 @@
             align-items: center;
         }
 
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .navbar-nav {
+            display: flex;
+            gap: 5px;
+        }
+
+        .nav-link {
+            padding: 8px 16px;
+            color: #666;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background: #f0f0f0;
+            color: #10b981;
+        }
+
+        .nav-link.active {
+            background: #e8f5e9;
+            color: #10b981;
+            font-weight: 600;
+        }
+
         .navbar h1 {
             font-size: 20px;
             background: linear-gradient(135deg, #10b981, #f59e0b);
@@ -41,7 +72,7 @@
             background-clip: text;
         }
 
-        .navbar a {
+        .back-link {
             color: #10b981;
             text-decoration: none;
             font-weight: 600;
@@ -441,8 +472,17 @@
     <!-- Navigation -->
     <div class="navbar">
         <div class="navbar-content">
-            <h1>🛍️ SHOPUP</h1>
-            <a href="storefront-index.html">← Back to Shopping</a>
+            <div class="navbar-left">
+                <h1>🛍️ SHOPUP</h1>
+                <nav class="navbar-nav">
+                    <a href="customer-dashboard.html" class="nav-link">Dashboard</a>
+                    <a href="customer-orders.html" class="nav-link active">Orders</a>
+                    <a href="customer-profile.html" class="nav-link">Profile</a>
+                    <a href="customer-addresses.html" class="nav-link">Addresses</a>
+                    <a href="../index.html" class="nav-link">Shop</a>
+                </nav>
+            </div>
+            <a href="customer-dashboard.html" class="back-link">← Dashboard</a>
         </div>
     </div>
 
