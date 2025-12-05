@@ -9,7 +9,7 @@ console.log('Paystack config loading...');
 
 const PAYSTACK_CONFIG = {
     // Get from https://dashboard.paystack.com/#/settings/developer
-    publicKey: 'pk_test_YOUR_PUBLIC_KEY_HERE', // Use pk_live_ for production
+    publicKey: 'pk_test_568969ab37dbf86e712189b75c2db0edb8f25afc', // Use pk_live_ for production
     
     // Supported channels
     channels: ['card', 'mobile_money', 'bank_transfer'],
