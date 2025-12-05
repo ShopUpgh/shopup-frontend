@@ -81,8 +81,10 @@ async function loadSellerInfo() {
             .single();
         
         if (seller) {
-            document.getElementById('storeName').textContent = seller.business_name || 'My Store';
-            document.getElementById('userName').textContent = seller.first_name || 'Seller';
+            const storeNameEl = document.getElementById('storeName');
+            const userNameEl = document.getElementById('userName');
+            if (storeNameEl) storeNameEl.textContent = seller.business_name || 'My Store';
+            if (userNameEl) userNameEl.textContent = seller.first_name || 'Seller';
         }
     } catch (error) {
         console.error('Error loading seller info:', error);
