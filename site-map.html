@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Map - ShopUp Navigation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2em;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .nav-section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-icon {
+            font-size: 2.5em;
+        }
+
+        .section-title {
+            color: #2d3748;
+        }
+
+        .section-title h2 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .section-title p {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .nav-links {
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-bottom: 10px;
+        }
+
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #2d3748;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            background: #2d8a3e;
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-links .link-icon {
+            font-size: 1.3em;
+            width: 30px;
+            text-align: center;
+        }
+
+        .nav-links .link-text {
+            flex: 1;
+        }
+
+        .nav-links .link-arrow {
+            color: #a0aec0;
+        }
+
+        .nav-links a:hover .link-arrow {
+            color: white;
+        }
+
+        /* Color coding for different sections */
+        .section-customer .section-header {
+            border-color: #667eea;
+        }
+
+        .section-customer a:hover {
+            background: #667eea;
+        }
+
+        .section-seller .section-header {
+            border-color: #2d8a3e;
+        }
+
+        .section-seller a:hover {
+            background: #2d8a3e;
+        }
+
+        .section-admin .section-header {
+            border-color: #e53e3e;
+        }
+
+        .section-admin a:hover {
+            background: #e53e3e;
+        }
+
+        .section-public .section-header {
+            border-color: #38b2ac;
+        }
+
+        .section-public a:hover {
+            background: #38b2ac;
+        }
+
+        .back-home {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .back-home a {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 30px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-home a:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .nav-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">🛍️</div>
+            <h1>ShopUp Site Map</h1>
+            <p class="subtitle">Complete navigation to all pages</p>
+        </header>
+
+        <div class="nav-grid">
+            <!-- Public Pages -->
+            <div class="nav-section section-public">
+                <div class="section-header">
+                    <span class="section-icon">🌐</span>
+                    <div class="section-title">
+                        <h2>Public Pages</h2>
+                        <p>Main website and storefront</p>
+                    </div>
+                </div>
+                <ul class="nav-links">
+                    <li>
+                        <a href="index.html">
+                            <span class="link-icon">🏠</span>
+                            <span class="link-text">Homepage</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="storefront-index.html">
+                            <span class="link-icon">🏪</span>
+                            <span class="link-text">Storefront Index</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="store.html">
+                            <span class="link-icon">🛒</span>
+                            <span class="link-text">Store Page</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="cart.html">
+                            <span class="link-icon">🛍️</span>
+                            <span class="link-text">Shopping Cart</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="checkout.html">
+                            <span class="link-icon">💳</span>
+                            <span class="link-text">Checkout</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="QUICK-START.html">
+                            <span class="link-icon">🚀</span>
+                            <span class="link-text">Quick Start Guide</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Customer Pages -->
+            <div class="nav-section section-customer">
+                <div class="section-header">
+                    <span class="section-icon">👤</span>
+                    <div class="section-title">
+                        <h2>Customer Portal</h2>
+                        <p>Shop and manage orders</p>
+                    </div>
+                </div>
+                <ul class="nav-links">
+                    <li>
+                        <a href="customer/customer-login.html">
+                            <span class="link-icon">🔐</span>
+                            <span class="link-text">Customer Login</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="customer/customer-register.html">
+                            <span class="link-icon">📝</span>
+                            <span class="link-text">Customer Registration</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="customer/customer-dashboard.html">
+                            <span class="link-icon">📊</span>
+                            <span class="link-text">Customer Dashboard</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="customer/customer-profile.html">
+                            <span class="link-icon">👤</span>
+                            <span class="link-text">Profile Settings</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="customer/customer-addresses.html">
+                            <span class="link-icon">📍</span>
+                            <span class="link-text">Delivery Addresses</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="customer/customer-orders.html">
+                            <span class="link-icon">📦</span>
+                            <span class="link-text">My Orders</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="customer/customer-checkout.html">
+                            <span class="link-icon">💳</span>
+                            <span class="link-text">Customer Checkout</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Seller Pages -->
+            <div class="nav-section section-seller">
+                <div class="section-header">
+                    <span class="section-icon">🏪</span>
+                    <div class="section-title">
+                        <h2>Seller Portal</h2>
+                        <p>Manage your store</p>
+                    </div>
+                </div>
+                <ul class="nav-links">
+                    <li>
+                        <a href="login.html">
+                            <span class="link-icon">🔐</span>
+                            <span class="link-text">Seller Login</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="signup.html">
+                            <span class="link-icon">📝</span>
+                            <span class="link-text">Seller Registration</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="dashboard.html">
+                            <span class="link-icon">📊</span>
+                            <span class="link-text">Seller Dashboard</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="products.html">
+                            <span class="link-icon">📦</span>
+                            <span class="link-text">Manage Products</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="add-product.html">
+                            <span class="link-icon">➕</span>
+                            <span class="link-text">Add New Product</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="orders.html">
+                            <span class="link-icon">🛒</span>
+                            <span class="link-text">Manage Orders</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="seller/seller-analytics.html">
+                            <span class="link-icon">📈</span>
+                            <span class="link-text">Analytics</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="seller/seller-verification.html">
+                            <span class="link-icon">✅</span>
+                            <span class="link-text">Seller Verification</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="seller/seller-orders-dashboard.html">
+                            <span class="link-icon">📋</span>
+                            <span class="link-text">Orders Dashboard</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Admin Pages -->
+            <div class="nav-section section-admin">
+                <div class="section-header">
+                    <span class="section-icon">🔐</span>
+                    <div class="section-title">
+                        <h2>Admin Portal</h2>
+                        <p>Platform management</p>
+                    </div>
+                </div>
+                <ul class="nav-links">
+                    <li>
+                        <a href="admin/admin-login.html">
+                            <span class="link-icon">🔑</span>
+                            <span class="link-text">Admin Login</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin/admin-dashboard.html">
+                            <span class="link-icon">📊</span>
+                            <span class="link-text">Admin Dashboard</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin/admin-users.html">
+                            <span class="link-icon">👥</span>
+                            <span class="link-text">Manage Users</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin/admin-verifications.html">
+                            <span class="link-icon">✅</span>
+                            <span class="link-text">Verify Sellers</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="god-mode.html">
+                            <span class="link-icon">⚡</span>
+                            <span class="link-text">God Mode (Owner)</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="bitkey-setup.html">
+                            <span class="link-icon">🔧</span>
+                            <span class="link-text">BitKey Setup</span>
+                            <span class="link-arrow">→</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="back-home">
+            <a href="index.html">
+                <span>🏠</span>
+                <span>Back to Homepage</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        console.log('🗺️ ShopUp Site Map loaded');
+        console.log('Navigate to any page from here!');
+    </script>
+</body>
+</html>
