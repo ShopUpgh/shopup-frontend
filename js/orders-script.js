@@ -110,30 +110,41 @@ function displayOrders(orders) {
         return;
     }
     
-    orderList.innerHTML = orders.map(order => `
-        <div class="order-card" data-order-id="${order.id}">
-            <div class="order-header">
-                <span class="order-number">${order.order_number}</span>
-                <span class="order-status status-${order.order_status}">${order.order_status}</span>
+    // SECURITY: Sanitize order data before display
+    orderList.innerHTML = orders.map(order => {
+        const safeOrderNumber = typeof sanitizeHTML === 'function' ? sanitizeHTML(order.order_number) : order.order_number;
+        const safeCustomerName = typeof sanitizeHTML === 'function' ? sanitizeHTML(order.customer_name) : order.customer_name;
+        const safeStatus = typeof sanitizeHTML === 'function' ? sanitizeHTML(order.order_status) : order.order_status;
+        const safePaymentMethod = typeof sanitizeHTML === 'function' ? sanitizeHTML(order.payment_method) : order.payment_method;
+        const safePaymentStatus = typeof sanitizeHTML === 'function' ? sanitizeHTML(order.payment_status) : order.payment_status;
+        const safeTracking = order.tracking_number ? (typeof sanitizeHTML === 'function' ? sanitizeHTML(order.tracking_number) : order.tracking_number) : '';
+        const safeTotal = parseFloat(order.total).toFixed(2);
+        
+        return `
+            <div class="order-card" data-order-id="${order.id}">
+                <div class="order-header">
+                    <span class="order-number">${safeOrderNumber}</span>
+                    <span class="order-status status-${safeStatus}">${safeStatus}</span>
+                </div>
+                <div class="order-details">
+                    <p><strong>Customer:</strong> ${safeCustomerName}</p>
+                    <p><strong>Date:</strong> ${new Date(order.created_at).toLocaleDateString()}</p>
+                    <p><strong>Total:</strong> GH₵ ${safeTotal}</p>
+                    <p><strong>Payment:</strong> ${safePaymentMethod} (${safePaymentStatus})</p>
+                    ${safeTracking ? `<p><strong>Tracking:</strong> ${safeTracking}</p>` : ''}
+                </div>
+                <div class="order-actions">
+                    <button onclick="viewOrder('${order.id}')" class="btn-view">View Details</button>
+                    ${order.order_status === 'pending' ? `
+                        <button onclick="confirmOrder('${order.id}')" class="btn-confirm">Confirm</button>
+                    ` : ''}
+                    ${order.order_status === 'confirmed' ? `
+                        <button onclick="shipOrder('${order.id}')" class="btn-ship">Mark as Shipped</button>
+                    ` : ''}
+                </div>
             </div>
-            <div class="order-details">
-                <p><strong>Customer:</strong> ${order.customer_name}</p>
-                <p><strong>Date:</strong> ${new Date(order.created_at).toLocaleDateString()}</p>
-                <p><strong>Total:</strong> GH₵ ${parseFloat(order.total).toFixed(2)}</p>
-                <p><strong>Payment:</strong> ${order.payment_method} (${order.payment_status})</p>
-                ${order.tracking_number ? `<p><strong>Tracking:</strong> ${order.tracking_number}</p>` : ''}
-            </div>
-            <div class="order-actions">
-                <button onclick="viewOrder('${order.id}')" class="btn-view">View Details</button>
-                ${order.order_status === 'pending' ? `
-                    <button onclick="confirmOrder('${order.id}')" class="btn-confirm">Confirm</button>
-                ` : ''}
-                ${order.order_status === 'confirmed' ? `
-                    <button onclick="shipOrder('${order.id}')" class="btn-ship">Mark as Shipped</button>
-                ` : ''}
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // Setup filter handlers

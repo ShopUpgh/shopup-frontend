@@ -156,15 +156,23 @@ function displaySellers(sellers) {
         return;
     }
     
-    const sellersHtml = sellers.map(seller => `
-        <div class="seller-card" onclick="viewSeller('${seller.id}')">
-            <div class="seller-avatar">${seller.avatar_emoji || '🏪'}</div>
-            <h3>${seller.business_name}</h3>
-            ${seller.verified ? '<div class="seller-badge">✅ Verified</div>' : ''}
-            <div class="seller-rating">⭐ ${seller.rating || '4.8'}</div>
-            <p style="font-size: 12px; color: #666;">📍 ${seller.city || 'Ghana'}</p>
-        </div>
-    `).join('');
+    // SECURITY: Use sanitizeHTML for user-generated content
+    const sellersHtml = sellers.map(seller => {
+        const safeName = typeof sanitizeHTML === 'function' ? sanitizeHTML(seller.business_name) : seller.business_name;
+        const safeCity = typeof sanitizeHTML === 'function' ? sanitizeHTML(seller.city || 'Ghana') : (seller.city || 'Ghana');
+        const safeAvatar = seller.avatar_emoji || '🏪';
+        const safeRating = seller.rating || '4.8';
+        
+        return `
+            <div class="seller-card" onclick="viewSeller('${seller.id}')">
+                <div class="seller-avatar">${safeAvatar}</div>
+                <h3>${safeName}</h3>
+                ${seller.verified ? '<div class="seller-badge">✅ Verified</div>' : ''}
+                <div class="seller-rating">⭐ ${safeRating}</div>
+                <p style="font-size: 12px; color: #666;">📍 ${safeCity}</p>
+            </div>
+        `;
+    }).join('');
     
     container.innerHTML = sellersHtml;
     console.log('🎨 Sellers displayed');
@@ -385,25 +393,31 @@ function displayProducts(products) {
     const container = document.getElementById('productsList');
     if (!container) return;
     
+    // SECURITY: Use sanitizeHTML for user-generated content
     const productsHtml = products.map(product => {
         const discountPercent = product.compare_price 
             ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
             : 0;
+        
+        // Sanitize user-generated content
+        const safeName = typeof sanitizeHTML === 'function' ? sanitizeHTML(product.name) : product.name;
+        const safePrice = parseFloat(product.price).toFixed(2);
+        const safeComparePrice = product.compare_price ? parseFloat(product.compare_price).toFixed(2) : null;
         
         return `
             <div class="product-card">
                 <div class="product-image">📦</div>
                 <div class="product-info">
                     ${discountPercent > 0 ? `<div class="product-badge">-${discountPercent}%</div>` : ''}
-                    <div class="product-name">${product.name}</div>
+                    <div class="product-name">${safeName}</div>
                     <div class="product-seller">👤 Seller</div>
                     <div class="product-rating">⭐⭐⭐⭐⭐ (${Math.floor(Math.random() * 200) + 50})</div>
                     <div class="product-price">
-                        GH₵ ${product.price.toFixed(2)}
-                        ${product.compare_price ? `<span class="product-compare-price">GH₵ ${product.compare_price.toFixed(2)}</span>` : ''}
+                        GH₵ ${safePrice}
+                        ${safeComparePrice ? `<span class="product-compare-price">GH₵ ${safeComparePrice}</span>` : ''}
                     </div>
                     <div class="product-actions">
-                        <button class="btn-add-cart" onclick="addToCart(${product.id}, '${product.name}', ${product.price})">
+                        <button class="btn-add-cart" onclick="addToCart(${product.id}, '${safeName.replace(/'/g, "\\'")}', ${product.price})">
                             🛒 Add
                         </button>
                         <button class="btn-view-product" onclick="viewProduct(${product.id})">

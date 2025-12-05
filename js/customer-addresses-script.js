@@ -71,29 +71,41 @@ async function loadAddresses() {
             return;
         }
         
-        grid.innerHTML = addresses.map(addr => `
-            <div class="address-card ${addr.is_default ? 'default' : ''}">
-                ${addr.is_default ? '<div class="default-badge">Default</div>' : ''}
-                
-                <div class="address-type">${addr.address_type}</div>
-                <div class="address-name">${addr.address_label || addr.full_name}</div>
-                
-                <div class="address-details">
-                    <strong>${addr.full_name}</strong><br>
-                    ${addr.phone}<br>
-                    ${addr.street_address}<br>
-                    ${addr.landmark ? `Near ${addr.landmark}<br>` : ''}
-                    ${addr.city}, ${addr.region}<br>
-                    ${addr.digital_address ? `GPS: ${addr.digital_address}` : ''}
+        // SECURITY: Sanitize user-generated address content
+        grid.innerHTML = addresses.map(addr => {
+            const safeName = typeof sanitizeHTML === 'function' ? sanitizeHTML(addr.full_name) : addr.full_name;
+            const safeLabel = typeof sanitizeHTML === 'function' ? sanitizeHTML(addr.address_label || addr.full_name) : (addr.address_label || addr.full_name);
+            const safePhone = typeof sanitizeHTML === 'function' ? sanitizeHTML(addr.phone) : addr.phone;
+            const safeStreet = typeof sanitizeHTML === 'function' ? sanitizeHTML(addr.street_address) : addr.street_address;
+            const safeLandmark = addr.landmark ? (typeof sanitizeHTML === 'function' ? sanitizeHTML(addr.landmark) : addr.landmark) : '';
+            const safeCity = typeof sanitizeHTML === 'function' ? sanitizeHTML(addr.city) : addr.city;
+            const safeRegion = typeof sanitizeHTML === 'function' ? sanitizeHTML(addr.region) : addr.region;
+            const safeDigital = addr.digital_address ? (typeof sanitizeHTML === 'function' ? sanitizeHTML(addr.digital_address) : addr.digital_address) : '';
+            
+            return `
+                <div class="address-card ${addr.is_default ? 'default' : ''}">
+                    ${addr.is_default ? '<div class="default-badge">Default</div>' : ''}
+                    
+                    <div class="address-type">${addr.address_type}</div>
+                    <div class="address-name">${safeLabel}</div>
+                    
+                    <div class="address-details">
+                        <strong>${safeName}</strong><br>
+                        ${safePhone}<br>
+                        ${safeStreet}<br>
+                        ${safeLandmark ? `Near ${safeLandmark}<br>` : ''}
+                        ${safeCity}, ${safeRegion}<br>
+                        ${safeDigital ? `GPS: ${safeDigital}` : ''}
+                    </div>
+                    
+                    <div class="address-actions">
+                        ${!addr.is_default ? `<button class="btn-default" onclick="setDefault('${addr.id}')">Set as Default</button>` : ''}
+                        <button class="btn-edit" onclick="editAddress('${addr.id}')">Edit</button>
+                        <button class="btn-delete" onclick="deleteAddress('${addr.id}')">Delete</button>
+                    </div>
                 </div>
-                
-                <div class="address-actions">
-                    ${!addr.is_default ? `<button class="btn-default" onclick="setDefault('${addr.id}')">Set as Default</button>` : ''}
-                    <button class="btn-edit" onclick="editAddress('${addr.id}')">Edit</button>
-                    <button class="btn-delete" onclick="deleteAddress('${addr.id}')">Delete</button>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
         
     } catch (error) {
         console.error('Error loading addresses:', error);

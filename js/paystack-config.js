@@ -1,5 +1,11 @@
 // paystack-config.js
 // Paystack Integration Configuration
+//
+// SECURITY NOTE: 
+// - Public keys (pk_live_* or pk_test_*) are safe to include in frontend code
+// - Secret keys (sk_live_* or sk_test_*) must NEVER be in frontend code
+// - Set your live key below before going to production
+// ============================================
 
 console.log('Paystack config loading...');
 
@@ -7,9 +13,32 @@ console.log('Paystack config loading...');
 // CONFIGURATION
 // ============================================
 
+// IMPORTANT: Replace with your actual Paystack public key before production
+// Get from https://dashboard.paystack.com/#/settings/developer
+// The public key is safe to include in frontend code (it's meant to be public)
+const PAYSTACK_PUBLIC_KEY = (() => {
+    // Check for environment-injected key first (for build systems)
+    if (typeof window !== 'undefined' && window.SHOPUP_PAYSTACK_KEY) {
+        return window.SHOPUP_PAYSTACK_KEY;
+    }
+    
+    // Default key - REPLACE THIS WITH YOUR LIVE KEY BEFORE PRODUCTION
+    // Format: pk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    return 'pk_live_YOUR_LIVE_KEY_HERE';
+})();
+
+// Validate key format
+if (!PAYSTACK_PUBLIC_KEY || PAYSTACK_PUBLIC_KEY.includes('YOUR_') || PAYSTACK_PUBLIC_KEY.includes('_KEY_HERE')) {
+    console.error('⚠️ PAYSTACK WARNING: Public key not configured! Payments will fail.');
+    console.error('⚠️ Please replace the placeholder in js/paystack-config.js with your actual Paystack public key.');
+}
+
 const PAYSTACK_CONFIG = {
-    // Get from https://dashboard.paystack.com/#/settings/developer
-    publicKey: 'pk_test_YOUR_PUBLIC_KEY_HERE', // Use pk_live_ for production
+    // Paystack public key (safe for frontend)
+    publicKey: PAYSTACK_PUBLIC_KEY,
+    
+    // Key validation flag
+    isConfigured: !PAYSTACK_PUBLIC_KEY.includes('YOUR_') && !PAYSTACK_PUBLIC_KEY.includes('_KEY_HERE'),
     
     // Supported channels
     channels: ['card', 'mobile_money', 'bank_transfer'],

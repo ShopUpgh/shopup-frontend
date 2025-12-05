@@ -35,16 +35,28 @@ async function handleLogin() {
     
     const originalText = submitBtn.textContent;
     
+    // Get form data
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const rememberMe = document.getElementById('rememberMe')?.checked || false;
+    
+    // SECURITY: Rate limiting check
+    if (typeof RateLimiter !== 'undefined') {
+        const rateCheck = RateLimiter.check('login_' + email, 5, 15 * 60 * 1000);
+        if (!rateCheck.allowed) {
+            showToast(`❌ Too many login attempts. Please wait ${rateCheck.resetInMinutes} minutes.`);
+            if (typeof logSecurityEvent === 'function') {
+                logSecurityEvent('rate_limit_exceeded', { email: email, action: 'login' });
+            }
+            return;
+        }
+    }
+    
     // Disable button
     submitBtn.disabled = true;
     submitBtn.textContent = 'Signing in...';
     
     try {
-        // Get form data
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
-        const rememberMe = document.getElementById('rememberMe')?.checked || false;
-        
         console.log('Attempting login with:', email);
         
         // Sign in with Supabase
@@ -55,6 +67,15 @@ async function handleLogin() {
         
         if (error) {
             console.error('Login error:', error);
+            
+            // SECURITY: Record failed attempt for rate limiting
+            if (typeof RateLimiter !== 'undefined') {
+                RateLimiter.recordAttempt('login_' + email, 15 * 60 * 1000);
+            }
+            if (typeof logSecurityEvent === 'function') {
+                logSecurityEvent('login_failed', { email: email, error: error.message });
+            }
+            
             showToast('❌ ' + error.message);
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
@@ -62,6 +83,11 @@ async function handleLogin() {
         }
         
         console.log('Login successful:', data.user.id);
+        
+        // SECURITY: Reset rate limit on successful login
+        if (typeof RateLimiter !== 'undefined') {
+            RateLimiter.reset('login_' + email);
+        }
         
         // Get seller profile
         const { data: sellerProfile, error: profileError } = await supabase
