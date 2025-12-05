@@ -256,7 +256,7 @@ async function activateGodMode() {
         }, 1500);
         
     } catch (error) {
-        console.error('God Mode activation error:', error');
+        console.error('God Mode activation error:', error);
         showAlert('ACTIVATION FAILED: ' + error.message, 'error');
         btn.disabled = false;
         btn.textContent = '⚡ ACTIVATE GOD MODE';
