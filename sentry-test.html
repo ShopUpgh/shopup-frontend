@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentry Test - ShopUp Ghana</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-label {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .status-value {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .test-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 16px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-error {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+            color: white;
+        }
+        
+        .btn-error:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(238, 90, 90, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #ffb300);
+            color: #333;
+        }
+        
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 193, 7, 0.4);
+        }
+        
+        .btn-promise {
+            background: linear-gradient(135deg, #6c63ff, #5a52e0);
+            color: white;
+        }
+        
+        .btn-promise:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(108, 99, 255, 0.4);
+        }
+        
+        .btn-custom {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 184, 148, 0.4);
+        }
+        
+        .result-box {
+            background: #1e1e1e;
+            color: #00ff00;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .result-box:empty {
+            display: none;
+        }
+        
+        .instructions {
+            background: #e7f5ff;
+            border-left: 4px solid #1971c2;
+            padding: 16px;
+            margin-top: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .instructions h3 {
+            color: #1971c2;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+            color: #333;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Sentry Integration Test</h1>
+        <p class="subtitle">ShopUp Ghana - Error Monitoring Verification</p>
+        
+        <div class="status-card">
+            <div class="status-item">
+                <span class="status-label">Sentry SDK</span>
+                <span id="sdk-status" class="status-value status-warning">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">DSN Configured</span>
+                <span id="dsn-status" class="status-value status-warning">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Environment</span>
+                <span id="env-status" class="status-value status-warning">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Release Version</span>
+                <span id="release-status" class="status-value status-warning">Checking...</span>
+            </div>
+        </div>
+        
+        <h3 style="margin-bottom: 15px; color: #333;">Test Error Reporting:</h3>
+        
+        <div class="test-buttons">
+            <button class="btn-error" onclick="triggerJavaScriptError()">
+                💥 Trigger JavaScript Error
+            </button>
+            
+            <button class="btn-promise" onclick="triggerPromiseRejection()">
+                ⚡ Trigger Promise Rejection
+            </button>
+            
+            <button class="btn-warning" onclick="sendWarningMessage()">
+                ⚠️ Send Warning Message
+            </button>
+            
+            <button class="btn-custom" onclick="sendCustomEvent()">
+                📤 Send Custom Event
+            </button>
+        </div>
+        
+        <div id="result-box" class="result-box"></div>
+        
+        <div class="instructions">
+            <h3>📋 How to Verify:</h3>
+            <ol>
+                <li>Make sure you've added your Sentry DSN to <code>js/error-monitoring.js</code></li>
+                <li>Click any test button above to trigger an event</li>
+                <li>Go to your Sentry dashboard: <a href="https://sentry.io" target="_blank">sentry.io</a></li>
+                <li>Look for the test event in your project's Issues or Events</li>
+            </ol>
+        </div>
+        
+        <div class="footer">
+            <a href="index.html">← Back to Home</a> | 
+            <a href="health.html">Health Check</a>
+        </div>
+    </div>
+    
+    <!-- Load Sentry SDK -->
+    <script src="https://browser.sentry-cdn.com/7.88.0/bundle.min.js" crossorigin="anonymous"></script>
+    
+    <!-- Load ShopUp Error Monitoring -->
+    <script src="js/error-monitoring.js"></script>
+    
+    <script>
+        // Log helper
+        function log(message) {
+            const box = document.getElementById('result-box');
+            const timestamp = new Date().toLocaleTimeString();
+            box.innerHTML += `[${timestamp}] ${message}\n`;
+            box.scrollTop = box.scrollHeight;
+        }
+        
+        // Check status on load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(checkSentryStatus, 500);
+        });
+        
+        function checkSentryStatus() {
+            // Check SDK
+            const sdkEl = document.getElementById('sdk-status');
+            if (typeof Sentry !== 'undefined') {
+                sdkEl.textContent = '✓ Loaded';
+                sdkEl.className = 'status-value status-success';
+            } else {
+                sdkEl.textContent = '✗ Not Loaded';
+                sdkEl.className = 'status-value status-error';
+            }
+            
+            // Check monitoring status
+            if (typeof getMonitoringStatus === 'function') {
+                const status = getMonitoringStatus();
+                
+                // DSN Status
+                const dsnEl = document.getElementById('dsn-status');
+                if (status.sentryConfigured) {
+                    dsnEl.textContent = '✓ Configured';
+                    dsnEl.className = 'status-value status-success';
+                } else {
+                    dsnEl.textContent = '✗ Not Configured';
+                    dsnEl.className = 'status-value status-error';
+                }
+                
+                // Environment
+                const envEl = document.getElementById('env-status');
+                envEl.textContent = status.environment;
+                envEl.className = 'status-value status-success';
+                
+                // Release
+                const releaseEl = document.getElementById('release-status');
+                releaseEl.textContent = status.release;
+                releaseEl.className = 'status-value status-success';
+                
+            } else {
+                // error-monitoring.js not loaded
+                document.getElementById('dsn-status').textContent = '? Unknown';
+                document.getElementById('env-status').textContent = '? Unknown';
+                document.getElementById('release-status').textContent = '? Unknown';
+            }
+        }
+        
+        // Test 1: Trigger JavaScript Error
+        function triggerJavaScriptError() {
+            log('🔴 Triggering JavaScript error...');
+            try {
+                // This will throw an error
+                throw new Error('ShopUp Sentry Test: JavaScript Error at ' + new Date().toISOString());
+            } catch (e) {
+                if (typeof Sentry !== 'undefined') {
+                    Sentry.captureException(e);
+                    log('✅ Error captured and sent to Sentry!');
+                    log('📊 Check your Sentry dashboard for this event.');
+                } else {
+                    log('❌ Sentry SDK not loaded. Error logged to console only.');
+                    console.error(e);
+                }
+            }
+        }
+        
+        // Test 2: Trigger Promise Rejection
+        function triggerPromiseRejection() {
+            log('🔵 Triggering unhandled promise rejection...');
+            Promise.reject(new Error('ShopUp Sentry Test: Promise Rejection at ' + new Date().toISOString()))
+                .catch(function(e) {
+                    if (typeof Sentry !== 'undefined') {
+                        Sentry.captureException(e);
+                        log('✅ Promise rejection captured and sent to Sentry!');
+                        log('📊 Check your Sentry dashboard for this event.');
+                    } else {
+                        log('❌ Sentry SDK not loaded. Error logged to console only.');
+                        console.error(e);
+                    }
+                });
+        }
+        
+        // Test 3: Send Warning Message
+        function sendWarningMessage() {
+            log('🟡 Sending warning message...');
+            if (typeof Sentry !== 'undefined') {
+                Sentry.captureMessage('ShopUp Sentry Test: Warning Message at ' + new Date().toISOString(), 'warning');
+                log('✅ Warning message sent to Sentry!');
+                log('📊 Check your Sentry dashboard for this event.');
+            } else {
+                log('❌ Sentry SDK not loaded.');
+            }
+        }
+        
+        // Test 4: Send Custom Event
+        function sendCustomEvent() {
+            log('🟢 Sending custom event with context...');
+            if (typeof Sentry !== 'undefined') {
+                Sentry.captureMessage('ShopUp Sentry Test: Custom Event', {
+                    level: 'info',
+                    tags: {
+                        test: 'true',
+                        page: 'sentry-test'
+                    },
+                    extra: {
+                        timestamp: new Date().toISOString(),
+                        userAgent: navigator.userAgent,
+                        url: window.location.href,
+                        customData: {
+                            platform: 'ShopUp Ghana',
+                            testType: 'Manual Integration Test'
+                        }
+                    }
+                });
+                log('✅ Custom event sent to Sentry!');
+                log('📊 Check your Sentry dashboard for this event.');
+            } else {
+                log('❌ Sentry SDK not loaded.');
+            }
+        }
+    </script>
+</body>
+</html>
