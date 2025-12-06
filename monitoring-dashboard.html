@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring Dashboard - ShopUp Ghana</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            color: #00d9ff;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #1f3460;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-healthy {
+            background: rgba(0, 200, 150, 0.2);
+            color: #00c896;
+        }
+        
+        .status-warning {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+        
+        .status-error {
+            background: rgba(255, 82, 82, 0.2);
+            color: #ff5252;
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .metric {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #00d9ff;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .status-list {
+            list-style: none;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #1f3460;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .indicator-green {
+            background: #00c896;
+            box-shadow: 0 0 10px #00c896;
+        }
+        
+        .indicator-yellow {
+            background: #ffc107;
+            box-shadow: 0 0 10px #ffc107;
+        }
+        
+        .indicator-red {
+            background: #ff5252;
+            box-shadow: 0 0 10px #ff5252;
+        }
+        
+        .status-name {
+            display: flex;
+            align-items: center;
+        }
+        
+        .log-container {
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+        }
+        
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #1f3460;
+        }
+        
+        .log-time {
+            color: #888;
+        }
+        
+        .log-info { color: #00d9ff; }
+        .log-warning { color: #ffc107; }
+        .log-error { color: #ff5252; }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #1f3460;
+            color: #00d9ff;
+        }
+        
+        .btn-secondary:hover {
+            background: #2a4580;
+        }
+        
+        .refresh-info {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+        
+        .footer-links {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #1f3460;
+        }
+        
+        .footer-links a {
+            color: #00d9ff;
+            text-decoration: none;
+            margin: 0 15px;
+        }
+        
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🖥️ ShopUp Monitoring Dashboard</h1>
+        <p>Real-time system health and error tracking</p>
+    </div>
+    
+    <div class="dashboard-grid">
+        <!-- System Status Card -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">⚡ System Status</span>
+                <span id="overall-status" class="status-badge status-healthy">Healthy</span>
+            </div>
+            <ul class="status-list">
+                <li class="status-item">
+                    <span class="status-name">
+                        <span id="frontend-indicator" class="status-indicator indicator-green"></span>
+                        Frontend
+                    </span>
+                    <span id="frontend-status">Operational</span>
+                </li>
+                <li class="status-item">
+                    <span class="status-name">
+                        <span id="sentry-indicator" class="status-indicator indicator-green"></span>
+                        Sentry Monitoring
+                    </span>
+                    <span id="sentry-status">Checking...</span>
+                </li>
+                <li class="status-item">
+                    <span class="status-name">
+                        <span id="supabase-indicator" class="status-indicator indicator-green"></span>
+                        Supabase Backend
+                    </span>
+                    <span id="supabase-status">Checking...</span>
+                </li>
+                <li class="status-item">
+                    <span class="status-name">
+                        <span id="paystack-indicator" class="status-indicator indicator-green"></span>
+                        Paystack Payments
+                    </span>
+                    <span id="paystack-status">Checking...</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Metrics Card -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">📊 Current Metrics</span>
+            </div>
+            <div class="metric-grid">
+                <div class="metric">
+                    <div class="metric-value" id="page-load-time">--</div>
+                    <div class="metric-label">Page Load (ms)</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="memory-usage">--</div>
+                    <div class="metric-label">Memory (MB)</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="error-count">0</div>
+                    <div class="metric-label">Errors (Session)</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="uptime">--</div>
+                    <div class="metric-label">Session Time</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sentry Configuration Card -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">🔧 Sentry Configuration</span>
+            </div>
+            <ul class="status-list">
+                <li class="status-item">
+                    <span>SDK Loaded</span>
+                    <span id="sdk-loaded">Checking...</span>
+                </li>
+                <li class="status-item">
+                    <span>DSN Configured</span>
+                    <span id="dsn-configured">Checking...</span>
+                </li>
+                <li class="status-item">
+                    <span>Environment</span>
+                    <span id="environment">--</span>
+                </li>
+                <li class="status-item">
+                    <span>Release</span>
+                    <span id="release-version">--</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Activity Log Card -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">📜 Activity Log</span>
+            </div>
+            <div id="activity-log" class="log-container">
+                <div class="log-entry">
+                    <span class="log-time">[--:--:--]</span>
+                    <span class="log-info">Initializing dashboard...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="action-buttons" style="max-width: 700px; margin: 30px auto;">
+        <button class="btn-primary" onclick="refreshAll()">🔄 Refresh All</button>
+        <button class="btn-secondary" onclick="testSentry()">🧪 Test Sentry</button>
+        <button class="btn-secondary" onclick="window.open('https://sentry.io', '_blank')">📊 Sentry Dashboard</button>
+    </div>
+    
+    <p class="refresh-info">Auto-refreshes every 30 seconds</p>
+    
+    <div class="footer-links">
+        <a href="index.html">← Home</a>
+        <a href="health.html">Health Check</a>
+        <a href="sentry-test.html">Sentry Test</a>
+        <a href="dashboard.html">Seller Dashboard</a>
+    </div>
+    
+    <!-- Load Sentry SDK -->
+    <script src="https://browser.sentry-cdn.com/7.88.0/bundle.min.js" crossorigin="anonymous"></script>
+    
+    <!-- Load ShopUp Error Monitoring -->
+    <script src="js/error-monitoring.js"></script>
+    
+    <script>
+        // Session start time
+        const sessionStart = Date.now();
+        let errorCount = 0;
+        
+        // Logging helper
+        function log(message, level = 'info') {
+            const logContainer = document.getElementById('activity-log');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = '<span class="log-time">[' + time + ']</span> ' +
+                            '<span class="log-' + level + '">' + message + '</span>';
+            logContainer.insertBefore(entry, logContainer.firstChild);
+            
+            // Keep only last 50 entries
+            while (logContainer.children.length > 50) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+        
+        // Update metrics
+        function updateMetrics() {
+            // Page load time
+            if (window.performance && performance.timing) {
+                const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+                document.getElementById('page-load-time').textContent = loadTime > 0 ? loadTime : '--';
+            }
+            
+            // Memory usage (if available)
+            if (performance.memory) {
+                const memory = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
+                document.getElementById('memory-usage').textContent = memory;
+            }
+            
+            // Error count
+            document.getElementById('error-count').textContent = errorCount;
+            
+            // Uptime
+            const uptime = Math.round((Date.now() - sessionStart) / 1000);
+            const minutes = Math.floor(uptime / 60);
+            const seconds = uptime % 60;
+            document.getElementById('uptime').textContent = minutes + 'm ' + seconds + 's';
+        }
+        
+        // Check Sentry status
+        function checkSentryStatus() {
+            const sdkLoaded = typeof Sentry !== 'undefined';
+            document.getElementById('sdk-loaded').textContent = sdkLoaded ? '✓ Yes' : '✗ No';
+            
+            // Update indicator
+            const sentryIndicator = document.getElementById('sentry-indicator');
+            const sentryStatus = document.getElementById('sentry-status');
+            
+            if (sdkLoaded) {
+                sentryIndicator.className = 'status-indicator indicator-green';
+                sentryStatus.textContent = 'Active';
+            } else {
+                sentryIndicator.className = 'status-indicator indicator-red';
+                sentryStatus.textContent = 'Not Loaded';
+            }
+            
+            // Check monitoring status if available
+            if (typeof getMonitoringStatus === 'function') {
+                const status = getMonitoringStatus();
+                document.getElementById('dsn-configured').textContent = status.sentryConfigured ? '✓ Yes' : '✗ No';
+                document.getElementById('environment').textContent = status.environment;
+                document.getElementById('release-version').textContent = status.release;
+                
+                log('Sentry status: ' + (status.sentryConfigured ? 'Configured' : 'Not configured'));
+            } else {
+                document.getElementById('dsn-configured').textContent = '?';
+                document.getElementById('environment').textContent = '--';
+                document.getElementById('release-version').textContent = '--';
+            }
+        }
+        
+        // Check Supabase status
+        function checkSupabaseStatus() {
+            const indicator = document.getElementById('supabase-indicator');
+            const status = document.getElementById('supabase-status');
+            
+            if (typeof supabase !== 'undefined') {
+                indicator.className = 'status-indicator indicator-green';
+                status.textContent = 'Connected';
+                log('Supabase: Connected');
+            } else {
+                indicator.className = 'status-indicator indicator-yellow';
+                status.textContent = 'Not Loaded';
+                log('Supabase: SDK not loaded on this page', 'warning');
+            }
+        }
+        
+        // Check Paystack status
+        function checkPaystackStatus() {
+            const indicator = document.getElementById('paystack-indicator');
+            const status = document.getElementById('paystack-status');
+            
+            // Simple check for Paystack availability
+            if (typeof PaystackPop !== 'undefined') {
+                indicator.className = 'status-indicator indicator-green';
+                status.textContent = 'Available';
+                log('Paystack: SDK loaded');
+            } else {
+                indicator.className = 'status-indicator indicator-yellow';
+                status.textContent = 'Not Loaded';
+                log('Paystack: SDK not loaded on this page', 'warning');
+            }
+        }
+        
+        // Refresh all statuses
+        function refreshAll() {
+            log('Refreshing all statuses...');
+            updateMetrics();
+            checkSentryStatus();
+            checkSupabaseStatus();
+            checkPaystackStatus();
+            log('Refresh complete');
+        }
+        
+        // Test Sentry
+        function testSentry() {
+            log('Sending test event to Sentry...');
+            if (typeof Sentry !== 'undefined') {
+                Sentry.captureMessage('Dashboard Test: ' + new Date().toISOString(), 'info');
+                log('Test event sent! Check Sentry dashboard.', 'info');
+                errorCount++;
+                updateMetrics();
+            } else {
+                log('Sentry not available', 'error');
+            }
+        }
+        
+        // Track errors
+        window.onerror = function(msg, url, line) {
+            errorCount++;
+            log('Error: ' + msg, 'error');
+            updateMetrics();
+        };
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Dashboard initialized');
+            setTimeout(refreshAll, 500);
+        });
+        
+        // Auto-refresh every 30 seconds
+        setInterval(function() {
+            updateMetrics();
+        }, 1000);
+        
+        setInterval(function() {
+            refreshAll();
+        }, 30000);
+    </script>
+</body>
+</html>

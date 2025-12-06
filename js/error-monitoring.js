@@ -20,9 +20,8 @@
     // ============================================
     
     const SENTRY_CONFIG = {
-        // IMPORTANT: Replace with your actual Sentry DSN before production
-        // Get this from your Sentry project settings
-        dsn: 'https://YOUR_SENTRY_DSN_HERE@sentry.io/YOUR_PROJECT_ID',
+        // ShopUp Ghana Production Sentry DSN
+        dsn: 'https://15328ade5c7644a80ab839d3a7488e67@o4508595405824000.ingest.us.sentry.io/4508595408904192',
         
         // Environment (development, staging, production)
         environment: window.location.hostname === 'localhost' ? 'development' : 'production',
