@@ -94,29 +94,42 @@ async function loadSellerInfo() {
 // Setup event listeners
 function setupEventListeners() {
     const productForm = document.getElementById('productForm');
-    productForm.addEventListener('submit', handleSubmit);
+    if (productForm) {
+        productForm.addEventListener('submit', handleSubmit);
+    }
     
     // Image upload
     const imageUpload = document.getElementById('imageUpload');
-    imageUpload.addEventListener('change', handleImageUpload);
+    if (imageUpload) {
+        imageUpload.addEventListener('change', handleImageUpload);
+    }
     
     // Price calculation
     const priceInput = document.getElementById('price');
     const comparePriceInput = document.getElementById('comparePrice');
     
-    priceInput.addEventListener('input', calculateSavings);
-    comparePriceInput.addEventListener('input', calculateSavings);
+    if (priceInput) {
+        priceInput.addEventListener('input', calculateSavings);
+    }
+    if (comparePriceInput) {
+        comparePriceInput.addEventListener('input', calculateSavings);
+    }
     
     // Real-time character count
     const descriptionInput = document.getElementById('description');
-    descriptionInput.addEventListener('input', updateCharCount);
+    if (descriptionInput) {
+        descriptionInput.addEventListener('input', updateCharCount);
+    }
     
     // Cancel button
-    document.getElementById('cancelBtn').addEventListener('click', () => {
-        if (confirm('Are you sure you want to cancel? All changes will be lost.')) {
-            window.location.href = 'products.html';
-        }
-    });
+    const cancelBtn = document.getElementById('cancelBtn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to cancel? All changes will be lost.')) {
+                window.location.href = 'products.html';
+            }
+        });
+    }
     
     // Logout
     document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
