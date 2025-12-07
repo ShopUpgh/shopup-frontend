@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Settings - ShopUp Ghana</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/dashboard-styles.css">
+    <style>
+        .settings-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .settings-header {
+            margin-bottom: 30px;
+        }
+        
+        .settings-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+        
+        .settings-header p {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .settings-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .settings-section h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #00a67c;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #00a67c, #00875a);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,166,124,0.3);
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .btn-secondary:hover {
+            background: #eee;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #00a67c;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .logo-upload {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .logo-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: #999;
+            overflow: hidden;
+        }
+        
+        .logo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .upload-btn {
+            background: #f5f5f5;
+            border: 1px dashed #ccc;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .upload-btn:hover {
+            background: #eee;
+            border-color: #00a67c;
+        }
+        
+        .color-picker-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .color-picker-group input[type="color"] {
+            width: 50px;
+            height: 40px;
+            padding: 0;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .color-preview {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: white;
+        }
+        
+        .notification-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+        
+        .notification-info h4 {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .notification-info p {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 28px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            border-radius: 28px;
+            transition: 0.3s;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #00a67c;
+        }
+        
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+        
+        .success-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #00a67c;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            display: none;
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+        
+        <div class="settings-header">
+            <h1>Store Settings</h1>
+            <p>Customize your store appearance and preferences</p>
+        </div>
+        
+        <!-- Store Information -->
+        <div class="settings-section">
+            <h2>📝 Store Information</h2>
+            <form id="storeInfoForm">
+                <div class="form-group">
+                    <label for="storeName">Store Name</label>
+                    <input type="text" id="storeName" placeholder="Your store name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="storeDescription">Store Description</label>
+                    <textarea id="storeDescription" placeholder="Describe your store and what you sell..."></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="storePhone">Phone Number</label>
+                        <input type="tel" id="storePhone" placeholder="+233 XX XXX XXXX">
+                    </div>
+                    <div class="form-group">
+                        <label for="storeEmail">Email</label>
+                        <input type="email" id="storeEmail" placeholder="store@example.com">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="storeCity">City</label>
+                        <input type="text" id="storeCity" placeholder="e.g., Accra">
+                    </div>
+                    <div class="form-group">
+                        <label for="storeRegion">Region</label>
+                        <select id="storeRegion">
+                            <option value="">Select Region</option>
+                            <option value="greater-accra">Greater Accra</option>
+                            <option value="ashanti">Ashanti</option>
+                            <option value="western">Western</option>
+                            <option value="eastern">Eastern</option>
+                            <option value="central">Central</option>
+                            <option value="volta">Volta</option>
+                            <option value="northern">Northern</option>
+                            <option value="upper-east">Upper East</option>
+                            <option value="upper-west">Upper West</option>
+                            <option value="bono">Bono</option>
+                            <option value="bono-east">Bono East</option>
+                            <option value="ahafo">Ahafo</option>
+                            <option value="savannah">Savannah</option>
+                            <option value="north-east">North East</option>
+                            <option value="oti">Oti</option>
+                            <option value="western-north">Western North</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Store Branding -->
+        <div class="settings-section">
+            <h2>🎨 Store Branding</h2>
+            <div class="form-group">
+                <label>Store Logo</label>
+                <div class="logo-upload">
+                    <div class="logo-preview" id="logoPreview">🏪</div>
+                    <div>
+                        <label class="upload-btn" for="logoUpload">
+                            📷 Upload Logo
+                            <input type="file" id="logoUpload" accept="image/*" style="display: none;">
+                        </label>
+                        <p style="font-size: 12px; color: #666; margin-top: 8px;">
+                            Recommended: 200x200px, PNG or JPG
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Brand Color</label>
+                <div class="color-picker-group">
+                    <input type="color" id="brandColor" value="#00a67c">
+                    <span class="color-preview" id="colorPreview" style="background: #00a67c;">#00a67c</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notifications -->
+        <div class="settings-section">
+            <h2>🔔 Notifications</h2>
+            
+            <div class="notification-item">
+                <div class="notification-info">
+                    <h4>Order Notifications</h4>
+                    <p>Get notified when you receive new orders</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="orderNotifications" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="notification-item">
+                <div class="notification-info">
+                    <h4>Payment Alerts</h4>
+                    <p>Receive alerts when payments are confirmed</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="paymentNotifications" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="notification-item">
+                <div class="notification-info">
+                    <h4>Weekly Summary</h4>
+                    <p>Get a weekly report of your store performance</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="weeklySummary">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="notification-item">
+                <div class="notification-info">
+                    <h4>Marketing Updates</h4>
+                    <p>Tips and updates to grow your business</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="marketingUpdates">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <!-- Store URL -->
+        <div class="settings-section">
+            <h2>🔗 Store URL</h2>
+            <div class="form-group">
+                <label for="storeSlug">Store URL</label>
+                <div style="display: flex; align-items: center; gap: 0;">
+                    <span style="padding: 12px 16px; background: #f5f5f5; border: 1px solid #ddd; border-right: none; border-radius: 8px 0 0 8px; color: #666;">
+                        shopupgh.com/store/
+                    </span>
+                    <input type="text" id="storeSlug" placeholder="your-store-name" style="border-radius: 0 8px 8px 0;">
+                </div>
+                <p style="font-size: 12px; color: #666; margin-top: 8px;">
+                    This is how customers will find your store. Use lowercase letters, numbers, and hyphens only.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Save Button -->
+        <div class="button-group">
+            <button type="button" class="btn-primary" id="saveSettings">💾 Save Changes</button>
+            <button type="button" class="btn-secondary" onclick="window.location.href='dashboard.html'">Cancel</button>
+        </div>
+    </div>
+    
+    <div class="success-toast" id="successToast">
+        ✓ Settings saved successfully!
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script>
+        let currentUser = null;
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait for Supabase
+            await waitForSupabase();
+            
+            // Check auth
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            currentUser = user;
+            
+            // Load settings
+            await loadSettings();
+            
+            // Setup event listeners
+            setupEventListeners();
+        });
+        
+        async function waitForSupabase() {
+            let attempts = 0;
+            while (!window.supabase && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
+        }
+        
+        async function loadSettings() {
+            try {
+                const { data: seller } = await supabase
+                    .from('sellers')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+                
+                if (seller) {
+                    document.getElementById('storeName').value = seller.business_name || '';
+                    document.getElementById('storeDescription').value = seller.description || '';
+                    document.getElementById('storePhone').value = seller.phone || '';
+                    document.getElementById('storeEmail').value = seller.email || '';
+                    document.getElementById('storeCity').value = seller.city || '';
+                    document.getElementById('storeRegion').value = seller.region || '';
+                    document.getElementById('storeSlug').value = seller.store_slug || '';
+                    
+                    if (seller.brand_color) {
+                        document.getElementById('brandColor').value = seller.brand_color;
+                        updateColorPreview(seller.brand_color);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+        
+        function setupEventListeners() {
+            // Color picker
+            document.getElementById('brandColor').addEventListener('change', (e) => {
+                updateColorPreview(e.target.value);
+            });
+            
+            // Logo upload
+            document.getElementById('logoUpload').addEventListener('change', handleLogoUpload);
+            
+            // Save settings
+            document.getElementById('saveSettings').addEventListener('click', saveSettings);
+            
+            // Store slug validation
+            document.getElementById('storeSlug').addEventListener('input', (e) => {
+                e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+            });
+        }
+        
+        function updateColorPreview(color) {
+            const preview = document.getElementById('colorPreview');
+            preview.style.background = color;
+            preview.textContent = color;
+        }
+        
+        async function handleLogoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const preview = document.getElementById('logoPreview');
+                preview.innerHTML = `<img src="${e.target.result}" alt="Logo">`;
+            };
+            reader.readAsDataURL(file);
+            
+            // TODO: Upload to Supabase storage
+        }
+        
+        async function saveSettings() {
+            const btn = document.getElementById('saveSettings');
+            const originalText = btn.textContent;
+            btn.textContent = 'Saving...';
+            btn.disabled = true;
+            
+            try {
+                const updates = {
+                    business_name: document.getElementById('storeName').value,
+                    description: document.getElementById('storeDescription').value,
+                    phone: document.getElementById('storePhone').value,
+                    city: document.getElementById('storeCity').value,
+                    region: document.getElementById('storeRegion').value,
+                    store_slug: document.getElementById('storeSlug').value,
+                    brand_color: document.getElementById('brandColor').value,
+                    updated_at: new Date().toISOString()
+                };
+                
+                const { error } = await supabase
+                    .from('sellers')
+                    .update(updates)
+                    .eq('id', currentUser.id);
+                
+                if (error) throw error;
+                
+                // Show success
+                const toast = document.getElementById('successToast');
+                toast.style.display = 'block';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 3000);
+                
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                alert('Failed to save settings. Please try again.');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
