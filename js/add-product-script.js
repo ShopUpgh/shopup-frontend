@@ -99,9 +99,40 @@ function setupEventListeners() {
     }
     
     // Image upload
-    const imageUpload = document.getElementById('imageUpload');
+    const imageUpload = document.getElementById('imageInput');
+    const imageUploadArea = document.getElementById('imageUploadArea');
+    
     if (imageUpload) {
         imageUpload.addEventListener('change', handleImageUpload);
+    }
+    
+    // Click on upload area to trigger file input
+    if (imageUploadArea && imageUpload) {
+        imageUploadArea.addEventListener('click', () => {
+            imageUpload.click();
+        });
+        
+        // Drag and drop support
+        imageUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageUploadArea.classList.add('dragover');
+        });
+        
+        imageUploadArea.addEventListener('dragleave', () => {
+            imageUploadArea.classList.remove('dragover');
+        });
+        
+        imageUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageUploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                // Create a synthetic event-like object for handleImageUpload
+                const syntheticEvent = { target: { files: files } };
+                handleImageUpload(syntheticEvent);
+            }
+        });
     }
     
     // Price calculation

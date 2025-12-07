@@ -1,10 +1,13 @@
 // orders-script-FIXED.js
 // Added: Call to updateNavigationCounts after orders load
+// Wrapped in IIFE to avoid global scope conflicts with shared-nav.js
 
 console.log('Orders script loaded with Supabase integration');
 
-let supabaseClient = null;
-let currentUser = null;
+(function() {
+    // Use local variables to avoid conflicts with shared-nav.js
+    let ordersSupabase = null;
+    let ordersCurrentUser = null;
 
 // Initialize when Supabase is ready
 document.addEventListener('DOMContentLoaded', async () => {
@@ -22,16 +25,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     
-    supabaseClient = window.supabase;
+    ordersSupabase = window.supabase;
     console.log('Supabase ready for orders');
     
     // Get current user session
     try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
+        const { data: { session } } = await ordersSupabase.auth.getSession();
         if (session) {
-            currentUser = session.user;
-            console.log('Session found:', currentUser.id);
-            console.log('User authenticated for orders:', currentUser.id);
+            ordersCurrentUser = session.user;
+            console.log('Session found:', ordersCurrentUser.id);
+            console.log('User authenticated for orders:', ordersCurrentUser.id);
         } else {
             console.log('No session - user not logged in');
             window.location.href = 'login.html';
@@ -60,15 +63,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Load orders from Supabase
 async function loadOrders(status = null) {
     try {
-        if (!currentUser) {
+        if (!ordersCurrentUser) {
             console.error('No user - cannot load orders');
             return;
         }
         
-        let query = supabaseClient
+        let query = ordersSupabase
             .from('orders')
             .select('*')
-            .eq('seller_id', currentUser.id)
+            .eq('seller_id', ordersCurrentUser.id)
             .order('created_at', { ascending: false });
         
         // Apply status filter if provided
@@ -176,7 +179,7 @@ window.confirmOrder = async function(orderId) {
     if (!confirm('Confirm this order?')) return;
     
     try {
-        const { error } = await supabaseClient
+        const { error } = await ordersSupabase
             .from('orders')
             .update({ 
                 order_status: 'confirmed',
@@ -184,7 +187,7 @@ window.confirmOrder = async function(orderId) {
                 confirmed_at: new Date().toISOString()
             })
             .eq('id', orderId)
-            .eq('seller_id', currentUser.id);
+            .eq('seller_id', ordersCurrentUser.id);
         
         if (error) throw error;
         
@@ -211,7 +214,7 @@ window.shipOrder = async function(orderId) {
     if (!trackingNumber) return;
     
     try {
-        const { error } = await supabaseClient
+        const { error } = await ordersSupabase
             .from('orders')
             .update({ 
                 order_status: 'shipped',
@@ -219,7 +222,7 @@ window.shipOrder = async function(orderId) {
                 shipped_at: new Date().toISOString()
             })
             .eq('id', orderId)
-            .eq('seller_id', currentUser.id);
+            .eq('seller_id', ordersCurrentUser.id);
         
         if (error) throw error;
         
@@ -241,3 +244,5 @@ window.shipOrder = async function(orderId) {
 };
 
 console.log('✅ Orders script fully loaded');
+
+})(); // End of IIFE
