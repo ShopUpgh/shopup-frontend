@@ -206,3 +206,204 @@
             <section class="products-section">
                 <h2>Featured Products</h2>
                 <div class="products-grid" id="productsGrid">
+                    <div class="loading">Loading products...</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Track page view
+        if (typeof Sentry !== 'undefined') {
+            Sentry.addBreadcrumb({
+                category: 'navigation',
+                message: 'Customer dashboard viewed',
+                level: 'info'
+            });
+        }
+
+        // Check authentication
+        const authToken = localStorage.getItem('authToken');
+        const currentUser = localStorage.getItem('currentUser');
+
+        if (!authToken || !currentUser) {
+            if (typeof Sentry !== 'undefined') {
+                Sentry.captureMessage('Unauthorized access attempt to customer dashboard', {
+                    level: 'warning',
+                    tags: { error_category: 'authentication' }
+                });
+            }
+            window.location.href = 'customer-login.html';
+        }
+
+        // Identify user in Sentry
+        try {
+            const user = JSON.parse(currentUser);
+            if (typeof Sentry !== 'undefined') {
+                Sentry.setUser({
+                    id: user.id,
+                    email: user.email
+                });
+            }
+            document.getElementById('userName').textContent = user.email.split('@')[0];
+        } catch (error) {
+            if (typeof Sentry !== 'undefined') {
+                Sentry.captureException(error, {
+                    tags: { error_category: 'user_data' }
+                });
+            }
+        }
+
+        // Load products
+        async function loadProducts() {
+            try {
+                if (typeof Sentry !== 'undefined' && typeof SentryTracking !== 'undefined') {
+                    await SentryTracking.trackDatabaseOperation(async () => {
+                        Sentry.addBreadcrumb({
+                            category: 'data',
+                            message: 'Loading products',
+                            level: 'info'
+                        });
+
+                        const { data: products, error } = await supabase
+                            .from('products')
+                            .select('*')
+                            .eq('status', 'active')
+                            .limit(12);
+
+                        if (error) throw error;
+                        displayProducts(products);
+                    }, 'products', 'select');
+                } else {
+                    const { data: products, error } = await supabase
+                        .from('products')
+                        .select('*')
+                        .eq('status', 'active')
+                        .limit(12);
+
+                    if (error) throw error;
+                    displayProducts(products);
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+                document.getElementById('productsGrid').innerHTML = 
+                    '<p class="error-message">Failed to load products. Please refresh the page.</p>';
+            }
+        }
+
+        function displayProducts(products) {
+            const grid = document.getElementById('productsGrid');
+            
+            if (!products || products.length === 0) {
+                grid.innerHTML = '<p>No products available at the moment.</p>';
+                return;
+            }
+
+            grid.innerHTML = products.map(product => `
+                <div class="product-card">
+                    <img src="${product.image_url || '../images/placeholder.png'}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p class="price">GHS ${product.price}</p>
+                    <button class="btn-add-cart" onclick="addToCart('${product.id}')">
+                        Add to Cart
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Add to cart function
+        async function addToCart(productId) {
+            try {
+                if (typeof Sentry !== 'undefined' && typeof SentryTracking !== 'undefined') {
+                    await SentryTracking.trackCartOperation(async () => {
+                        Sentry.addBreadcrumb({
+                            category: 'cart',
+                            message: 'Adding product to cart',
+                            level: 'info',
+                            data: { product_id: productId }
+                        });
+
+                        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                        const existingItem = cart.find(item => item.productId === productId);
+                        
+                        if (existingItem) {
+                            existingItem.quantity += 1;
+                        } else {
+                            cart.push({ productId, quantity: 1 });
+                        }
+                        
+                        localStorage.setItem('cart', JSON.stringify(cart));
+                        updateCartCount();
+                        alert('Product added to cart!');
+                    }, 'add', { id: productId, quantity: 1 });
+                } else {
+                    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                    const existingItem = cart.find(item => item.productId === productId);
+                    
+                    if (existingItem) {
+                        existingItem.quantity += 1;
+                    } else {
+                        cart.push({ productId, quantity: 1 });
+                    }
+                    
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    updateCartCount();
+                    alert('Product added to cart!');
+                }
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+                alert('Failed to add product to cart. Please try again.');
+            }
+        }
+
+        function updateCartCount() {
+            try {
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                const count = cart.reduce((total, item) => total + item.quantity, 0);
+                document.getElementById('cartCount').textContent = count;
+            } catch (error) {
+                if (typeof Sentry !== 'undefined') {
+                    Sentry.captureException(error, {
+                        tags: { error_category: 'cart' }
+                    });
+                }
+            }
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                if (typeof Sentry !== 'undefined') {
+                    Sentry.addBreadcrumb({
+                        category: 'auth',
+                        message: 'User logout initiated',
+                        level: 'info'
+                    });
+                }
+
+                await supabase.auth.signOut();
+                
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('sessionExpiry');
+                
+                if (typeof Sentry !== 'undefined') {
+                    Sentry.setUser(null);
+                }
+                
+                window.location.href = 'customer-login.html';
+            } catch (error) {
+                if (typeof Sentry !== 'undefined') {
+                    Sentry.captureException(error, {
+                        tags: { error_category: 'authentication' }
+                    });
+                }
+            }
+        });
+
+        // Load products on page load
+        loadProducts();
+        updateCartCount();
+    </script>
+</body>
+</html>
