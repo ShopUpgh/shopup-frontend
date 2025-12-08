@@ -4,9 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - ShopUp</title>
+    
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
-    <script src="paystack-config.js"></script>
+    <script src="../js/supabase-config.js"></script>
+    
+    <!-- Sentry Error Monitoring -->
+    <script src="https://js.sentry-cdn.com/15328ade5c7644a80ab839d3a7488e67.min.js" crossorigin="anonymous"></script>
+    <script src="../js/sentry-config.js"></script>
+    <script src="../js/sentry-error-tracking.js"></script>
+    
+    <!-- Paystack -->
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -17,39 +27,53 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f5f7fa;
-            min-height: 100vh;
         }
 
-        .container {
+        .header {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 40px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2d8a3e;
+        }
+
+        .checkout-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
         }
 
         .checkout-grid {
             display: grid;
-            grid-template-columns: 1fr 400px;
+            grid-template-columns: 2fr 1fr;
             gap: 30px;
         }
 
-        .section {
+        .checkout-form {
             background: white;
+            border-radius: 10px;
             padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin-bottom: 20px;
         }
 
-        h1 {
-            font-size: 2em;
+        .form-section {
             margin-bottom: 30px;
-            color: #2d3748;
         }
 
-        h2 {
-            color: #2d3748;
+        .form-section h2 {
             margin-bottom: 20px;
-            font-size: 1.3em;
+            color: #333;
         }
 
         .form-group {
@@ -59,68 +83,28 @@
         label {
             display: block;
             margin-bottom: 8px;
-            color: #2d3748;
             font-weight: 600;
-            font-size: 0.9em;
+            color: #333;
         }
 
         input, select, textarea {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e2e8f0;
+            border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 1em;
         }
 
-        input:focus, select:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: #2d8a3e;
         }
 
-        .payment-methods {
-            display: grid;
-            gap: 15px;
-        }
-
-        .payment-option {
-            border: 2px solid #e2e8f0;
-            padding: 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            transition: all 0.3s;
-        }
-
-        .payment-option:hover {
-            border-color: #2d8a3e;
-        }
-
-        .payment-option.selected {
-            border-color: #2d8a3e;
-            background: #f0fdf4;
-        }
-
-        .payment-option input[type="radio"] {
-            width: auto;
-        }
-
-        .payment-icon {
-            font-size: 2em;
-        }
-
-        .payment-info h3 {
-            color: #2d3748;
-            margin-bottom: 5px;
-        }
-
-        .payment-info p {
-            color: #718096;
-            font-size: 0.9em;
-        }
-
         .order-summary {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            height: fit-content;
             position: sticky;
             top: 20px;
         }
@@ -128,194 +112,449 @@
         .summary-item {
             display: flex;
             justify-content: space-between;
-            padding: 15px 0;
-            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
         }
 
-        .summary-item.total {
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
             font-size: 1.3em;
             font-weight: bold;
-            color: #2d3748;
-            border-bottom: none;
-            padding-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #eee;
         }
 
-        .btn-pay {
+        .btn-place-order {
             width: 100%;
+            padding: 15px;
             background: #2d8a3e;
             color: white;
             border: none;
-            padding: 18px;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 1.1em;
             font-weight: 600;
             cursor: pointer;
             margin-top: 20px;
         }
 
-        .btn-pay:hover {
+        .btn-place-order:hover {
             background: #236d31;
         }
 
-        .btn-pay:disabled {
+        .btn-place-order:disabled {
             background: #ccc;
             cursor: not-allowed;
         }
 
-        .cart-items {
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .payment-method {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .payment-method:hover {
+            border-color: #2d8a3e;
+        }
+
+        .payment-method.selected {
+            border-color: #2d8a3e;
+            background: #e8f5e9;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
             margin-bottom: 20px;
         }
 
-        .cart-item {
-            display: flex;
-            gap: 15px;
-            padding: 15px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            margin-bottom: 10px;
+        .alert-error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #e53935;
         }
 
-        .item-image {
-            width: 80px;
-            height: 80px;
-            background: #f5f5f5;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2em;
+        .alert-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-left: 4px solid #43a047;
         }
 
-        .item-details {
-            flex: 1;
-        }
-
-        .item-name {
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .item-price {
-            color: #2d8a3e;
-            font-weight: 600;
-        }
-
-        .security-badge {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 15px;
-            background: #f0fdf4;
-            border-radius: 8px;
-            margin-top: 15px;
-            font-size: 0.9em;
-            color: #2d8a3e;
-        }
-
-        @media (max-width: 968px) {
+        @media (max-width: 768px) {
             .checkout-grid {
                 grid-template-columns: 1fr;
-            }
-
-            .order-summary {
-                position: static;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🛒 Checkout</h1>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">🛍️ ShopUp</div>
+            <a href="cart.html" style="text-decoration: none; color: #333;">← Back to Cart</a>
+        </div>
+    </header>
+
+    <div class="checkout-container">
+        <h1>Checkout</h1>
+        
+        <div id="alertContainer"></div>
 
         <div class="checkout-grid">
-            <!-- Left Column -->
-            <div>
-                <!-- Delivery Address -->
-                <div class="section">
-                    <h2>📍 Delivery Address</h2>
-                    <div id="addressSection">
-                        <p>Loading addresses...</p>
+            <div class="checkout-form">
+                <!-- Shipping Information -->
+                <div class="form-section">
+                    <h2>Shipping Information</h2>
+                    <div class="form-group">
+                        <label for="fullName">Full Name</label>
+                        <input type="text" id="fullName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Delivery Address</label>
+                        <textarea id="address" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input type="text" id="city" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="region">Region</label>
+                        <select id="region" required>
+                            <option value="">Select Region</option>
+                            <option value="Greater Accra">Greater Accra</option>
+                            <option value="Ashanti">Ashanti</option>
+                            <option value="Western">Western</option>
+                            <option value="Eastern">Eastern</option>
+                            <option value="Central">Central</option>
+                            <option value="Northern">Northern</option>
+                            <option value="Volta">Volta</option>
+                            <option value="Upper East">Upper East</option>
+                            <option value="Upper West">Upper West</option>
+                        </select>
                     </div>
                 </div>
 
                 <!-- Payment Method -->
-                <div class="section">
-                    <h2>💳 Payment Method</h2>
+                <div class="form-section">
+                    <h2>Payment Method</h2>
                     <div class="payment-methods">
-                        <label class="payment-option" id="cardOption">
-                            <input type="radio" name="paymentMethod" value="card" checked>
-                            <div class="payment-icon">💳</div>
-                            <div class="payment-info">
-                                <h3>Card Payment</h3>
-                                <p>Visa, Mastercard, Verve</p>
-                            </div>
-                        </label>
-
-                        <label class="payment-option" id="momoOption">
-                            <input type="radio" name="paymentMethod" value="mobile_money">
-                            <div class="payment-icon">📱</div>
-                            <div class="payment-info">
-                                <h3>Mobile Money</h3>
-                                <p>MTN, Vodafone, AirtelTigo</p>
-                            </div>
-                        </label>
-
-                        <label class="payment-option" id="bankOption">
-                            <input type="radio" name="paymentMethod" value="bank_transfer">
-                            <div class="payment-icon">🏦</div>
-                            <div class="payment-info">
-                                <h3>Bank Transfer</h3>
-                                <p>Direct bank transfer</p>
-                            </div>
-                        </label>
-
-                        <label class="payment-option" id="codOption">
-                            <input type="radio" name="paymentMethod" value="cash_on_delivery">
-                            <div class="payment-icon">💵</div>
-                            <div class="payment-info">
-                                <h3>Cash on Delivery</h3>
-                                <p>Pay when you receive</p>
-                            </div>
-                        </label>
-                    </div>
-
-                    <div class="security-badge">
-                        <span>🔒</span>
-                        <span>Secured by Paystack. Your payment information is encrypted and secure.</span>
+                        <div class="payment-method selected" data-method="card" onclick="selectPayment('card')">
+                            💳 Card
+                        </div>
+                        <div class="payment-method" data-method="momo" onclick="selectPayment('momo')">
+                            📱 Mobile Money
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column - Order Summary -->
-            <div>
-                <div class="section order-summary">
-                    <h2>Order Summary</h2>
-                    
-                    <div class="cart-items" id="cartItems">
-                        <!-- Cart items will load here -->
-                    </div>
-
-                    <div class="summary-item">
-                        <span>Subtotal</span>
-                        <span id="subtotal">GH₵ 0.00</span>
-                    </div>
-                    <div class="summary-item">
-                        <span>Delivery</span>
-                        <span id="delivery">GH₵ 0.00</span>
-                    </div>
-                    <div class="summary-item total">
-                        <span>Total</span>
-                        <span id="total">GH₵ 0.00</span>
-                    </div>
-
-                    <button class="btn-pay" id="payBtn">
-                        Complete Payment
-                    </button>
+            <div class="order-summary">
+                <h2>Order Summary</h2>
+                <div id="orderItems"></div>
+                <div class="summary-total">
+                    <span>Total:</span>
+                    <span id="totalAmount">GHS 0.00</span>
                 </div>
+                <button class="btn-place-order" id="placeOrderBtn" onclick="placeOrder()">
+                    Place Order
+                </button>
             </div>
         </div>
     </div>
 
-    <script src="customer-checkout-script.js"></script>
+    <script>
+        // Track page view
+        Sentry.addBreadcrumb({
+            category: 'navigation',
+            message: 'Checkout page viewed',
+            level: 'info'
+        });
+
+        // Check authentication
+        const authToken = localStorage.getItem('authToken');
+        const currentUser = localStorage.getItem('currentUser');
+
+        if (!authToken) {
+            window.location.href = 'customer-login.html';
+        }
+
+        // Identify user in Sentry
+        let userData;
+        try {
+            userData = JSON.parse(currentUser);
+            Sentry.setUser({
+                id: userData.id,
+                email: userData.email
+            });
+
+            // Pre-fill email
+            document.getElementById('email').value = userData.email;
+        } catch (error) {
+            Sentry.captureException(error);
+        }
+
+        let selectedPaymentMethod = 'card';
+        let cartData = [];
+        let products = [];
+        let totalAmount = 0;
+
+        function selectPayment(method) {
+            Sentry.addBreadcrumb({
+                category: 'checkout',
+                message: `Payment method selected: ${method}`,
+                level: 'info'
+            });
+
+            selectedPaymentMethod = method;
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.classList.remove('selected');
+            });
+            document.querySelector(`[data-method="${method}"]`).classList.add('selected');
+        }
+
+        async function loadOrderSummary() {
+            try {
+                await SentryTracking.trackCheckout('review', async () => {
+                    // Get cart
+                    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                    
+                    if (cart.length === 0) {
+                        window.location.href = 'cart.html';
+                        return;
+                    }
+
+                    const productIds = cart.map(item => item.productId);
+
+                    // Fetch products
+                    const { data, error } = await supabase
+                        .from('products')
+                        .select('*')
+                        .in('id', productIds);
+
+                    if (error) throw error;
+
+                    products = data;
+                    cartData = cart;
+
+                    displayOrderSummary();
+                }, {});
+            } catch (error) {
+                console.error('Error loading order:', error);
+                showAlert('Failed to load order. Please try again.', 'error');
+            }
+        }
+
+        function displayOrderSummary() {
+            const orderItems = document.getElementById('orderItems');
+            
+            let subtotal = 0;
+            let itemsHTML = '';
+
+            cartData.forEach(item => {
+                const product = products.find(p => p.id === item.productId);
+                if (product) {
+                    const itemTotal = product.price * item.quantity;
+                    subtotal += itemTotal;
+                    
+                    itemsHTML += `
+                        <div class="summary-item">
+                            <div>
+                                <strong>${product.name}</strong><br>
+                                <small>Qty: ${item.quantity}</small>
+                            </div>
+                            <div>GHS ${itemTotal.toFixed(2)}</div>
+                        </div>
+                    `;
+                }
+            });
+
+            const shipping = 20;
+            totalAmount = subtotal + shipping;
+
+            itemsHTML += `
+                <div class="summary-item">
+                    <span>Subtotal:</span>
+                    <span>GHS ${subtotal.toFixed(2)}</span>
+                </div>
+                <div class="summary-item">
+                    <span>Shipping:</span>
+                    <span>GHS ${shipping.toFixed(2)}</span>
+                </div>
+            `;
+
+            orderItems.innerHTML = itemsHTML;
+            document.getElementById('totalAmount').textContent = `GHS ${totalAmount.toFixed(2)}`;
+        }
+
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${message}
+                </div>
+            `;
+        }
+
+        async function placeOrder() {
+            const placeOrderBtn = document.getElementById('placeOrderBtn');
+            placeOrderBtn.disabled = true;
+            placeOrderBtn.textContent = 'Processing...';
+
+            try {
+                await SentryTracking.trackCheckout('payment', async () => {
+                    // Validate form
+                    const fullName = document.getElementById('fullName').value;
+                    const email = document.getElementById('email').value;
+                    const phone = document.getElementById('phone').value;
+                    const address = document.getElementById('address').value;
+                    const city = document.getElementById('city').value;
+                    const region = document.getElementById('region').value;
+
+                    if (!fullName || !email || !phone || !address || !city || !region) {
+                        throw new Error('Please fill in all required fields');
+                    }
+
+                    Sentry.addBreadcrumb({
+                        category: 'checkout',
+                        message: 'Order placement initiated',
+                        level: 'info',
+                        data: {
+                            payment_method: selectedPaymentMethod,
+                            total_amount: totalAmount,
+                            item_count: cartData.length
+                        }
+                    });
+
+                    // Create order in database
+                    const { data: order, error: orderError } = await supabase
+                        .from('orders')
+                        .insert({
+                            customer_id: userData.id,
+                            total_amount: totalAmount,
+                            status: 'pending',
+                            shipping_address: {
+                                full_name: fullName,
+                                email: email,
+                                phone: phone,
+                                address: address,
+                                city: city,
+                                region: region
+                            },
+                            items: cartData.map(item => {
+                                const product = products.find(p => p.id === item.productId);
+                                return {
+                                    product_id: item.productId,
+                                    quantity: item.quantity,
+                                    price: product.price
+                                };
+                            })
+                        })
+                        .select()
+                        .single();
+
+                    if (orderError) throw orderError;
+
+                    // Process payment
+                    await processPayment(order.id, email, totalAmount);
+
+                }, {
+                    full_name: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value,
+                    payment_method: selectedPaymentMethod
+                });
+
+            } catch (error) {
+                console.error('Order placement failed:', error);
+                showAlert(error.message || 'Order placement failed. Please try again.', 'error');
+                placeOrderBtn.disabled = false;
+                placeOrderBtn.textContent = 'Place Order';
+            }
+        }
+
+        async function processPayment(orderId, email, amount) {
+            try {
+                await SentryTracking.trackPayment(async () => {
+                    const handler = PaystackPop.setup({
+                        key: 'pk_test_your_paystack_public_key', // Replace with your Paystack public key
+                        email: email,
+                        amount: amount * 100, // Convert to pesewas
+                        currency: 'GHS',
+                        ref: 'ORDER-' + orderId + '-' + Math.floor((Math.random() * 1000000000) + 1),
+                        metadata: {
+                            order_id: orderId,
+                            custom_fields: [
+                                {
+                                    display_name: "Order ID",
+                                    variable_name: "order_id",
+                                    value: orderId
+                                }
+                            ]
+                        },
+                        callback: function(response) {
+                            Sentry.addBreadcrumb({
+                                category: 'payment',
+                                message: 'Payment successful',
+                                level: 'info',
+                                data: {
+                                    reference: response.reference,
+                                    order_id: orderId
+                                }
+                            });
+
+                            // Clear cart
+                            localStorage.removeItem('cart');
+                            
+                            // Redirect to success page
+                            window.location.href = `order-success.html?order=${orderId}`;
+                        },
+                        onClose: function() {
+                            Sentry.addBreadcrumb({
+                                category: 'payment',
+                                message: 'Payment cancelled',
+                                level: 'warning'
+                            });
+
+                            showAlert('Payment was cancelled', 'error');
+                            document.getElementById('placeOrderBtn').disabled = false;
+                            document.getElementById('placeOrderBtn').textContent = 'Place Order';
+                        }
+                    });
+
+                    handler.openIframe();
+                }, {
+                    amount: amount,
+                    currency: 'GHS',
+                    paymentMethod: selectedPaymentMethod,
+                    reference: 'ORDER-' + orderId,
+                    provider: 'paystack'
+                });
+
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // Load order summary on page load
+        loadOrderSummary();
+    </script>
 </body>
 </html>
