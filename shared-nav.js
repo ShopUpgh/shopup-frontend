@@ -11,19 +11,25 @@ let currentUser = null;
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('📱 Shared nav initializing...');
     
-    // Wait for Supabase (check every 100ms, max 5 seconds)
+    // Wait for Supabase client to be ready (check every 100ms, max 5 seconds)
+    // The client must have an 'auth' property with 'getSession' method
     let attempts = 0;
-    while (!window.supabase && attempts < 50) {
+    while (attempts < 50) {
+        const client = window.supabaseClient || window.supabase;
+        if (client && client.auth && typeof client.auth.getSession === 'function') {
+            break;
+        }
         await new Promise(resolve => setTimeout(resolve, 100));
         attempts++;
     }
     
-    if (!window.supabase) {
-        console.error('❌ Supabase not available after 5 seconds');
+    const client = window.supabaseClient || window.supabase;
+    if (!client || !client.auth || typeof client.auth.getSession !== 'function') {
+        console.error('❌ Supabase client not properly initialized after 5 seconds');
         return;
     }
     
-    supabaseClient = window.supabase;
+    supabaseClient = client;
     console.log('✅ Supabase ready for shared nav');
     
     // Get current user
