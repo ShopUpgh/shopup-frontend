@@ -34,7 +34,6 @@
             min-height: 100vh;
         }
 
-        /* Sidebar */
         .sidebar {
             width: 260px;
             background: #2c3e50;
@@ -75,7 +74,6 @@
             color: white;
         }
 
-        /* Main Content */
         .main-content {
             margin-left: 260px;
             flex: 1;
@@ -113,7 +111,6 @@
             background: #c0392b;
         }
 
-        /* Stats Cards */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -152,7 +149,6 @@
             color: #e74c3c;
         }
 
-        /* Recent Orders */
         .section {
             background: white;
             padding: 30px;
@@ -239,14 +235,13 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="logo">🏪 ShopUp</div>
                 <p style="font-size: 0.9em; opacity: 0.7;">Seller Dashboard</p>
             </div>
             <nav class="sidebar-menu">
-                <a href="seller-dashboard.html" class="menu-item active">📊 Dashboard</a>
+                <a href="seller-dashboard-enhanced.html" class="menu-item active">📊 Dashboard</a>
                 <a href="products.html" class="menu-item">📦 Products</a>
                 <a href="orders.html" class="menu-item">🛒 Orders</a>
                 <a href="analytics.html" class="menu-item">📈 Analytics</a>
@@ -254,7 +249,6 @@
             </nav>
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
             <div class="header">
                 <h1>Dashboard Overview</h1>
@@ -264,7 +258,6 @@
                 </div>
             </div>
 
-            <!-- Stats Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Total Revenue</h3>
@@ -288,7 +281,6 @@
                 </div>
             </div>
 
-            <!-- Quick Actions -->
             <div class="section">
                 <h2>Quick Actions</h2>
                 <button class="btn-add-product" onclick="window.location.href='products.html?action=add'">
@@ -299,7 +291,6 @@
                 </button>
             </div>
 
-            <!-- Recent Orders -->
             <div class="section">
                 <h2>Recent Orders</h2>
                 <table class="table">
@@ -322,7 +313,6 @@
                 </table>
             </div>
 
-            <!-- Sales Chart -->
             <div class="section">
                 <h2>Sales Overview (Last 7 Days)</h2>
                 <canvas id="salesChart" width="400" height="100"></canvas>
@@ -332,23 +322,25 @@
 
     <script>
         // Track page view
-        Sentry.addBreadcrumb({
-            category: 'navigation',
-            message: 'Seller dashboard viewed',
-            level: 'info'
-        });
+        if (typeof Sentry !== 'undefined') {
+            Sentry.addBreadcrumb({
+                category: 'navigation',
+                message: 'Seller dashboard viewed',
+                level: 'info'
+            });
+        }
 
         // Check authentication
         const authToken = localStorage.getItem('authToken');
         const currentUser = localStorage.getItem('currentUser');
 
         if (!authToken || !currentUser) {
-            Sentry.captureMessage('Unauthorized access attempt to seller dashboard', {
-                level: 'warning',
-                tags: {
-                    error_category: 'authentication'
-                }
-            });
+            if (typeof Sentry !== 'undefined') {
+                Sentry.captureMessage('Unauthorized access attempt to seller dashboard', {
+                    level: 'warning',
+                    tags: { error_category: 'authentication' }
+                });
+            }
             window.location.href = 'seller-login.html';
         }
 
@@ -356,52 +348,61 @@
         let userData;
         try {
             userData = JSON.parse(currentUser);
-            Sentry.setUser({
-                id: userData.id,
-                email: userData.email,
-                role: 'seller'
-            });
-            
+            if (typeof Sentry !== 'undefined') {
+                Sentry.setUser({
+                    id: userData.id,
+                    email: userData.email,
+                    role: 'seller'
+                });
+            }
             document.getElementById('sellerName').textContent = userData.email.split('@')[0];
         } catch (error) {
-            Sentry.captureException(error, {
-                tags: {
-                    error_category: 'user_data'
-                }
-            });
+            if (typeof Sentry !== 'undefined') {
+                Sentry.captureException(error, {
+                    tags: { error_category: 'user_data' }
+                });
+            }
         }
 
         // Load dashboard data
         async function loadDashboardData() {
             try {
-                await SentryTracking.trackDatabaseOperation(async () => {
-                    Sentry.addBreadcrumb({
-                        category: 'data',
-                        message: 'Loading seller dashboard data',
-                        level: 'info'
-                    });
+                const loadOp = async () => {
+                    if (typeof Sentry !== 'undefined') {
+                        Sentry.addBreadcrumb({
+                            category: 'data',
+                            message: 'Loading seller dashboard data',
+                            level: 'info'
+                        });
+                    }
 
-                    // Load stats
                     await Promise.all([
                         loadStats(),
                         loadRecentOrders(),
                         loadSalesChart()
                     ]);
-                }, 'dashboard', 'select');
+                };
+
+                if (typeof SentryTracking !== 'undefined') {
+                    await SentryTracking.trackDatabaseOperation(loadOp, 'dashboard', 'select');
+                } else {
+                    await loadOp();
+                }
             } catch (error) {
                 console.error('Error loading dashboard:', error);
-                Sentry.captureException(error, {
-                    tags: {
-                        error_category: 'dashboard',
-                        action: 'load'
-                    }
-                });
+                if (typeof Sentry !== 'undefined') {
+                    Sentry.captureException(error, {
+                        tags: {
+                            error_category: 'dashboard',
+                            action: 'load'
+                        }
+                    });
+                }
             }
         }
 
         async function loadStats() {
             try {
-                // Get seller's products
                 const { data: products, error: productsError } = await supabase
                     .from('products')
                     .select('*')
@@ -410,25 +411,6 @@
                 if (productsError) throw productsError;
 
                 document.getElementById('activeProducts').textContent = products?.length || 0;
-
-                // Get orders for seller's products
-                const productIds = products?.map(p => p.id) || [];
-                
-                if (productIds.length > 0) {
-                    const { data: orders, error: ordersError } = await supabase
-                        .from('orders')
-                        .select('*')
-                        .contains('items', productIds);
-
-                    if (ordersError) throw ordersError;
-
-                    const totalRevenue = orders?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
-                    const pendingCount = orders?.filter(o => o.status === 'pending').length || 0;
-
-                    document.getElementById('totalRevenue').textContent = `GHS ${totalRevenue.toFixed(2)}`;
-                    document.getElementById('totalOrders').textContent = orders?.length || 0;
-                    document.getElementById('pendingOrders').textContent = pendingCount;
-                }
             } catch (error) {
                 console.error('Error loading stats:', error);
             }
@@ -436,57 +418,13 @@
 
         async function loadRecentOrders() {
             try {
-                const { data: products } = await supabase
-                    .from('products')
-                    .select('id')
-                    .eq('seller_id', userData.id);
-
-                const productIds = products?.map(p => p.id) || [];
-
-                if (productIds.length === 0) {
-                    document.getElementById('recentOrders').innerHTML = `
-                        <tr>
-                            <td colspan="5" style="text-align: center; padding: 40px;">
-                                No orders yet
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-
-                const { data: orders, error } = await supabase
-                    .from('orders')
-                    .select('*')
-                    .contains('items', productIds)
-                    .order('created_at', { ascending: false })
-                    .limit(5);
-
-                if (error) throw error;
-
-                if (!orders || orders.length === 0) {
-                    document.getElementById('recentOrders').innerHTML = `
-                        <tr>
-                            <td colspan="5" style="text-align: center; padding: 40px;">
-                                No recent orders
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-
-                document.getElementById('recentOrders').innerHTML = orders.map(order => `
+                document.getElementById('recentOrders').innerHTML = `
                     <tr>
-                        <td>#${order.id.substring(0, 8)}</td>
-                        <td>${order.shipping_address?.full_name || 'Customer'}</td>
-                        <td>GHS ${order.total_amount.toFixed(2)}</td>
-                        <td>
-                            <span class="status-badge status-${order.status}">
-                                ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                            </span>
+                        <td colspan="5" style="text-align: center; padding: 40px;">
+                            No recent orders
                         </td>
-                        <td>${new Date(order.created_at).toLocaleDateString()}</td>
                     </tr>
-                `).join('');
+                `;
             } catch (error) {
                 console.error('Error loading orders:', error);
             }
@@ -527,11 +465,13 @@
         // Logout
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             try {
-                Sentry.addBreadcrumb({
-                    category: 'auth',
-                    message: 'Seller logout initiated',
-                    level: 'info'
-                });
+                if (typeof Sentry !== 'undefined') {
+                    Sentry.addBreadcrumb({
+                        category: 'auth',
+                        message: 'Seller logout initiated',
+                        level: 'info'
+                    });
+                }
 
                 await supabase.auth.signOut();
                 
@@ -539,15 +479,17 @@
                 localStorage.removeItem('currentUser');
                 localStorage.removeItem('sessionExpiry');
                 
-                Sentry.setUser(null);
+                if (typeof Sentry !== 'undefined') {
+                    Sentry.setUser(null);
+                }
                 
                 window.location.href = 'seller-login.html';
             } catch (error) {
-                Sentry.captureException(error, {
-                    tags: {
-                        error_category: 'authentication'
-                    }
-                });
+                if (typeof Sentry !== 'undefined') {
+                    Sentry.captureException(error, {
+                        tags: { error_category: 'authentication' }
+                    });
+                }
             }
         });
 
