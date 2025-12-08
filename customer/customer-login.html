@@ -312,11 +312,13 @@
 
     <script>
         // Track page view
-        Sentry.addBreadcrumb({
-            category: 'navigation',
-            message: 'Customer login page viewed',
-            level: 'info'
-        });
+        if (typeof Sentry !== 'undefined') {
+            Sentry.addBreadcrumb({
+                category: 'navigation',
+                message: 'Customer login page viewed',
+                level: 'info'
+            });
+        }
 
         const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
@@ -343,17 +345,52 @@
             loading.classList.add('show');
             
             try {
-                await SentryTracking.trackAuth(async () => {
-                    const email = document.getElementById('email').value;
-                    const password = document.getElementById('password').value;
-                    
-                    Sentry.addBreadcrumb({
-                        category: 'auth',
-                        message: 'Login attempt started',
-                        level: 'info',
-                        data: { email }
-                    });
-                    
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                if (typeof Sentry !== 'undefined' && typeof SentryTracking !== 'undefined') {
+                    await SentryTracking.trackAuth(async () => {
+                        Sentry.addBreadcrumb({
+                            category: 'auth',
+                            message: 'Login attempt started',
+                            level: 'info',
+                            data: { email }
+                        });
+                        
+                        const { data, error } = await supabase.auth.signInWithPassword({
+                            email,
+                            password
+                        });
+                        
+                        if (error) throw error;
+                        
+                        // Store auth data
+                        localStorage.setItem('authToken', data.session.access_token);
+                        localStorage.setItem('currentUser', JSON.stringify(data.user));
+                        localStorage.setItem('sessionExpiry', new Date(data.session.expires_at * 1000).toISOString());
+                        
+                        // Identify user in Sentry
+                        Sentry.setUser({
+                            id: data.user.id,
+                            email: data.user.email
+                        });
+                        
+                        Sentry.addBreadcrumb({
+                            category: 'auth',
+                            message: 'Login successful',
+                            level: 'info'
+                        });
+                        
+                        showSuccess('Login successful! Redirecting...');
+                        
+                        setTimeout(() => {
+                            window.location.href = 'customer.html';
+                        }, 1000);
+                        
+                        return { user: data.user };
+                    }, 'email');
+                } else {
+                    // Fallback if Sentry not loaded
                     const { data, error } = await supabase.auth.signInWithPassword({
                         email,
                         password
@@ -361,31 +398,16 @@
                     
                     if (error) throw error;
                     
-                    // Store auth data
                     localStorage.setItem('authToken', data.session.access_token);
                     localStorage.setItem('currentUser', JSON.stringify(data.user));
                     localStorage.setItem('sessionExpiry', new Date(data.session.expires_at * 1000).toISOString());
-                    
-                    // Identify user in Sentry
-                    Sentry.setUser({
-                        id: data.user.id,
-                        email: data.user.email
-                    });
-                    
-                    Sentry.addBreadcrumb({
-                        category: 'auth',
-                        message: 'Login successful',
-                        level: 'info'
-                    });
                     
                     showSuccess('Login successful! Redirecting...');
                     
                     setTimeout(() => {
                         window.location.href = 'customer.html';
                     }, 1000);
-                    
-                    return { user: data.user };
-                }, 'email');
+                }
                 
             } catch (error) {
                 console.error('Login failed:', error);
