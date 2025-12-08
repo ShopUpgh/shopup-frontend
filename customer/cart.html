@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - ShopUp</title>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-config.js"></script>
+    
+    <!-- Sentry Error Monitoring -->
+    <script src="https://js.sentry-cdn.com/15328ade5c7644a80ab839d3a7488e67.min.js" crossorigin="anonymous"></script>
+    <script src="../js/sentry-config.js"></script>
+    <script src="../js/sentry-error-tracking.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2d8a3e;
+        }
+
+        .nav-links a {
+            margin-left: 20px;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .cart-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .cart-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .cart-items {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 20px;
+            padding: 20px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .item-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .item-price {
+            color: #2d8a3e;
+            font-weight: bold;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .qty-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .qty-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .remove-btn {
+            color: #dc3545;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+        }
+
+        .cart-summary {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .summary-total {
+            font-size: 1.3em;
+            font-weight: bold;
+            padding-top: 15px;
+            border-top: 2px solid #eee;
+        }
+
+        .btn-checkout {
+            width: 100%;
+            padding: 15px;
+            background: #2d8a3e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .btn-checkout:hover {
+            background: #236d31;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-cart-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .cart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">🛍️ ShopUp</div>
+            <nav class="nav-links">
+                <a href="customer.html">Home</a>
+                <a href="cart.html">Cart</a>
+                <a href="orders.html">Orders</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="cart-container">
+        <h1>Shopping Cart</h1>
+        
+        <div class="cart-grid">
+            <div class="cart-items" id="cartItems">
+                <div class="empty-cart">
+                    <div class="empty-cart-icon">🛒</div>
+                    <h2>Your cart is empty</h2>
+                    <p>Add some products to get started!</p>
+                    <a href="customer.html" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background: #2d8a3e; color: white; text-decoration: none; border-radius: 8px;">Continue Shopping</a>
+                </div>
+            </div>
+            
+            <div class="cart-summary" id="cartSummary" style="display: none;">
+                <h2>Order Summary</h2>
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">GHS 0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping:</span>
+                    <span id="shipping">GHS 0.00</span>
+                </div>
+                <div class="summary-row summary-total">
+                    <span>Total:</span>
+                    <span id="total">GHS 0.00</span>
+                </div>
+                <button class="btn-checkout" onclick="proceedToCheckout()">
+                    Proceed to Checkout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Track page view
+        Sentry.addBreadcrumb({
+            category: 'navigation',
+            message: 'Cart page viewed',
+            level: 'info'
+        });
+
+        // Check authentication
+        const authToken = localStorage.getItem('authToken');
+        const currentUser = localStorage.getItem('currentUser');
+
+        if (!authToken) {
+            window.location.href = 'customer-login.html';
+        }
+
+        // Identify user in Sentry
+        try {
+            const user = JSON.parse(currentUser);
+            Sentry.setUser({
+                id: user.id,
+                email: user.email
+            });
+        } catch (error) {
+            Sentry.captureException(error);
+        }
+
+        let cartData = [];
+        let products = [];
+
+        async function loadCart() {
+            try {
+                await SentryTracking.trackCartOperation(async () => {
+                    Sentry.addBreadcrumb({
+                        category: 'cart',
+                        message: 'Loading cart',
+                        level: 'info'
+                    });
+
+                    // Get cart from localStorage
+                    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                    
+                    if (cart.length === 0) {
+                        return;
+                    }
+
+                    // Get product IDs
+                    const productIds = cart.map(item => item.productId);
+
+                    // Fetch product details from Supabase
+                    const { data, error } = await supabase
+                        .from('products')
+                        .select('*')
+                        .in('id', productIds);
+
+                    if (error) throw error;
+
+                    products = data;
+                    cartData = cart;
+
+                    displayCart();
+                }, 'load', {});
+            } catch (error) {
+                console.error('Error loading cart:', error);
+                Sentry.captureException(error, {
+                    tags: {
+                        error_category: 'cart',
+                        action: 'load'
+                    }
+                });
+            }
+        }
+
+        function displayCart() {
+            const cartItems = document.getElementById('cartItems');
+            const cartSummary = document.getElementById('cartSummary');
+
+            if (cartData.length === 0) {
+                cartItems.innerHTML = `
+                    <div class="empty-cart">
+                        <div class="empty-cart-icon">🛒</div>
+                        <h2>Your cart is empty</h2>
+                        <p>Add some products to get started!</p>
+                        <a href="customer.html" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background: #2d8a3e; color: white; text-decoration: none; border-radius: 8px;">Continue Shopping</a>
+                    </div>
+                `;
+                cartSummary.style.display = 'none';
+                return;
+            }
+
+            cartSummary.style.display = 'block';
+
+            cartItems.innerHTML = cartData.map(item => {
+                const product = products.find(p => p.id === item.productId);
+                if (!product) return '';
+
+                return `
+                    <div class="cart-item">
+                        <img src="${product.image_url || '../images/placeholder.png'}" alt="${product.name}" class="item-image">
+                        <div class="item-details">
+                            <div class="item-name">${product.name}</div>
+                            <div class="item-price">GHS ${product.price}</div>
+                            <div class="quantity-controls">
+                                <button class="qty-btn" onclick="updateQuantity('${item.productId}', -1)">-</button>
+                                <span>${item.quantity}</span>
+                                <button class="qty-btn" onclick="updateQuantity('${item.productId}', 1)">+</button>
+                            </div>
+                        </div>
+                        <button class="remove-btn" onclick="removeItem('${item.productId}')">🗑️ Remove</button>
+                    </div>
+                `;
+            }).join('');
+
+            updateSummary();
+        }
+
+        function updateQuantity(productId, change) {
+            try {
+                SentryTracking.trackCartOperation(() => {
+                    const item = cartData.find(i => i.productId === productId);
+                    if (item) {
+                        item.quantity += change;
+                        if (item.quantity <= 0) {
+                            removeItem(productId);
+                        } else {
+                            localStorage.setItem('cart', JSON.stringify(cartData));
+                            displayCart();
+                        }
+                    }
+                }, 'update', { productId, change });
+            } catch (error) {
+                Sentry.captureException(error, {
+                    tags: {
+                        error_category: 'cart',
+                        action: 'update_quantity'
+                    }
+                });
+            }
+        }
+
+        function removeItem(productId) {
+            try {
+                SentryTracking.trackCartOperation(() => {
+                    Sentry.addBreadcrumb({
+                        category: 'cart',
+                        message: 'Removing item from cart',
+                        level: 'info',
+                        data: { product_id: productId }
+                    });
+
+                    cartData = cartData.filter(item => item.productId !== productId);
+                    localStorage.setItem('cart', JSON.stringify(cartData));
+                    displayCart();
+                }, 'remove', { productId });
+            } catch (error) {
+                Sentry.captureException(error, {
+                    tags: {
+                        error_category: 'cart',
+                        action: 'remove'
+                    }
+                });
+            }
+        }
+
+        function updateSummary() {
+            const subtotal = cartData.reduce((total, item) => {
+                const product = products.find(p => p.id === item.productId);
+                return total + (product ? product.price * item.quantity : 0);
+            }, 0);
+
+            const shipping = subtotal > 0 ? 20 : 0; // GHS 20 flat shipping
+            const total = subtotal + shipping;
+
+            document.getElementById('subtotal').textContent = `GHS ${subtotal.toFixed(2)}`;
+            document.getElementById('shipping').textContent = `GHS ${shipping.toFixed(2)}`;
+            document.getElementById('total').textContent = `GHS ${total.toFixed(2)}`;
+        }
+
+        function proceedToCheckout() {
+            Sentry.addBreadcrumb({
+                category: 'checkout',
+                message: 'Proceeding to checkout',
+                level: 'info',
+                data: {
+                    item_count: cartData.length,
+                    total_items: cartData.reduce((sum, item) => sum + item.quantity, 0)
+                }
+            });
+
+            window.location.href = 'checkout.html';
+        }
+
+        // Load cart on page load
+        loadCart();
+    </script>
+</body>
+</html>
