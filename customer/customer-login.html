@@ -3,11 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - ShopUp</title>
-
-    <!-- Supabase JS + Config -->
+    <title>Customer Login - ShopUp</title>
+    
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-config.js"></script>
+    
+    <!-- Sentry Error Monitoring -->
+    <script src="https://js.sentry-cdn.com/15328ade5c7644a80ab839d3a7488e67.min.js" crossorigin="anonymous"></script>
+    <script src="../js/sentry-config.js"></script>
+    <script src="../js/sentry-error-tracking.js"></script>
 
     <style>
         * {
@@ -137,10 +142,8 @@
         .forgot-password {
             color: #2d8a3e;
             text-decoration: none;
-        }
-
-        .forgot-password:hover {
-            text-decoration: underline;
+            cursor: pointer;
+            opacity: 0.5;
         }
 
         .btn-login {
@@ -163,30 +166,6 @@
         .btn-login:disabled {
             background: #ccc;
             cursor: not-allowed;
-        }
-
-        .divider {
-            text-align: center;
-            margin: 25px 0;
-            position: relative;
-        }
-
-        .divider:before {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 50%;
-            width: 100%;
-            height: 1px;
-            background: #e0e0e0;
-        }
-
-        .divider span {
-            background: white;
-            padding: 0 15px;
-            position: relative;
-            color: #999;
-            font-size: 0.9em;
         }
 
         .register-link {
@@ -274,11 +253,9 @@
         <h2>Customer Login</h2>
         <p class="subtitle">Sign in to your account</p>
 
-        <!-- Alert Messages -->
         <div class="alert alert-success" id="successAlert"></div>
         <div class="alert alert-error" id="errorAlert"></div>
 
-        <!-- Login Form -->
         <form id="loginForm">
             <div class="form-group">
                 <label for="email">Email Address</label>
@@ -309,10 +286,7 @@
                     <input type="checkbox" id="rememberMe" name="rememberMe">
                     <span>Remember me</span>
                 </label>
-                <!-- Temporarily disabled reset link -->
-                <span class="forgot-password"
-                      style="cursor: pointer; opacity: 0.5;"
-                      onclick="alert('Password reset feature coming soon! Please contact support.'); return false;">
+                <span class="forgot-password" onclick="alert('Password reset feature coming soon! Please contact support.')">
                     Forgot password?
                 </span>
             </div>
@@ -336,7 +310,91 @@
         </div>
     </div>
 
-    <!-- Login logic -->
-    <script src="../js/customer-login-script.js"></script>
+    <script>
+        // Track page view
+        Sentry.addBreadcrumb({
+            category: 'navigation',
+            message: 'Customer login page viewed',
+            level: 'info'
+        });
+
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const loading = document.getElementById('loading');
+        const successAlert = document.getElementById('successAlert');
+        const errorAlert = document.getElementById('errorAlert');
+
+        function showSuccess(message) {
+            successAlert.textContent = message;
+            successAlert.classList.add('show');
+            errorAlert.classList.remove('show');
+        }
+
+        function showError(message) {
+            errorAlert.textContent = message;
+            errorAlert.classList.add('show');
+            successAlert.classList.remove('show');
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            loginBtn.disabled = true;
+            loading.classList.add('show');
+            
+            try {
+                await SentryTracking.trackAuth(async () => {
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    
+                    Sentry.addBreadcrumb({
+                        category: 'auth',
+                        message: 'Login attempt started',
+                        level: 'info',
+                        data: { email }
+                    });
+                    
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+                    
+                    if (error) throw error;
+                    
+                    // Store auth data
+                    localStorage.setItem('authToken', data.session.access_token);
+                    localStorage.setItem('currentUser', JSON.stringify(data.user));
+                    localStorage.setItem('sessionExpiry', new Date(data.session.expires_at * 1000).toISOString());
+                    
+                    // Identify user in Sentry
+                    Sentry.setUser({
+                        id: data.user.id,
+                        email: data.user.email
+                    });
+                    
+                    Sentry.addBreadcrumb({
+                        category: 'auth',
+                        message: 'Login successful',
+                        level: 'info'
+                    });
+                    
+                    showSuccess('Login successful! Redirecting...');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'customer.html';
+                    }, 1000);
+                    
+                    return { user: data.user };
+                }, 'email');
+                
+            } catch (error) {
+                console.error('Login failed:', error);
+                showError(error.message || 'Login failed. Please try again.');
+                
+                loginBtn.disabled = false;
+                loading.classList.remove('show');
+            }
+        });
+    </script>
 </body>
 </html>
