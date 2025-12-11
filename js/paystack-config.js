@@ -1,43 +1,76 @@
-// paystack-config.js
-// Paystack Integration Configuration
+/**
+ * ⚠️ DEPRECATED: This file is deprecated and will be removed in a future version.
+ * Please use js/config.js instead for secure environment-based configuration.
+ * 
+ * This file is kept for backwards compatibility only.
+ * 
+ * SECURITY WARNING: Do NOT hardcode credentials here!
+ * Use environment variables via js/config.js
+ */
 
-console.log('Paystack config loading...');
+console.warn('⚠️ DEPRECATED: paystack-config.js is deprecated. Use js/config.js instead.');
 
-// ============================================
-// CONFIGURATION
-// ============================================
+// Check if new config system is loaded
+let PAYSTACK_CONFIG;
 
-const PAYSTACK_CONFIG = {
-    // Get from https://dashboard.paystack.com/#/settings/developer
-    publicKey: 'pk_test_568969ab37dbf86e712189b75c2db0edb8f25afc', // Use pk_live_ for production
+if (typeof window.AppConfig !== 'undefined') {
+    console.log('✅ Using new config system (js/config.js)');
     
-    // Supported channels
-    channels: ['card', 'mobile_money', 'bank_transfer'],
+    // Use configuration from AppConfig
+    PAYSTACK_CONFIG = {
+        publicKey: window.AppConfig.paystack.publicKey,
+        channels: window.AppConfig.paystack.channels,
+        mobileMoneyNetworks: window.AppConfig.paystack.mobileMoneyNetworks,
+        currency: window.AppConfig.paystack.currency,
+        callbackUrl: window.location.origin + '/payment-callback.html',
+        metadata: {
+            custom_fields: [
+                {
+                    display_name: "Platform",
+                    variable_name: "platform",
+                    value: "ShopUp"
+                }
+            ]
+        }
+    };
+} else {
+    // Fallback to hardcoded values (ONLY for development/migration period)
+    console.error('❌ New config system not loaded! Using fallback configuration.');
+    console.error('⚠️ WARNING: Hardcoded credentials detected! This is insecure!');
+    console.error('Please include js/config.js BEFORE this file.');
     
-    // Mobile Money Networks in Ghana
-    mobileMoneyNetworks: {
-        mtn: 'MTN Mobile Money',
-        vod: 'Vodafone Cash',
-        tgo: 'AirtelTigo Money'
-    },
-    
-    // Currency
-    currency: 'GHS',
-    
-    // Callback URLs
-    callbackUrl: window.location.origin + '/payment-callback.html',
-    
-    // Metadata
-    metadata: {
-        custom_fields: [
-            {
-                display_name: "Platform",
-                variable_name: "platform",
-                value: "ShopUp"
-            }
-        ]
-    }
-};
+    PAYSTACK_CONFIG = {
+        // Get from https://dashboard.paystack.com/#/settings/developer
+        publicKey: 'pk_test_568969ab37dbf86e712189b75c2db0edb8f25afc', // Use pk_live_ for production
+        
+        // Supported channels
+        channels: ['card', 'mobile_money', 'bank_transfer'],
+        
+        // Mobile Money Networks in Ghana
+        mobileMoneyNetworks: {
+            mtn: 'MTN Mobile Money',
+            vod: 'Vodafone Cash',
+            tgo: 'AirtelTigo Money'
+        },
+        
+        // Currency
+        currency: 'GHS',
+        
+        // Callback URLs
+        callbackUrl: window.location.origin + '/payment-callback.html',
+        
+        // Metadata
+        metadata: {
+            custom_fields: [
+                {
+                    display_name: "Platform",
+                    variable_name: "platform",
+                    value: "ShopUp"
+                }
+            ]
+        }
+    };
+}
 
 // ============================================
 // PAYSTACK HELPERS

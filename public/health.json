@@ -1,0 +1,12 @@
+{
+  "status": "ok",
+  "service": "ShopUp Ghana",
+  "version": "1.0.0",
+  "environment": "production",
+  "timestamp": "2025-12-11T00:00:00Z",
+  "checks": {
+    "api": "operational",
+    "database": "operational",
+    "payments": "operational"
+  }
+}
