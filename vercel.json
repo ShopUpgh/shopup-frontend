@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "name": "shopup-ghana",
+  "buildCommand": "node scripts/inject-env.js",
+  "outputDirectory": ".",
+  "framework": null,
+  "installCommand": "echo 'No dependencies to install'",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://js.paystack.co https://browser.sentry-cdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.paystack.co https://*.sentry.io; frame-src https://checkout.paystack.com;"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/health",
+      "destination": "/public/health.json"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/index.html",
+      "permanent": false
+    }
+  ],
+  "regions": ["fra1"],
+  "functions": {
+    "api/**/*.js": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
+  "env": {
+    "VITE_SUPABASE_URL": "@supabase_url",
+    "VITE_SUPABASE_ANON_KEY": "@supabase_anon_key",
+    "VITE_PAYSTACK_PUBLIC_KEY": "@paystack_public_key",
+    "VITE_ENVIRONMENT": "production",
+    "VITE_APP_NAME": "ShopUp Ghana",
+    "VITE_ENABLE_ANALYTICS": "true",
+    "VITE_ENABLE_ERROR_TRACKING": "true",
+    "VITE_ENABLE_COOKIE_CONSENT": "true",
+    "VITE_MAX_LOGIN_ATTEMPTS": "5",
+    "VITE_LOCKOUT_DURATION": "15",
+    "VITE_MIN_PASSWORD_LENGTH": "12"
+  },
+  "cleanUrls": true,
+  "trailingSlash": false
+}
