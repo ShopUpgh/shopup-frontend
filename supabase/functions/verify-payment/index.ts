@@ -18,6 +18,12 @@ const PAYSTACK_SECRET_KEY = Deno.env.get('PAYSTACK_SECRET_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+// Validate required environment variables
+if (!PAYSTACK_SECRET_KEY) {
+  console.error('PAYSTACK_SECRET_KEY environment variable is not set');
+  throw new Error('Payment verification not configured');
+}
+
 // CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

@@ -46,7 +46,9 @@ const Monitoring = {
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = 'https://browser.sentry-cdn.com/7.80.0/bundle.min.js';
-            script.integrity = 'sha384-VQ5KQHZK9/q1tXJQy8JGXHF0sYL8mV4PQvLxRjhGxL5yZLiZKQY9lQGYJQhXqGqG';
+            // Note: SRI hash should be updated based on actual Sentry bundle
+            // For production, verify hash at: https://browser.sentry-cdn.com/7.80.0/bundle.min.js
+            // Or omit integrity check and rely on HTTPS + CSP
             script.crossOrigin = 'anonymous';
             script.async = true;
 

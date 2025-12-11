@@ -97,7 +97,9 @@ BEGIN
     WHERE email = p_email
     AND attempted_at > NOW() - INTERVAL '15 minutes';
     
-    -- If 5 or more failed attempts, lock the account
+    -- If threshold or more failed attempts, lock the account
+    -- Note: Threshold can be customized by modifying this constant
+    -- For production, consider making this a configuration parameter
     IF v_attempt_count >= 5 THEN
         -- Get user_id if user exists
         SELECT id INTO v_user_id

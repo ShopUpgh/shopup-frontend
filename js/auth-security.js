@@ -132,17 +132,24 @@ const AuthSecurity = {
 
     /**
      * Get client IP address (best effort)
+     * Note: IP is logged for security audit only, not for precise geolocation
      */
     async getClientIP() {
         try {
-            // Try to get IP from ipify API
+            // Try to get IP from ipify API (with timeout)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            
             const response = await fetch('https://api.ipify.org?format=json', {
-                timeout: 2000
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
+            
             const data = await response.json();
             return data.ip || 'unknown';
         } catch (error) {
-            // Fallback to unknown if service is unavailable
+            // Fallback to unknown if service is unavailable or times out
+            // This is acceptable as IP logging is for audit only, not critical
             return 'unknown';
         }
     },
