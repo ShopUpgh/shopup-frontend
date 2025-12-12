@@ -28,9 +28,9 @@ window.addEventListener('scroll', () => {
 document.addEventListener('DOMContentLoaded', () => {
     // Smooth scrolling is already handled above
     // All buttons now link to real pages (signup.html, login.html)
-    console.log('All authentication pages are now live!');
+    console.debug('All authentication pages are now live!');
 });
 
 // Log page load (this helps you see that JavaScript is working)
-console.log('ShopUp loaded successfully! Sell on Your Terms.');
-console.log('Built with ❤️ for Ghana and Africa');
+console.debug('ShopUp loaded successfully! Sell on Your Terms.');
+console.debug('Built with ❤️ for Ghana and Africa');
