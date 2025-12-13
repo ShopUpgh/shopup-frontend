@@ -16,7 +16,7 @@ const SentryTracking = {
                     span.setStatus({ code: 1, message: 'ok' });
                     return result;
                 } catch (error) {
-                    span.setStatus({ code: 2, message: 'internal_error' });
+                    span.setStatus({ code: 13, message: 'internal_error' });
                     Sentry.captureException(error, {
                         tags: {
                             error_category: 'payment',
@@ -47,7 +47,7 @@ const SentryTracking = {
                     span.setStatus({ code: 1, message: 'ok' });
                     return result;
                 } catch (error) {
-                    span.setStatus({ code: 2, message: 'internal_error' });
+                    span.setStatus({ code: 13, message: 'internal_error' });
                     Sentry.captureException(error, {
                         tags: {
                             error_category: 'checkout',
@@ -102,7 +102,7 @@ const SentryTracking = {
                     span.setStatus({ code: 1, message: 'ok' });
                     return result;
                 } catch (error) {
-                    span.setStatus({ code: 2, message: 'internal_error' });
+                    span.setStatus({ code: 13, message: 'internal_error' });
                     Sentry.captureException(error, {
                         tags: {
                             error_category: 'database',
@@ -140,7 +140,7 @@ const SentryTracking = {
                     
                     return result;
                 } catch (error) {
-                    span.setStatus({ code: 2, message: 'unauthenticated' });
+                    span.setStatus({ code: 16, message: 'unauthenticated' });
                     Sentry.captureException(error, {
                         tags: {
                             error_category: 'authentication',
@@ -183,7 +183,7 @@ const SentryTracking = {
                     
                     return result;
                 } catch (error) {
-                    span.setStatus({ code: 2, message: 'internal_error' });
+                    span.setStatus({ code: 13, message: 'internal_error' });
                     Sentry.captureException(error, {
                         tags: {
                             error_category: 'api',
