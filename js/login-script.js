@@ -108,7 +108,7 @@ async function handleLogin(e) {
 async function checkUserRole(userId) {
     try {
         const { data, error } = await supabase
-            .from('users')
+            .from('user_roles')
             .select('user_type')
             .eq('id', userId)
             .single();
