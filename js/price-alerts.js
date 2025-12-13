@@ -17,11 +17,19 @@ class PriceAlerts {
         this.checkPriceChanges();
         
         // Check prices periodically (every hour when tab is active)
-        setInterval(() => {
-            if (!document.hidden) {
+        // Store interval ID for potential cleanup
+        this.priceCheckInterval = setInterval(() => {
+            if (!document.hidden && this.alerts.length > 0) {
                 this.checkPriceChanges();
             }
         }, 3600000); // 1 hour
+    }
+
+    destroy() {
+        // Cleanup method for proper resource management
+        if (this.priceCheckInterval) {
+            clearInterval(this.priceCheckInterval);
+        }
     }
 
     loadFromStorage() {
@@ -111,10 +119,10 @@ class PriceAlerts {
                 </div>
                 <div class="price-alert-modal-body">
                     <div class="product-preview">
-                        <img src="${productImage}" alt="${productName}">
+                        <img src="${this.escapeHtml(productImage)}" alt="${this.escapeHtml(productName)}">
                         <div>
-                            <h3>${productName}</h3>
-                            <p class="current-price">Current Price: ${priceText}</p>
+                            <h3>${this.escapeHtml(productName)}</h3>
+                            <p class="current-price">Current Price: ${this.escapeHtml(priceText)}</p>
                         </div>
                     </div>
                     
@@ -183,7 +191,12 @@ class PriceAlerts {
             const email = formData.get('email');
 
             if (targetPrice >= currentPrice) {
-                alert('Target price must be lower than current price.');
+                // Show inline error message instead of alert
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'form-error-message';
+                errorMsg.textContent = 'Target price must be lower than current price.';
+                form.querySelector('.form-group').appendChild(errorMsg);
+                setTimeout(() => errorMsg.remove(), 3000);
                 return;
             }
 
@@ -200,26 +213,26 @@ class PriceAlerts {
             this.showSuccessMessage();
         });
 
-        // Close handlers
+        // Close handlers - handler will be defined below
+        let handleKeyDown;
         modal.querySelector('.close-price-alert-modal').addEventListener('click', () => {
-            this.closeModal(modal);
+            this.closeModal(modal, handleKeyDown);
         });
 
         modal.querySelector('.btn-cancel').addEventListener('click', () => {
-            this.closeModal(modal);
+            this.closeModal(modal, handleKeyDown);
         });
 
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
-                this.closeModal(modal);
+                this.closeModal(modal, handleKeyDown);
             }
         });
 
         // Keyboard support
-        const handleKeyDown = (e) => {
+        handleKeyDown = (e) => {
             if (e.key === 'Escape') {
-                this.closeModal(modal);
-                document.removeEventListener('keydown', handleKeyDown);
+                this.closeModal(modal, handleKeyDown);
             }
         };
         document.addEventListener('keydown', handleKeyDown);
@@ -340,16 +353,28 @@ class PriceAlerts {
     }
 
     extractPrice(priceText) {
-        const match = priceText.match(/[\d,]+\.?\d*/);
-        return match ? parseFloat(match[0].replace(/,/g, '')) : 0;
+        // More specific regex for Ghana Cedis prices
+        const match = priceText.match(/(?:GH₵\s*)?(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/);
+        return match ? parseFloat(match[1].replace(/,/g, '')) : 0;
     }
 
-    closeModal(modal) {
+    closeModal(modal, keydownHandler) {
+        // Clean up event listener to prevent memory leaks
+        if (keydownHandler) {
+            document.removeEventListener('keydown', keydownHandler);
+        }
+        
         modal.classList.add('closing');
         setTimeout(() => {
             modal.remove();
             document.body.style.overflow = '';
         }, 300);
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 }
 
@@ -674,6 +699,22 @@ styles.textContent = `
     [data-theme="dark"] .price-drop-notification {
         background: #2d2d2d;
         color: #fff;
+    }
+
+    .form-error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 8px 12px;
+        border-radius: 4px;
+        margin-top: 10px;
+        font-size: 14px;
+        border: 1px solid #f5c6cb;
+    }
+
+    [data-theme="dark"] .form-error-message {
+        background: #5a1a1a;
+        color: #ff6b6b;
+        border-color: #8a2a2a;
     }
 `;
 document.head.appendChild(styles);

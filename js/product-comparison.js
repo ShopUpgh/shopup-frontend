@@ -123,7 +123,7 @@ class ProductComparison {
 
     addProduct(productId) {
         if (this.comparisonProducts.length >= this.maxProducts) {
-            alert(`You can only compare up to ${this.maxProducts} products at once.`);
+            this.showMessage(`You can only compare up to ${this.maxProducts} products at once.`, 'warning');
             return;
         }
 
@@ -146,6 +146,25 @@ class ProductComparison {
         this.updateUI();
     }
 
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    showMessage(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `comparison-toast comparison-toast-${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.classList.add('show'), 10);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
     removeProduct(productId) {
         this.comparisonProducts = this.comparisonProducts.filter(p => p.id !== productId);
         this.saveToStorage();
@@ -153,11 +172,35 @@ class ProductComparison {
     }
 
     clearAll() {
-        if (confirm('Remove all products from comparison?')) {
+        // Show custom confirmation modal instead of browser confirm
+        const modal = document.createElement('div');
+        modal.className = 'comparison-confirm-modal';
+        modal.innerHTML = `
+            <div class="comparison-confirm-content">
+                <h3>Clear Comparison?</h3>
+                <p>Remove all products from comparison?</p>
+                <div class="comparison-confirm-actions">
+                    <button class="btn-cancel">Cancel</button>
+                    <button class="btn-confirm">Clear All</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        modal.querySelector('.btn-confirm').addEventListener('click', () => {
             this.comparisonProducts = [];
             this.saveToStorage();
             this.updateUI();
-        }
+            modal.remove();
+        });
+
+        modal.querySelector('.btn-cancel').addEventListener('click', () => {
+            modal.remove();
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
     }
 
     updateUI() {
@@ -180,8 +223,8 @@ class ProductComparison {
         if (productsContainer) {
             productsContainer.innerHTML = this.comparisonProducts.map(product => `
                 <div class="comparison-item">
-                    <img src="${product.image}" alt="${product.name}">
-                    <button class="remove-comparison-item" data-product-id="${product.id}">
+                    <img src="${this.escapeHtml(product.image)}" alt="${this.escapeHtml(product.name)}">
+                    <button class="remove-comparison-item" data-product-id="${this.escapeHtml(product.id)}">
                         <svg width="12" height="12" viewBox="0 0 12 12">
                             <path d="M9 3L3 9M3 3l6 6" stroke="currentColor" stroke-width="2"/>
                         </svg>
@@ -245,8 +288,8 @@ class ProductComparison {
                                 <th>Feature</th>
                                 ${this.comparisonProducts.map(product => `
                                     <th>
-                                        <img src="${product.image}" alt="${product.name}">
-                                        <div class="product-name">${product.name}</div>
+                                        <img src="${this.escapeHtml(product.image)}" alt="${this.escapeHtml(product.name)}">
+                                        <div class="product-name">${this.escapeHtml(product.name)}</div>
                                     </th>
                                 `).join('')}
                             </tr>
@@ -254,15 +297,15 @@ class ProductComparison {
                         <tbody>
                             <tr>
                                 <td><strong>Price</strong></td>
-                                ${this.comparisonProducts.map(p => `<td>${p.price}</td>`).join('')}
+                                ${this.comparisonProducts.map(p => `<td>${this.escapeHtml(p.price)}</td>`).join('')}
                             </tr>
                             <tr>
                                 <td><strong>Category</strong></td>
-                                ${this.comparisonProducts.map(p => `<td>${p.category}</td>`).join('')}
+                                ${this.comparisonProducts.map(p => `<td>${this.escapeHtml(p.category)}</td>`).join('')}
                             </tr>
                             <tr>
                                 <td><strong>Condition</strong></td>
-                                ${this.comparisonProducts.map(p => `<td>${p.condition}</td>`).join('')}
+                                ${this.comparisonProducts.map(p => `<td>${this.escapeHtml(p.condition)}</td>`).join('')}
                             </tr>
                             <tr>
                                 <td><strong>Availability</strong></td>
@@ -279,8 +322,8 @@ class ProductComparison {
                 </div>
                 <div class="comparison-modal-actions">
                     ${this.comparisonProducts.map(product => `
-                        <a href="/product.html?id=${product.id}" class="btn-view-product">
-                            View ${product.name}
+                        <a href="/product.html?id=${this.escapeHtml(product.id)}" class="btn-view-product">
+                            View ${this.escapeHtml(product.name)}
                         </a>
                     `).join('')}
                 </div>
@@ -604,6 +647,96 @@ styles.textContent = `
 
     [data-theme="dark"] .comparison-table th {
         background: #1a1a1a;
+    }
+
+    .comparison-toast {
+        position: fixed;
+        top: -50px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-weight: 500;
+        z-index: 10002;
+        transition: top 0.3s;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .comparison-toast.show {
+        top: 20px;
+    }
+
+    .comparison-toast-warning {
+        background: #ffc107;
+        color: #000;
+    }
+
+    .comparison-toast-info {
+        background: #007bff;
+        color: white;
+    }
+
+    .comparison-confirm-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        z-index: 10001;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .comparison-confirm-content {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        max-width: 400px;
+        text-align: center;
+    }
+
+    .comparison-confirm-content h3 {
+        margin: 0 0 10px 0;
+    }
+
+    .comparison-confirm-content p {
+        margin: 0 0 20px 0;
+        color: #666;
+    }
+
+    .comparison-confirm-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .comparison-confirm-actions button {
+        padding: 10px 20px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .comparison-confirm-actions .btn-cancel {
+        background: #f5f5f5;
+        color: #333;
+    }
+
+    .comparison-confirm-actions .btn-confirm {
+        background: #dc3545;
+        color: white;
+    }
+
+    [data-theme="dark"] .comparison-confirm-content {
+        background: #2d2d2d;
+        color: #fff;
+    }
+
+    [data-theme="dark"] .comparison-confirm-content p {
+        color: #ccc;
     }
 `;
 document.head.appendChild(styles);
