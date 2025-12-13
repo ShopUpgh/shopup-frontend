@@ -389,7 +389,7 @@ See `TESTING_CHECKLIST.md` for complete testing guide.
 
 **Static Asset Rewrites:**
 - `/favicon.ico` → `/favicon.svg` (serves SVG for ICO requests)
-- `/styles.css` → `/css/styles.css` (serves from css directory)
+- `/styles.css` → `/css/styles.css` (allows root-relative paths in HTML while keeping CSS organized in subdirectory)
 
 **Reducing CORS Preflight Latency:**
 - For Supabase API calls, consider configuring CORS headers in Supabase dashboard
