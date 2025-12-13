@@ -168,7 +168,7 @@ const SentryTracking = {
                     const duration = performance.now() - startTime;
                     
                     span.setStatus({ code: 1, message: 'ok' });
-                    span.setMeasurement('api_call_duration', duration, 'millisecond');
+                    span.setData('api_call_duration_ms', duration);
                     
                     if (duration > 2000) {
                         Sentry.captureMessage(`Slow API call: ${endpoint}`, {
