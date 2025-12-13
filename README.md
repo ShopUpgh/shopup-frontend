@@ -595,6 +595,136 @@ Your complete e-commerce platform is ready for deployment.
 
 ---
 
+## 🔧 Deployment / Troubleshooting
+
+### Static Assets Configuration
+
+#### Favicon Setup
+The site uses `/public/favicon.svg` as the main favicon. All HTML files reference it with:
+```html
+<link rel="icon" type="image/svg+xml" href="/favicon.ico">
+```
+
+The `vercel.json` configuration includes a rewrite rule that serves `/favicon.svg` when `/favicon.ico` is requested.
+
+**To replace the favicon:**
+1. Update `/public/favicon.svg` with your custom SVG
+2. Ensure it's optimized (small file size, simple design)
+3. The favicon will be cached for 24 hours (86400 seconds)
+
+#### Root-Relative Asset Paths
+All CSS and static assets use root-relative paths (starting with `/`) to ensure reliable loading across all pages:
+- Main stylesheet: `/css/styles.css`
+- Other stylesheets: `/css/dashboard-styles.css`, `/css/login-styles.css`, etc.
+- Favicon: `/favicon.ico` (rewrites to `/public/favicon.svg`)
+
+**Why root-relative paths?**
+- Works consistently from any page depth (root, subdirectories)
+- Avoids 404 errors when deployed to CDN/edge networks
+- Simplifies maintenance and refactoring
+
+#### Cache Control Headers
+The `vercel.json` file sets optimal caching for different asset types:
+
+**Long-term caching (1 year, immutable):**
+- CSS files: `max-age=31536000, immutable`
+- JavaScript files: `max-age=31536000, immutable`
+- WASM files: `max-age=31536000, immutable`
+
+**Short-term caching (24 hours):**
+- Favicon: `max-age=86400`
+
+**Benefits:**
+- Faster page loads for returning visitors
+- Reduced bandwidth costs
+- Better performance scores
+
+#### Preloading Critical CSS
+Critical stylesheets are preloaded to avoid Flash of Unstyled Content (FOUC):
+```html
+<link rel="preload" href="/css/styles.css" as="style">
+<link rel="stylesheet" href="/css/styles.css">
+```
+
+This tells the browser to prioritize loading the stylesheet before rendering.
+
+### WASM Asset Optimization (Optional)
+
+If you're using WebAssembly files, you can precompress them for better performance:
+
+**Using the npm script:**
+```bash
+npm run precompress
+```
+
+This will create `.gz` and `.br` (Brotli) versions of all WASM files, which Vercel will automatically serve to supporting browsers.
+
+**Manual compression:**
+```bash
+# Gzip compression
+find . -name "*.wasm" -exec gzip -k {} \;
+
+# Brotli compression (better compression ratio)
+find . -name "*.wasm" -exec brotli {} -o {}.br \;
+```
+
+**Note:** You need `gzip` and `brotli` CLI tools installed. On macOS: `brew install brotli`
+
+### Verification Steps
+
+After deployment, verify that static assets are loading correctly:
+
+**1. Check stylesheet loading:**
+```bash
+curl -I https://www.shopupgh.com/css/styles.css
+```
+Expected: `200 OK` with `Cache-Control: public, max-age=31536000, immutable`
+
+**2. Check favicon:**
+```bash
+curl -I https://www.shopupgh.com/favicon.ico
+```
+Expected: `200 OK` (served from `/public/favicon.svg`)
+
+**3. Browser DevTools verification:**
+- Open Network tab in browser DevTools
+- Load the site
+- Verify no 404 errors for favicon or CSS files
+- Check that CSS files show proper `Cache-Control` headers
+- Confirm WASM files (if any) are served with correct MIME type and compression
+
+**4. Common issues and fixes:**
+
+| Issue | Solution |
+|-------|----------|
+| Favicon shows 404 | Ensure `/public/favicon.svg` exists and `vercel.json` rewrite is configured |
+| CSS not loading | Check that CSS files are in `/public/css/` directory |
+| Styles not applying | Clear browser cache, check for CSS path errors in HTML |
+| WASM not loading | Verify MIME type is `application/wasm` in `vercel.json` headers |
+
+### Directory Structure for Deployment
+
+```
+shopup-frontend/
+├── public/
+│   ├── favicon.svg          # Main favicon
+│   └── css/                 # All stylesheets
+│       ├── styles.css
+│       ├── dashboard-styles.css
+│       ├── login-styles.css
+│       ├── signup-styles.css
+│       └── storefront-styles.css
+├── vercel.json              # Vercel configuration
+├── index.html               # Entry points (root-relative paths)
+├── login.html
+├── signup.html
+└── [other HTML files]
+```
+
+**Important:** The `public/` directory must be deployed with all assets. Vercel automatically serves files from this directory at the root path.
+
+---
+
 **Made with ❤️ in Ghana**  
 **Powered by Commerce, Guided by Conscience**
 
