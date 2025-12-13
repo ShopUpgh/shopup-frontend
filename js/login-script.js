@@ -1,26 +1,23 @@
 // login-script.js - Seller Login
 console.log('Seller login script loaded');
 
-let supabaseClient = null;
-
 document.addEventListener('DOMContentLoaded', async () => {
-    // Wait for Supabase
+    // Wait for Supabase client to be initialized
     let attempts = 0;
-    while (!window.supabase && attempts < 50) {
+    while (typeof supabase === 'undefined' && attempts < 50) {
         await new Promise(resolve => setTimeout(resolve, 100));
         attempts++;
     }
     
-    if (!window.supabase) {
+    if (typeof supabase === 'undefined') {
         showError('Configuration error. Please refresh the page.');
         return;
     }
     
-    supabaseClient = window.supabase;
     console.log('✅ Supabase ready for seller login');
     
     // Check if already logged in
-    const { data: { session } } = await supabaseClient.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
     if (session) {
         // Check if user is a seller
         const userRole = await checkUserRole(session.user.id);
@@ -56,7 +53,7 @@ async function handleLogin(e) {
     
     try {
         // Sign in with Supabase
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
             email: email,
             password: password
         });
@@ -69,7 +66,7 @@ async function handleLogin(e) {
         const userRole = await checkUserRole(data.user.id);
         
         if (!userRole || userRole === 'customer') {
-            await supabaseClient.auth.signOut();
+            await supabase.auth.signOut();
             throw new Error('This login is for sellers only. Please use the customer login.');
         }
         
@@ -110,7 +107,7 @@ async function handleLogin(e) {
 
 async function checkUserRole(userId) {
     try {
-        const { data, error } = await supabaseClient
+        const { data, error } = await supabase
             .from('users')
             .select('user_type')
             .eq('id', userId)
