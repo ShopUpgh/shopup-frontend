@@ -1,0 +1,23 @@
+{
+    "name": "ShopUp Ghana",
+    "short_name": "ShopUp",
+    "description": "Ghana's Premier E-Commerce Platform - Sell on Your Terms",
+    "icons": [
+        {
+            "src": "/favicon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/favicon.ico",
+            "sizes": "16x16 32x32",
+            "type": "image/x-icon"
+        }
+    ],
+    "theme_color": "#4F46E5",
+    "background_color": "#ffffff",
+    "display": "standalone",
+    "start_url": "/",
+    "scope": "/"
+}
