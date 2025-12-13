@@ -371,6 +371,40 @@ See `TESTING_CHECKLIST.md` for complete testing guide.
 
 **Detailed guide:** See `DEPLOYMENT_GUIDE.md`
 
+### Static Assets & Performance
+
+**Favicon:**
+- The site uses `/favicon.svg` as the primary favicon (vector, scales well)
+- Fallback to `/favicon.ico` is handled via Vercel rewrite
+- Both are referenced in HTML head with root-relative paths
+
+**To replace the favicon:**
+1. Replace `public/favicon.svg` with your own SVG icon
+2. Optionally update the rewrite in `vercel.json` if using a different format
+
+**Cache Headers (vercel.json):**
+- CSS, JS, WASM: `max-age=31536000, immutable` (1 year, long-term caching)
+- Favicon: `max-age=604800` (1 week)
+- To adjust cache duration, edit the `headers` section in `vercel.json`
+
+**Static Asset Rewrites:**
+- `/favicon.ico` → `/favicon.svg` (serves SVG for ICO requests)
+- `/styles.css` → `/css/styles.css` (serves from css directory)
+
+**Reducing CORS Preflight Latency:**
+- For Supabase API calls, consider configuring CORS headers in Supabase dashboard
+- Alternatively, use a same-origin proxy for API requests to avoid preflight requests
+- Ensure `Access-Control-Allow-Origin` is properly configured for your domain
+
+**Large Asset Optimization (Optional):**
+- For WASM files and other large assets, consider precompression
+- Vercel automatically handles gzip/brotli compression for most assets
+- To precompress manually, use tools like `gzip` or `brotli` and upload `.gz`/`.br` files alongside originals
+- Example npm script (if using build process):
+  ```json
+  "precompress": "find dist -type f \\( -name '*.js' -o -name '*.css' -o -name '*.wasm' \\) -exec gzip -k -9 {} \\;"
+  ```
+
 ---
 
 ## 📚 Documentation
@@ -449,6 +483,29 @@ Enable/disable features in `platform_settings` table:
 4. **Mobile Apps**
    - Web-only currently
    - Native apps planned for v2.0
+
+### Troubleshooting
+
+**Favicon not showing:**
+- Clear browser cache (Ctrl+Shift+R or Cmd+Shift+R)
+- Check browser DevTools Network tab for 404 errors
+- Verify `vercel.json` rewrite is deployed
+- Check that `/favicon.svg` returns 200 status
+
+**Stylesheet not loading:**
+- Verify rewrite in `vercel.json` is active
+- Check that CSS file exists in `css/styles.css`
+- Inspect Network tab for correct path: `/styles.css` → `/css/styles.css`
+
+**Cache not working:**
+- Verify deployment includes `vercel.json`
+- Use `curl -I https://yourdomain.com/styles.css` to check Cache-Control header
+- Headers may take a few minutes to propagate after deployment
+
+**CORS errors for API calls:**
+- Configure CORS in Supabase dashboard under API settings
+- Add your domain to allowed origins
+- For development, `localhost` and `127.0.0.1` should be allowed
 
 ### Reporting Bugs
 
