@@ -15,7 +15,12 @@ class SEOMetaGenerator {
    */
   generateProductMeta(product) {
     const title = `${product.name} - Price in Ghana | ${this.siteName}`;
-    const description = `Buy ${product.name} at GH₵ ${product.price} in Ghana. ${product.description ? product.description.substring(0, 100) : 'Quality product'}... Fast delivery to Accra, Kumasi. 100% authentic. Order now!`;
+    
+    // Build description with proper handling of missing/short descriptions
+    let productDesc = product.description ? product.description.substring(0, 100).trim() : 'Quality product available now';
+    if (productDesc.length === 0) productDesc = 'Quality product available now';
+    
+    const description = `Buy ${product.name} at GH₵ ${product.price} in Ghana. ${productDesc}. Fast delivery to Accra, Kumasi. 100% authentic. Order now!`;
     
     // Set title
     document.title = title;
@@ -90,11 +95,14 @@ class SEOMetaGenerator {
    * @param {Object} product - Product object
    */
   generateProductSchema(product) {
+    // Handle image URL with fallback
+    const imageUrl = product.image_url || `${this.domain}/images/default-product.jpg`;
+    
     const schema = {
       "@context": "https://schema.org/",
       "@type": "Product",
       "name": product.name,
-      "image": [product.image_url],
+      "image": [imageUrl],
       "description": product.description || `${product.name} available in Ghana`,
       "sku": product.id,
       "brand": {

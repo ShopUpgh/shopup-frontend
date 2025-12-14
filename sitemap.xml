@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- ShopUp Ghana Sitemap - Update lastmod dates when pages are modified -->
+<!-- For dynamic sitemap generation, see seo-meta-generator.js -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Homepage -->
   <url>

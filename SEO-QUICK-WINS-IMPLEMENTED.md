@@ -219,6 +219,21 @@ After deployment, verify:
 - [ ] Run Google Rich Results Test on homepage
 - [ ] Check mobile-friendly test passes
 
+## ⚠️ Before Deployment
+
+**Required Updates:**
+- [ ] Replace telephone number in index.html Organization schema (line 214)
+  - Current: "+233-XX-XXXX-XXX"
+  - Update to: Your actual ShopUp Ghana contact number
+- [ ] Update sitemap.xml lastmod dates when pages are modified
+- [ ] Create actual OG images referenced in meta tags:
+  - /images/og-image.jpg (1200x630px)
+  - /images/products-og.jpg (1200x630px)
+  - /images/signup-og.jpg (1200x630px)
+  - /images/login-og.jpg (1200x630px)
+  - /images/store-og.jpg (1200x630px)
+  - /images/storefront-og.jpg (1200x630px)
+
 ---
 
 ## 📚 Reference
