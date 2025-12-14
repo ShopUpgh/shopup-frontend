@@ -1,15 +1,47 @@
 // paystack-config.js
 // Paystack Integration Configuration
+// SECURITY: Environment-based key switching for production safety
 
 console.log('Paystack config loading...');
+
+// ============================================
+// ENVIRONMENT DETECTION
+// ============================================
+
+const PaystackEnv = {
+    isDevelopment: function() {
+        return window.location.hostname === 'localhost' || 
+               window.location.hostname === '127.0.0.1' ||
+               window.location.hostname.includes('preview') ||
+               window.location.hostname.includes('test') ||
+               window.location.hostname.includes('.local');
+    },
+    
+    isProduction: function() {
+        return !this.isDevelopment();
+    },
+    
+    getEnvironment: function() {
+        return this.isProduction() ? 'production' : 'development';
+    }
+};
 
 // ============================================
 // CONFIGURATION
 // ============================================
 
 const PAYSTACK_CONFIG = {
-    // Get from https://dashboard.paystack.com/#/settings/developer
-    publicKey: 'pk_test_568969ab37dbf86e712189b75c2db0edb8f25afc', // Use pk_live_ for production
+    // Environment-based key selection
+    // IMPORTANT: Replace 'pk_live_YOUR_LIVE_KEY_HERE' with actual live key before production
+    publicKey: PaystackEnv.isProduction() 
+        ? 'pk_live_YOUR_LIVE_KEY_HERE'  // ⚠️ REPLACE WITH LIVE KEY
+        : 'pk_test_568969ab37dbf86e712189b75c2db0edb8f25afc',  // Test key for development
+    
+    // Webhook URLs (configured in Paystack dashboard)
+    webhookUrls: {
+        payment: 'https://brbewkxpvihnsrbrlpzq.supabase.co/functions/v1/paystack-webhook',
+        subscription: 'https://svjixgpkygbbptltwwji.supabase.co/functions/v1/paystack-subscription-webhook'
+    },
     
     // Supported channels
     channels: ['card', 'mobile_money', 'bank_transfer'],
@@ -36,6 +68,35 @@ const PAYSTACK_CONFIG = {
                 value: "ShopUp"
             }
         ]
+    },
+    
+    // Environment info
+    environment: PaystackEnv.getEnvironment(),
+    
+    // Validation method
+    validateConfiguration: function() {
+        const warnings = [];
+        const errors = [];
+        
+        // Check if using test key in production
+        if (PaystackEnv.isProduction() && this.publicKey.includes('test')) {
+            errors.push('⚠️ CRITICAL: Using TEST Paystack key in PRODUCTION environment!');
+            errors.push('   Real transactions will NOT work. Update publicKey to live key.');
+        }
+        
+        // Check if live key placeholder is still present
+        if (this.publicKey.includes('YOUR_LIVE_KEY_HERE')) {
+            errors.push('⚠️ CRITICAL: Paystack live key placeholder not replaced!');
+            errors.push('   Update publicKey with actual live key from Paystack dashboard.');
+        }
+        
+        // Check if using production key in development
+        if (PaystackEnv.isDevelopment() && this.publicKey.includes('live')) {
+            warnings.push('⚠️ WARNING: Using LIVE Paystack key in development!');
+            warnings.push('   Consider using test key for development to avoid real charges.');
+        }
+        
+        return { warnings, errors, isValid: errors.length === 0 };
     }
 };
 
@@ -254,5 +315,28 @@ if (document.readyState === 'loading') {
 // Make available globally
 window.PAYSTACK_CONFIG = PAYSTACK_CONFIG;
 window.PaystackHelper = PaystackHelper;
+window.PaystackEnv = PaystackEnv;
+
+// Validate configuration on load
+const validation = PAYSTACK_CONFIG.validateConfiguration();
 
 console.log('✅ Paystack config loaded');
+console.log('📍 Environment:', PAYSTACK_CONFIG.environment);
+console.log('🔑 Key type:', PAYSTACK_CONFIG.publicKey.includes('test') ? 'TEST' : 'LIVE');
+
+// Display warnings
+if (validation.warnings.length > 0) {
+    console.warn('⚠️ Paystack Configuration Warnings:');
+    validation.warnings.forEach(w => console.warn(w));
+}
+
+// Display errors (critical)
+if (validation.errors.length > 0) {
+    console.error('❌ Paystack Configuration Errors:');
+    validation.errors.forEach(e => console.error(e));
+    
+    // Show alert in production if misconfigured
+    if (PaystackEnv.isProduction()) {
+        alert('CRITICAL: Payment system is not configured for production. Transactions will not work. Contact support.');
+    }
+}
