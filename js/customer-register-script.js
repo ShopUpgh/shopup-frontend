@@ -1,6 +1,20 @@
 // Customer Registration Script for ShopUp Ghana
 console.log('Customer registration script loaded');
 
+// Password visibility toggle function
+function togglePassword(fieldId, iconId) {
+    const field = document.getElementById(fieldId);
+    const icon = document.getElementById(iconId);
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.textContent = '🙈';
+    } else {
+        field.type = 'password';
+        icon.textContent = '👁️';
+    }
+}
+
 // Wait for DOM and Supabase to be ready
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('Registration page loaded');

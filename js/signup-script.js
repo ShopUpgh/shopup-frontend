@@ -1,5 +1,19 @@
 // ShopUp Signup with Supabase Integration
 
+// Password visibility toggle function
+function togglePassword(fieldId, iconId) {
+    const field = document.getElementById(fieldId);
+    const icon = document.getElementById(iconId);
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.textContent = '🙈';
+    } else {
+        field.type = 'password';
+        icon.textContent = '👁️';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Wait for Supabase to initialize
     setTimeout(() => {
