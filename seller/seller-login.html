@@ -13,6 +13,9 @@
     <script src="https://browser.sentry-cdn.com/8.0.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
     <script src="../js/sentry-config.js"></script>
     <script src="../js/sentry-error-tracking.js"></script>
+    
+    <!-- Security Utils (XSS Protection & Rate Limiting) -->
+    <script src="../js/security-utils.js"></script>
 
     <style>
         * {
@@ -341,12 +344,26 @@
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            const email = document.getElementById('email').value;
+            
+            // SECURITY: Check rate limiting (5 attempts per 15 minutes)
+            const rateLimitCheck = SecurityUtils.RateLimiter.check(email, 5, 15 * 60 * 1000);
+            if (!rateLimitCheck.allowed) {
+                const minutesLeft = Math.ceil((rateLimitCheck.resetAt - new Date()) / 1000 / 60);
+                showError(`Too many login attempts. Please try again in ${minutesLeft} minute(s).`);
+                return;
+            }
+            
             loginBtn.disabled = true;
             loading.classList.add('show');
             
             try {
-                const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
+                
+                // Validate email format
+                if (!SecurityUtils.validateInput(email, 'email')) {
+                    throw new Error('Please enter a valid email address');
+                }
                 
                 if (typeof Sentry !== 'undefined' && typeof SentryTracking !== 'undefined') {
                     await SentryTracking.trackAuth(async () => {
@@ -376,6 +393,9 @@
                             role: 'seller'
                         });
                         
+                        // SECURITY: Clear rate limit on successful login
+                        SecurityUtils.RateLimiter.clear(email);
+                        
                         Sentry.addBreadcrumb({
                             category: 'auth',
                             message: 'Seller login successful',
@@ -402,6 +422,9 @@
                     localStorage.setItem('authToken', data.session.access_token);
                     localStorage.setItem('currentUser', JSON.stringify(data.user));
                     localStorage.setItem('sessionExpiry', new Date(data.session.expires_at * 1000).toISOString());
+                    
+                    // SECURITY: Clear rate limit on successful login
+                    SecurityUtils.RateLimiter.clear(email);
                     
                     showSuccess('Login successful! Redirecting to dashboard...');
                     

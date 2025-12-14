@@ -45,6 +45,24 @@ async function handleLogin(e) {
         return;
     }
     
+    // SECURITY: Check rate limiting (5 attempts per 15 minutes)
+    if (typeof SecurityUtils !== 'undefined' && SecurityUtils.RateLimiter) {
+        const rateLimitCheck = SecurityUtils.RateLimiter.check(email, 5, 15 * 60 * 1000);
+        if (!rateLimitCheck.allowed) {
+            const minutesLeft = Math.ceil((rateLimitCheck.resetAt - new Date()) / 1000 / 60);
+            showAlert(`Too many login attempts. Please try again in ${minutesLeft} minute(s).`, 'error');
+            return;
+        }
+    }
+    
+    // Validate email format
+    if (typeof SecurityUtils !== 'undefined' && SecurityUtils.validateInput) {
+        if (!SecurityUtils.validateInput(email, 'email')) {
+            showAlert('Please enter a valid email address', 'error');
+            return;
+        }
+    }
+    
     loginBtn.disabled = true;
     loginBtn.textContent = 'Signing in...';
     
@@ -64,6 +82,11 @@ async function handleLogin(e) {
             // Not an admin - sign out
             await supabaseClient.auth.signOut();
             throw new Error('Access denied. Admin privileges required.');
+        }
+        
+        // SECURITY: Clear rate limit on successful login
+        if (typeof SecurityUtils !== 'undefined' && SecurityUtils.RateLimiter) {
+            SecurityUtils.RateLimiter.clear(email);
         }
         
         // Log admin login
