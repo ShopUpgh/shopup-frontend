@@ -156,15 +156,23 @@ function displaySellers(sellers) {
         return;
     }
     
-    const sellersHtml = sellers.map(seller => `
-        <div class="seller-card" onclick="viewSeller('${seller.id}')">
-            <div class="seller-avatar">${seller.avatar_emoji || '🏪'}</div>
-            <h3>${seller.business_name}</h3>
-            ${seller.verified ? '<div class="seller-badge">✅ Verified</div>' : ''}
-            <div class="seller-rating">⭐ ${seller.rating || '4.8'}</div>
-            <p style="font-size: 12px; color: #666;">📍 ${seller.city || 'Ghana'}</p>
-        </div>
-    `).join('');
+    const sellersHtml = sellers.map(seller => {
+        // XSS Protection: Escape user-generated content
+        const safeName = window.SecurityUtils ? SecurityUtils.escapeHtml(seller.business_name) : seller.business_name;
+        const safeCity = window.SecurityUtils ? SecurityUtils.escapeHtml(seller.city || 'Ghana') : (seller.city || 'Ghana');
+        const safeRating = window.SecurityUtils ? SecurityUtils.sanitizePrice(seller.rating || 4.8) : (seller.rating || 4.8);
+        const safeEmoji = window.SecurityUtils ? SecurityUtils.escapeHtml(seller.avatar_emoji || '🏪') : (seller.avatar_emoji || '🏪');
+        
+        return `
+            <div class="seller-card" onclick="viewSeller('${seller.id}')">
+                <div class="seller-avatar">${safeEmoji}</div>
+                <h3>${safeName}</h3>
+                ${seller.verified ? '<div class="seller-badge">✅ Verified</div>' : ''}
+                <div class="seller-rating">⭐ ${safeRating.toFixed(1)}</div>
+                <p style="font-size: 12px; color: #666;">📍 ${safeCity}</p>
+            </div>
+        `;
+    }).join('');
     
     container.innerHTML = sellersHtml;
     console.log('🎨 Sellers displayed');
@@ -386,24 +394,34 @@ function displayProducts(products) {
     if (!container) return;
     
     const productsHtml = products.map(product => {
-        const discountPercent = product.compare_price 
-            ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
+        // XSS Protection: Sanitize all user-generated content
+        const safeName = window.SecurityUtils ? SecurityUtils.escapeHtml(product.name) : product.name;
+        const safePrice = window.SecurityUtils ? SecurityUtils.sanitizePrice(product.price) : product.price;
+        const safeComparePrice = product.compare_price && window.SecurityUtils 
+            ? SecurityUtils.sanitizePrice(product.compare_price) 
+            : product.compare_price;
+        
+        const discountPercent = safeComparePrice 
+            ? Math.round(((safeComparePrice - safePrice) / safeComparePrice) * 100)
             : 0;
+        
+        // Escape name for onclick attribute (double escaping for JS context)
+        const safeNameForJS = safeName.replace(/'/g, "\\'").replace(/"/g, '\\"');
         
         return `
             <div class="product-card">
                 <div class="product-image">📦</div>
                 <div class="product-info">
                     ${discountPercent > 0 ? `<div class="product-badge">-${discountPercent}%</div>` : ''}
-                    <div class="product-name">${product.name}</div>
+                    <div class="product-name">${safeName}</div>
                     <div class="product-seller">👤 Seller</div>
                     <div class="product-rating">⭐⭐⭐⭐⭐ (${Math.floor(Math.random() * 200) + 50})</div>
                     <div class="product-price">
-                        GH₵ ${product.price.toFixed(2)}
-                        ${product.compare_price ? `<span class="product-compare-price">GH₵ ${product.compare_price.toFixed(2)}</span>` : ''}
+                        GH₵ ${safePrice.toFixed(2)}
+                        ${safeComparePrice ? `<span class="product-compare-price">GH₵ ${safeComparePrice.toFixed(2)}</span>` : ''}
                     </div>
                     <div class="product-actions">
-                        <button class="btn-add-cart" onclick="addToCart(${product.id}, '${product.name}', ${product.price})">
+                        <button class="btn-add-cart" onclick="addToCart(${product.id}, '${safeNameForJS}', ${safePrice})">
                             🛒 Add
                         </button>
                         <button class="btn-view-product" onclick="viewProduct(${product.id})">
@@ -423,27 +441,31 @@ function displayProducts(products) {
  * Add product with quantity management
  */
 function addToCart(productId, productName, productPrice) {
-    console.log(`🛒 Adding to cart: ${productName}`);
+    // XSS Protection: Sanitize inputs before storing
+    const safeName = window.SecurityUtils ? SecurityUtils.escapeHtml(productName) : productName;
+    const safePrice = window.SecurityUtils ? SecurityUtils.sanitizePrice(productPrice) : productPrice;
+    
+    console.log(`🛒 Adding to cart: ${safeName}`);
     
     // Check if already in cart
     const existingItem = cart.find(item => item.id === productId);
     
     if (existingItem) {
         existingItem.quantity += 1;
-        console.log(`📈 Increased quantity: ${productName}`);
+        console.log(`📈 Increased quantity: ${safeName}`);
     } else {
         cart.push({
             id: productId,
-            name: productName,
-            price: productPrice,
+            name: safeName,
+            price: safePrice,
             quantity: 1
         });
-        console.log(`✨ Added new item: ${productName}`);
+        console.log(`✨ Added new item: ${safeName}`);
     }
     
     saveCart();
     updateCartBadge();
-    showNotification(`✅ Added ${productName} to cart!`);
+    showNotification(`✅ Added ${safeName} to cart!`);
 }
 
 /**
@@ -453,7 +475,8 @@ function loadCart() {
     try {
         const saved = localStorage.getItem('shopup_cart');
         if (saved) {
-            cart = JSON.parse(saved);
+            // XSS Protection: Use safeJSONParse
+            cart = window.SecurityUtils ? SecurityUtils.safeJSONParse(saved, []) : JSON.parse(saved);
             console.log(`💾 Cart loaded with ${cart.length} items`);
         }
     } catch (error) {

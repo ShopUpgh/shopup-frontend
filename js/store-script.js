@@ -12,10 +12,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function loadStore() {
-    const sellerData = JSON.parse(localStorage.getItem('shopup_seller') || sessionStorage.getItem('shopup_seller'));
+    // XSS Protection: Use safeJSONParse for localStorage data
+    const sellerDataStr = localStorage.getItem('shopup_seller') || sessionStorage.getItem('shopup_seller');
+    const sellerData = window.SecurityUtils ? SecurityUtils.safeJSONParse(sellerDataStr, {}) : JSON.parse(sellerDataStr || '{}');
+    
     if (sellerData && sellerData.businessName) {
-        document.getElementById('storeName').textContent = sellerData.businessName;
-        document.getElementById('storeTitle').textContent = `${sellerData.businessName} - ShopUp`;
+        const safeName = window.SecurityUtils ? SecurityUtils.escapeHtml(sellerData.businessName) : sellerData.businessName;
+        
+        // Use textContent (automatically escapes) instead of innerHTML
+        const storeNameEl = document.getElementById('storeName');
+        const storeTitleEl = document.getElementById('storeTitle');
+        
+        if (storeNameEl) storeNameEl.textContent = safeName;
+        if (storeTitleEl) storeTitleEl.textContent = `${safeName} - ShopUp`;
     }
 }
 
@@ -36,14 +45,18 @@ function displayProducts(products) {
     
     container.innerHTML = products.map(product => {
         const hasImage = product.images && product.images.length > 0;
-        const imageHtml = hasImage ? `<img src="${product.images[0]}" alt="${product.name}">` : '📷';
+        // XSS Protection: Escape user-generated content
+        const safeName = window.SecurityUtils ? SecurityUtils.escapeHtml(product.name) : product.name;
+        const safePrice = window.SecurityUtils ? SecurityUtils.sanitizePrice(product.price) : product.price;
+        const safeImageUrl = hasImage && window.SecurityUtils ? SecurityUtils.escapeHtml(product.images[0]) : (hasImage ? product.images[0] : null);
+        const imageHtml = safeImageUrl ? `<img src="${safeImageUrl}" alt="${safeName}">` : '📷';
         
         return `
             <div class="product-card">
                 <div class="product-image">${imageHtml}</div>
                 <div class="product-info">
-                    <h3 class="product-name">${product.name}</h3>
-                    <div class="product-price">GH₵ ${product.price.toFixed(2)}</div>
+                    <h3 class="product-name">${safeName}</h3>
+                    <div class="product-price">GH₵ ${safePrice.toFixed(2)}</div>
                     <button class="btn-add-cart" onclick="addToCart('${product.id}')">🛒 Add to Cart</button>
                 </div>
             </div>
@@ -88,16 +101,24 @@ function updateCartUI() {
         return;
     }
     
-    cartItems.innerHTML = cart.map(item => `
-        <div class="cart-item">
-            <div class="cart-item-image">${item.image ? `<img src="${item.image}">` : '📷'}</div>
-            <div class="cart-item-details">
-                <div style="font-weight:600">${item.name}</div>
-                <div style="color:#2d8a3e">GH₵ ${item.price.toFixed(2)} × ${item.quantity}</div>
-                <button onclick="removeFromCart('${item.id}')" style="background:none;border:none;color:#e53935;cursor:pointer;margin-top:0.5rem">Remove</button>
+    cartItems.innerHTML = cart.map(item => {
+        // XSS Protection: Escape user-generated content
+        const safeName = window.SecurityUtils ? SecurityUtils.escapeHtml(item.name) : item.name;
+        const safePrice = window.SecurityUtils ? SecurityUtils.sanitizePrice(item.price) : item.price;
+        const safeQuantity = window.SecurityUtils ? SecurityUtils.sanitizeQuantity(item.quantity) : item.quantity;
+        const safeImageUrl = item.image && window.SecurityUtils ? SecurityUtils.escapeHtml(item.image) : item.image;
+        
+        return `
+            <div class="cart-item">
+                <div class="cart-item-image">${safeImageUrl ? `<img src="${safeImageUrl}">` : '📷'}</div>
+                <div class="cart-item-details">
+                    <div style="font-weight:600">${safeName}</div>
+                    <div style="color:#2d8a3e">GH₵ ${safePrice.toFixed(2)} × ${safeQuantity}</div>
+                    <button onclick="removeFromCart('${item.id}')" style="background:none;border:none;color:#e53935;cursor:pointer;margin-top:0.5rem">Remove</button>
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 window.removeFromCart = function(productId) {
