@@ -1,0 +1,18 @@
+# ShopUp Ghana - robots.txt
+# Allow all search engines to crawl public pages
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /seller/
+Disallow: /customer/customer-dashboard.html
+Disallow: /dashboard.html
+Disallow: /god-mode.html
+Disallow: /checkout.html
+Disallow: /cart.html
+Disallow: /Backend/
+Disallow: /*.sql$
+Disallow: /supabase-config.js
+
+# Sitemap location
+Sitemap: https://shopup.gh/sitemap.xml

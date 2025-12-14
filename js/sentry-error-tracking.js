@@ -1,21 +1,15 @@
 // Sentry Error Tracking Helper Functions
+// Compatible with Sentry v8+ (removed deprecated transaction APIs)
 const SentryTracking = {
     // Track payment operations
     async trackPayment(paymentFunction, paymentData) {
-        const transaction = Sentry.startTransaction({
-            op: 'payment',
-            name: 'Process Payment'
-        });
-        
         Sentry.setContext('payment', paymentData);
         Sentry.setTag('transaction_type', 'payment');
         
         try {
             const result = await paymentFunction();
-            transaction.setStatus('ok');
             return result;
         } catch (error) {
-            transaction.setStatus('internal_error');
             Sentry.captureException(error, {
                 tags: {
                     error_category: 'payment',
@@ -24,28 +18,19 @@ const SentryTracking = {
                 }
             });
             throw error;
-        } finally {
-            transaction.finish();
         }
     },
     
     // Track checkout process
     async trackCheckout(step, checkoutFunction, checkoutData) {
-        const transaction = Sentry.startTransaction({
-            op: 'checkout',
-            name: `Checkout: ${step}`
-        });
-        
         Sentry.setContext('checkout', checkoutData);
         Sentry.setTag('flow', 'checkout');
         Sentry.setTag('checkout_step', step);
         
         try {
             const result = await checkoutFunction();
-            transaction.setStatus('ok');
             return result;
         } catch (error) {
-            transaction.setStatus('internal_error');
             Sentry.captureException(error, {
                 tags: {
                     error_category: 'checkout',
@@ -53,8 +38,6 @@ const SentryTracking = {
                 }
             });
             throw error;
-        } finally {
-            transaction.finish();
         }
     },
     
@@ -86,20 +69,13 @@ const SentryTracking = {
     
     // Track database operations
     async trackDatabaseOperation(dbFunction, table, operation) {
-        const transaction = Sentry.startTransaction({
-            op: 'db.query',
-            name: `${operation} ${table}`
-        });
-        
         Sentry.setTag('db_table', table);
         Sentry.setTag('db_operation', operation);
         
         try {
             const result = await dbFunction();
-            transaction.setStatus('ok');
             return result;
         } catch (error) {
-            transaction.setStatus('internal_error');
             Sentry.captureException(error, {
                 tags: {
                     error_category: 'database',
@@ -108,23 +84,15 @@ const SentryTracking = {
                 }
             });
             throw error;
-        } finally {
-            transaction.finish();
         }
     },
     
     // Track authentication
     async trackAuth(authFunction, method) {
-        const transaction = Sentry.startTransaction({
-            op: 'auth',
-            name: `Authentication: ${method}`
-        });
-        
         Sentry.setTag('auth_method', method);
         
         try {
             const result = await authFunction();
-            transaction.setStatus('ok');
             
             // Identify user after successful auth
             if (result && result.user) {
@@ -136,7 +104,6 @@ const SentryTracking = {
             
             return result;
         } catch (error) {
-            transaction.setStatus('unauthenticated');
             Sentry.captureException(error, {
                 tags: {
                     error_category: 'authentication',
@@ -144,26 +111,16 @@ const SentryTracking = {
                 }
             });
             throw error;
-        } finally {
-            transaction.finish();
         }
     },
     
     // Track API calls
     async trackAPICall(apiFunction, endpoint, method = 'GET') {
-        const transaction = Sentry.startTransaction({
-            op: 'http.client',
-            name: `${method} ${endpoint}`
-        });
-        
         const startTime = performance.now();
         
         try {
             const result = await apiFunction();
             const duration = performance.now() - startTime;
-            
-            transaction.setStatus('ok');
-            transaction.setMeasurement('api_call_duration', duration, 'millisecond');
             
             if (duration > 2000) {
                 Sentry.captureMessage(`Slow API call: ${endpoint}`, {
@@ -178,7 +135,6 @@ const SentryTracking = {
             
             return result;
         } catch (error) {
-            transaction.setStatus('internal_error');
             Sentry.captureException(error, {
                 tags: {
                     error_category: 'api',
@@ -187,8 +143,6 @@ const SentryTracking = {
                 }
             });
             throw error;
-        } finally {
-            transaction.finish();
         }
     },
     
@@ -214,8 +168,6 @@ const SentryTracking = {
     
     // Track performance metrics
     trackPerformance(metricName, value, thresholds = {}) {
-        Sentry.setMeasurement(metricName, value, 'millisecond');
-        
         if (thresholds.warning && value > thresholds.warning) {
             Sentry.captureMessage(`Performance issue: ${metricName}`, {
                 level: value > thresholds.critical ? 'error' : 'warning',
