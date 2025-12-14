@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Check - ShopUp Ghana</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            margin: 0;
+        }
+        h1 {
+            color: #00ff00;
+            margin-bottom: 20px;
+        }
+        #status {
+            background: #000;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #00ff00;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .loading {
+            color: #ffff00;
+        }
+        .healthy {
+            color: #00ff00;
+        }
+        .degraded {
+            color: #ff9900;
+        }
+        .unhealthy {
+            color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏥 ShopUp Ghana - Health Check</h1>
+    <div id="status" class="loading">
+        <pre>Checking system status...</pre>
+    </div>
+    
+    <script>
+    async function healthCheck() {
+        const results = {
+            timestamp: new Date().toISOString(),
+            status: 'healthy',
+            checks: {},
+            version: '1.0.0',
+            environment: window.location.hostname.includes('localhost') ? 'development' : 'production'
+        };
+        
+        try {
+            // Check 1: Supabase Database Connection
+            try {
+                const { data, error } = await supabase
+                    .from('customer_profiles')
+                    .select('count')
+                    .limit(1);
+                
+                results.checks.database = {
+                    status: error ? 'unhealthy' : 'healthy',
+                    message: error ? error.message : 'Connected',
+                    responseTime: performance.now()
+                };
+            } catch (err) {
+                results.checks.database = {
+                    status: 'unhealthy',
+                    message: err.message,
+                    responseTime: null
+                };
+            }
+            
+            // Check 2: Paystack Configuration
+            results.checks.payment = {
+                status: typeof PAYSTACK_CONFIG !== 'undefined' ? 'healthy' : 'unhealthy',
+                message: typeof PAYSTACK_CONFIG !== 'undefined' ? 'Configured' : 'Not configured',
+                config: typeof PAYSTACK_CONFIG !== 'undefined' ? {
+                    keyType: PAYSTACK_CONFIG.publicKey.includes('test') ? 'test' : 'live',
+                    currency: PAYSTACK_CONFIG.currency
+                } : null
+            };
+            
+            // Check 3: Sentry Error Monitoring
+            results.checks.monitoring = {
+                status: typeof Sentry !== 'undefined' ? 'healthy' : 'degraded',
+                message: typeof Sentry !== 'undefined' ? 'Configured' : 'Not configured',
+                note: typeof Sentry === 'undefined' ? 'Error monitoring not enabled' : 'Active'
+            };
+            
+            // Check 4: Security Utils
+            results.checks.security = {
+                status: typeof SecurityUtils !== 'undefined' ? 'healthy' : 'degraded',
+                message: typeof SecurityUtils !== 'undefined' ? 'Loaded' : 'Not loaded',
+                note: typeof SecurityUtils === 'undefined' ? 'XSS protection may not be active' : 'Active'
+            };
+            
+            // Check 5: Local Storage
+            try {
+                localStorage.setItem('health_check_test', 'ok');
+                localStorage.removeItem('health_check_test');
+                results.checks.localStorage = {
+                    status: 'healthy',
+                    message: 'Available'
+                };
+            } catch (err) {
+                results.checks.localStorage = {
+                    status: 'degraded',
+                    message: 'Not available or restricted'
+                };
+            }
+            
+            // Overall Status Determination
+            const statuses = Object.values(results.checks).map(c => c.status);
+            if (statuses.every(s => s === 'healthy')) {
+                results.status = 'healthy';
+            } else if (statuses.some(s => s === 'unhealthy')) {
+                results.status = 'degraded';
+            } else {
+                results.status = 'degraded';
+            }
+            
+            // Summary
+            results.summary = {
+                totalChecks: Object.keys(results.checks).length,
+                healthy: statuses.filter(s => s === 'healthy').length,
+                degraded: statuses.filter(s => s === 'degraded').length,
+                unhealthy: statuses.filter(s => s === 'unhealthy').length
+            };
+            
+        } catch (err) {
+            results.status = 'unhealthy';
+            results.error = err.message;
+            results.stack = err.stack;
+        }
+        
+        // Display Results
+        const statusDiv = document.getElementById('status');
+        statusDiv.className = results.status;
+        statusDiv.innerHTML = '<pre>' + JSON.stringify(results, null, 2) + '</pre>';
+        
+        // Set HTTP response code simulation
+        if (results.status === 'unhealthy') {
+            console.error('❌ Health Check Failed:', results);
+        } else if (results.status === 'degraded') {
+            console.warn('⚠️ Health Check Degraded:', results);
+        } else {
+            console.log('✅ Health Check Passed:', results);
+        }
+    }
+    
+    // Run health check on load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', healthCheck);
+    } else {
+        healthCheck();
+    }
+    
+    // Auto-refresh every 30 seconds
+    setInterval(healthCheck, 30000);
+    </script>
+</body>
+</html>
