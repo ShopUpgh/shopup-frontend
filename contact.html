@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - ShopUp</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: -40px auto 40px;
+            padding: 0 20px;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .contact-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .contact-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .contact-card h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .contact-card p {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .contact-card a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .contact-card a:hover {
+            text-decoration: underline;
+        }
+
+        .contact-form-section {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+
+        .contact-form-section h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .contact-form-section p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .btn-submit {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #d1e7dd;
+            color: #0f5132;
+            border-left: 4px solid #0f5132;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #842029;
+            border-left: 4px solid #842029;
+        }
+
+        .faq-section {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+
+        .faq-section h2 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .faq-item {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .faq-item h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .faq-item p {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .contact-form-section {
+                padding: 25px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📧 Contact Us</h1>
+        <p>We're here to help! Get in touch with the ShopUp team.</p>
+    </div>
+
+    <div class="container">
+        <div class="contact-grid">
+            <div class="contact-card">
+                <div class="contact-icon">📧</div>
+                <h3>Email Support</h3>
+                <p>Our support team typically responds within 24 hours</p>
+                <a href="mailto:support@shopup.gh">support@shopup.gh</a>
+            </div>
+
+            <div class="contact-card">
+                <div class="contact-icon">📱</div>
+                <h3>Phone Support</h3>
+                <p>Available Mon-Fri, 9:00 AM - 5:00 PM GMT</p>
+                <a href="tel:+233123456789">+233 (0) 123 456 789</a>
+            </div>
+
+            <div class="contact-card">
+                <div class="contact-icon">💬</div>
+                <h3>Live Chat</h3>
+                <p>Chat with our support team in real-time</p>
+                <a href="#" onclick="alert('Live chat feature coming soon!'); return false;">Start Chat</a>
+            </div>
+
+            <div class="contact-card">
+                <div class="contact-icon">📍</div>
+                <h3>Office Location</h3>
+                <p>Visit us at our headquarters</p>
+                <p style="font-weight: 600;">Accra, Ghana</p>
+            </div>
+        </div>
+
+        <div class="contact-form-section">
+            <h2>Send Us a Message</h2>
+            <p>Fill out the form below and we'll get back to you as soon as possible.</p>
+
+            <div class="alert alert-success" id="successAlert">
+                Thank you for contacting us! We'll respond within 24 hours.
+            </div>
+            <div class="alert alert-error" id="errorAlert">
+                There was an error submitting your message. Please try again.
+            </div>
+
+            <form id="contactForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input type="text" id="name" name="name" required placeholder="John Doe">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" name="email" required placeholder="john@example.com">
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" placeholder="+233 123 456 789">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subject">Subject *</label>
+                        <select id="subject" name="subject" required>
+                            <option value="">Select a subject</option>
+                            <option value="general">General Inquiry</option>
+                            <option value="support">Customer Support</option>
+                            <option value="seller">Seller Support</option>
+                            <option value="technical">Technical Issue</option>
+                            <option value="feedback">Feedback</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Message *</label>
+                    <textarea id="message" name="message" required placeholder="Tell us how we can help you..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit">Send Message</button>
+            </form>
+        </div>
+
+        <div class="faq-section">
+            <h2>Frequently Asked Questions</h2>
+
+            <div class="faq-item">
+                <h3>How do I create a seller account?</h3>
+                <p>Visit our <a href="/seller/seller-login.html">Seller Login</a> page and click on the registration link. You'll need to provide your business details and complete the verification process.</p>
+            </div>
+
+            <div class="faq-item">
+                <h3>What payment methods do you accept?</h3>
+                <p>We accept Mobile Money, Credit/Debit Cards via Paystack, and Bank Transfers. All transactions are secure and encrypted.</p>
+            </div>
+
+            <div class="faq-item">
+                <h3>How long does delivery take?</h3>
+                <p>Delivery times vary by location. Most orders within Accra are delivered within 1-3 business days. Other regions may take 3-7 business days.</p>
+            </div>
+
+            <div class="faq-item">
+                <h3>What is your return policy?</h3>
+                <p>We offer a 7-day return policy for most items. Products must be in original condition with tags attached. Contact the seller directly through your order page to initiate a return.</p>
+            </div>
+
+            <div class="faq-item">
+                <h3>How do I track my order?</h3>
+                <p>Once your order is shipped, you'll receive a tracking number via email. You can also track your orders from your <a href="/customer/customer-orders.html">Orders Dashboard</a>.</p>
+            </div>
+
+            <div class="faq-item">
+                <h3>How can I become a verified seller?</h3>
+                <p>After creating your seller account, submit your business documents through the verification portal. Our team will review your application within 2-3 business days.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Universal Footer -->
+    <footer style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); color: white; padding: 60px 20px 20px; margin-top: 80px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px;">
+                <!-- About Section -->
+                <div>
+                    <h3 style="font-size: 1.2em; margin-bottom: 20px; color: #3498db;">About ShopUp</h3>
+                    <p style="line-height: 1.8; color: rgba(255,255,255,0.8); font-size: 0.95em;">
+                        Ghana's premier online marketplace connecting local sellers with customers. Shop quality products, support local businesses.
+                    </p>
+                </div>
+                
+                <!-- Quick Links -->
+                <div>
+                    <h3 style="font-size: 1.2em; margin-bottom: 20px; color: #3498db;">Quick Links</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 12px;">
+                            <a href="/customer/customer-dashboard.html" style="color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.3s; display: inline-block;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">Shop Now</a>
+                        </li>
+                        <li style="margin-bottom: 12px;">
+                            <a href="/seller/seller-login.html" style="color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.3s; display: inline-block;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">Become a Seller</a>
+                        </li>
+                        <li style="margin-bottom: 12px;">
+                            <a href="/contact.html" style="color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.3s; display: inline-block;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">Contact Us</a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Support -->
+                <div>
+                    <h3 style="font-size: 1.2em; margin-bottom: 20px; color: #3498db;">Support</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 12px;">
+                            <a href="/contact.html" style="color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.3s; display: inline-block;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">Help Center</a>
+                        </li>
+                        <li style="margin-bottom: 12px;">
+                            <a href="/contact.html" style="color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.3s; display: inline-block;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='rgba(255,255,255,0.8)'">FAQ</a>
+                        </li>
+                        <li style="margin-bottom: 12px;">
+                            <span style="color: rgba(255,255,255,0.8); font-size: 0.95em;">📧 support@shopup.gh</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Connect -->
+                <div>
+                    <h3 style="font-size: 1.2em; margin-bottom: 20px; color: #3498db;">Connect With Us</h3>
+                    <div style="display: flex; gap: 15px; margin-top: 15px;">
+                        <a href="#" style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: all 0.3s;" onmouseover="this.style.background='#3498db'; this.style.transform='translateY(-3px)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='translateY(0)'">
+                            <span style="font-size: 1.2em;">📘</span>
+                        </a>
+                        <a href="#" style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: all 0.3s;" onmouseover="this.style.background='#3498db'; this.style.transform='translateY(-3px)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='translateY(0)'">
+                            <span style="font-size: 1.2em;">🐦</span>
+                        </a>
+                        <a href="#" style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: all 0.3s;" onmouseover="this.style.background='#3498db'; this.style.transform='translateY(-3px)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.transform='translateY(0)'">
+                            <span style="font-size: 1.2em;">📷</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bottom Bar -->
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px; text-align: center;">
+                <p style="color: rgba(255,255,255,0.6); font-size: 0.9em;">
+                    © 2024 ShopUp Ghana. All rights reserved. | 
+                    <a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='rgba(255,255,255,0.6)'">Privacy Policy</a> | 
+                    <a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none;" onmouseover="this.style.color='#3498db'" onmouseout="this.style.color='rgba(255,255,255,0.6)'">Terms of Service</a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const contactForm = document.getElementById('contactForm');
+        const successAlert = document.getElementById('successAlert');
+        const errorAlert = document.getElementById('errorAlert');
+
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Get form data
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                subject: document.getElementById('subject').value,
+                message: document.getElementById('message').value
+            };
+
+            // Simulate form submission (in production, this would send to a server)
+            console.log('Contact form submitted:', formData);
+
+            // Show success message
+            errorAlert.classList.remove('show');
+            successAlert.classList.add('show');
+
+            // Reset form
+            contactForm.reset();
+
+            // Scroll to success message
+            successAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            // Hide success message after 5 seconds
+            setTimeout(() => {
+                successAlert.classList.remove('show');
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
