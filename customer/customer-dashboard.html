@@ -209,6 +209,50 @@
                     <div class="loading">Loading products...</div>
                 </div>
             </section>
+
+            <!-- Help & Support Section -->
+            <section style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 50px;">
+                <h2 style="color: #333; margin-bottom: 20px; font-size: 1.8em; text-align: center;">Need Help?</h2>
+                <p style="text-align: center; color: #666; margin-bottom: 40px; font-size: 1.1em;">We're here to assist you with anything you need</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px;">
+                    <!-- Quick Support Card -->
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 12px; color: white; text-align: center;">
+                        <div style="font-size: 3em; margin-bottom: 15px;">💬</div>
+                        <h3 style="margin-bottom: 15px; font-size: 1.3em;">Quick Support</h3>
+                        <p style="margin-bottom: 20px; opacity: 0.9;">Get instant answers to common questions</p>
+                        <a href="../contact.html" style="display: inline-block; background: white; color: #667eea; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Contact Support</a>
+                    </div>
+
+                    <!-- Order Help Card -->
+                    <div style="background: linear-gradient(135deg, #2d8a3e 0%, #1e6b2c 100%); padding: 30px; border-radius: 12px; color: white; text-align: center;">
+                        <div style="font-size: 3em; margin-bottom: 15px;">📦</div>
+                        <h3 style="margin-bottom: 15px; font-size: 1.3em;">Track Your Orders</h3>
+                        <p style="margin-bottom: 20px; opacity: 0.9;">View order status and delivery updates</p>
+                        <a href="customer-orders.html" style="display: inline-block; background: white; color: #2d8a3e; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">My Orders</a>
+                    </div>
+
+                    <!-- FAQ Card -->
+                    <div style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); padding: 30px; border-radius: 12px; color: white; text-align: center;">
+                        <div style="font-size: 3em; margin-bottom: 15px;">❓</div>
+                        <h3 style="margin-bottom: 15px; font-size: 1.3em;">FAQs</h3>
+                        <p style="margin-bottom: 20px; opacity: 0.9;">Find answers to frequently asked questions</p>
+                        <a href="../contact.html#faq" style="display: inline-block; background: white; color: #f39c12; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">View FAQs</a>
+                    </div>
+                </div>
+
+                <!-- Quick Tips -->
+                <div style="margin-top: 40px; padding: 25px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #2d8a3e;">
+                    <h4 style="color: #2d8a3e; margin-bottom: 15px; font-size: 1.2em;">💡 Shopping Tips</h4>
+                    <ul style="color: #666; line-height: 2; padding-left: 20px;">
+                        <li>Save items to your cart to purchase later</li>
+                        <li>Check product reviews before making a purchase</li>
+                        <li>Track your orders in the "My Orders" section</li>
+                        <li>Contact sellers directly if you have product questions</li>
+                        <li>Enable notifications to get updates on your orders</li>
+                    </ul>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -405,5 +449,63 @@
         loadProducts();
         updateCartCount();
     </script>
+
+    <!-- Universal Footer - Clean Premium Style -->
+    <footer style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 60px 20px 30px; margin-top: 80px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px;">
+                <!-- About Section -->
+                <div>
+                    <h3 style="font-size: 1.4em; margin-bottom: 20px; color: #2d8a3e;">🛍️ ShopUp</h3>
+                    <p style="color: #b8c1d9; line-height: 1.6; margin-bottom: 20px;">Your trusted marketplace connecting local Ghanaian sellers with customers. Shop authentic products, support local businesses.</p>
+                    <div style="display: flex; gap: 15px; margin-top: 20px;">
+                        <a href="#" style="color: #fff; font-size: 1.5em; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#fff'">📘</a>
+                        <a href="#" style="color: #fff; font-size: 1.5em; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#fff'">🐦</a>
+                        <a href="#" style="color: #fff; font-size: 1.5em; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#fff'">📸</a>
+                        <a href="#" style="color: #fff; font-size: 1.5em; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#fff'">💼</a>
+                    </div>
+                </div>
+                
+                <!-- Quick Links -->
+                <div>
+                    <h4 style="font-size: 1.1em; margin-bottom: 20px; color: #fff; font-weight: 600;">Quick Links</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 12px;"><a href="../storefront-index.html" style="color: #b8c1d9; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#b8c1d9'">Home</a></li>
+                        <li style="margin-bottom: 12px;"><a href="customer-dashboard.html" style="color: #b8c1d9; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#b8c1d9'">Shop</a></li>
+                        <li style="margin-bottom: 12px;"><a href="cart.html" style="color: #b8c1d9; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#b8c1d9'">Cart</a></li>
+                        <li style="margin-bottom: 12px;"><a href="customer-orders.html" style="color: #b8c1d9; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#b8c1d9'">Orders</a></li>
+                        <li style="margin-bottom: 12px;"><a href="../contact.html" style="color: #b8c1d9; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#b8c1d9'">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <!-- For Sellers -->
+                <div>
+                    <h4 style="font-size: 1.1em; margin-bottom: 20px; color: #fff; font-weight: 600;">For Sellers</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 12px;"><a href="../seller/seller-login.html" style="color: #b8c1d9; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#b8c1d9'">Seller Login</a></li>
+                        <li style="margin-bottom: 12px;"><a href="../seller/seller-dashboard-enhanced.html" style="color: #b8c1d9; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#b8c1d9'">Dashboard</a></li>
+                        <li style="margin-bottom: 12px;"><a href="#" style="color: #b8c1d9; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#b8c1d9'">Seller Resources</a></li>
+                        <li style="margin-bottom: 12px;"><a href="#" style="color: #b8c1d9; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#b8c1d9'">Pricing</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Support -->
+                <div>
+                    <h4 style="font-size: 1.1em; margin-bottom: 20px; color: #fff; font-weight: 600;">Support</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 12px;"><a href="../contact.html" style="color: #b8c1d9; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#b8c1d9'">Help Center</a></li>
+                        <li style="margin-bottom: 12px;"><a href="#" style="color: #b8c1d9; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#b8c1d9'">FAQs</a></li>
+                        <li style="margin-bottom: 12px;"><a href="#" style="color: #b8c1d9; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#b8c1d9'">Terms of Service</a></li>
+                        <li style="margin-bottom: 12px;"><a href="#" style="color: #b8c1d9; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#b8c1d9'">Privacy Policy</a></li>
+                        <li style="margin-bottom: 12px;"><a href="#" style="color: #b8c1d9; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#2d8a3e'" onmouseout="this.style.color='#b8c1d9'">Shipping Info</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px; text-align: center;">
+                <p style="color: #b8c1d9; font-size: 0.95em;">&copy; 2024 ShopUp Ghana. All rights reserved. Made with ❤️ in Ghana.</p>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
