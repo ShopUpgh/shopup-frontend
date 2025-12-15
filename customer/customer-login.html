@@ -274,14 +274,17 @@
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    name="password" 
-                    required 
-                    placeholder="Enter your password"
-                    autocomplete="off"
-                >
+                <div style="position: relative;">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        required 
+                        placeholder="Enter your password"
+                        autocomplete="off"
+                    >
+                    <button type="button" onclick="togglePassword('password', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2em;">👁️</button>
+                </div>
             </div>
 
             <div class="form-options">
@@ -339,6 +342,18 @@
             errorAlert.textContent = message;
             errorAlert.classList.add('show');
             successAlert.classList.remove('show');
+        }
+
+        // Password visibility toggle
+        function togglePassword(inputId, button) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                button.textContent = '👁️';
+            }
         }
 
         loginForm.addEventListener('submit', async (e) => {
