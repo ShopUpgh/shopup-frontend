@@ -223,4 +223,7 @@ if (typeof window !== 'undefined') {
     window.SecurityUtils = SecurityUtils;
 }
 
-console.log('✅ Security utilities loaded');
+// Log successful load (only in development)
+if (window.logger) {
+    window.logger.log('✅ Security utilities loaded');
+}

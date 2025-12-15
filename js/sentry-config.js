@@ -9,7 +9,10 @@
         return;
     }
 
-    console.log('🔧 Initializing Sentry...');
+    // Use custom logger (only logs in development)
+    if (window.logger) {
+        window.logger.log('🔧 Initializing Sentry...');
+    }
 
     // Initialize Sentry with minimal filtering
     Sentry.init({
@@ -32,9 +35,12 @@
         ],
     });
 
-    console.log('✅ Sentry initialized successfully');
-    console.log('📊 Environment:', window.location.hostname.includes('localhost') ? 'development' : 'production');
-    console.log('🎯 Capturing ALL error levels for testing');
+    // Use custom logger (only logs in development)
+    if (window.logger) {
+        window.logger.log('✅ Sentry initialized successfully');
+        window.logger.log('📊 Environment:', window.location.hostname.includes('localhost') ? 'development' : 'production');
+        window.logger.log('🎯 Capturing ALL error levels for testing');
+    }
 
 })();
 
