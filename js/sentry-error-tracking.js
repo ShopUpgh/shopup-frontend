@@ -1,11 +1,30 @@
 // Sentry Error Tracking Helper Functions
+
+// Compatibility wrapper for Sentry v7 and v8
+const createTransaction = (op, name) => {
+    // Sentry v8 uses startSpan instead of startTransaction
+    if (typeof Sentry.startSpan === 'function') {
+        return {
+            setStatus: () => {},
+            finish: () => {},
+            span: true // marker for v8
+        };
+    }
+    // Fallback for v7 or if startTransaction exists
+    if (typeof Sentry.startTransaction === 'function') {
+        return Sentry.startTransaction({ op, name });
+    }
+    // No-op fallback
+    return {
+        setStatus: () => {},
+        finish: () => {}
+    };
+};
+
 const SentryTracking = {
     // Track payment operations
     async trackPayment(paymentFunction, paymentData) {
-        const transaction = Sentry.startTransaction({
-            op: 'payment',
-            name: 'Process Payment'
-        });
+        const transaction = createTransaction('payment', 'Process Payment');
         
         Sentry.setContext('payment', paymentData);
         Sentry.setTag('transaction_type', 'payment');
@@ -31,10 +50,7 @@ const SentryTracking = {
     
     // Track checkout process
     async trackCheckout(step, checkoutFunction, checkoutData) {
-        const transaction = Sentry.startTransaction({
-            op: 'checkout',
-            name: `Checkout: ${step}`
-        });
+        const transaction = createTransaction('checkout', `Checkout: ${step}`);
         
         Sentry.setContext('checkout', checkoutData);
         Sentry.setTag('flow', 'checkout');
@@ -86,10 +102,7 @@ const SentryTracking = {
     
     // Track database operations
     async trackDatabaseOperation(dbFunction, table, operation) {
-        const transaction = Sentry.startTransaction({
-            op: 'db.query',
-            name: `${operation} ${table}`
-        });
+        const transaction = createTransaction('db.query', `${operation} ${table}`);
         
         Sentry.setTag('db_table', table);
         Sentry.setTag('db_operation', operation);
@@ -115,10 +128,7 @@ const SentryTracking = {
     
     // Track authentication
     async trackAuth(authFunction, method) {
-        const transaction = Sentry.startTransaction({
-            op: 'auth',
-            name: `Authentication: ${method}`
-        });
+        const transaction = createTransaction('auth', `Authentication: ${method}`);
         
         Sentry.setTag('auth_method', method);
         
@@ -151,10 +161,7 @@ const SentryTracking = {
     
     // Track API calls
     async trackAPICall(apiFunction, endpoint, method = 'GET') {
-        const transaction = Sentry.startTransaction({
-            op: 'http.client',
-            name: `${method} ${endpoint}`
-        });
+        const transaction = createTransaction('http.client', `${method} ${endpoint}`);
         
         const startTime = performance.now();
         
