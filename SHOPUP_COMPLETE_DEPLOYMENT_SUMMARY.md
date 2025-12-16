@@ -141,7 +141,7 @@ bitkey-verify: https://brbewkxpvihnsrbrlpzq.supabase.co/functions/v1/bitkey-veri
 
 **Seller Pages:**
 - seller-login.html
-- seller-register.html
+- signup.html (seller registration)
 - seller-dashboard.html
 - seller-products.html
 - seller-add-product.html
