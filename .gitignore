@@ -1,1 +1,26 @@
-﻿nul
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+dist/
+build/
+.vercel/
+
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.local
+
+# Temporary files
+*.log
+*.tmp
