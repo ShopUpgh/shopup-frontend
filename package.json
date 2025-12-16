@@ -1,0 +1,15 @@
+{
+  "name": "shopup-frontend",
+  "version": "1.0.0",
+  "description": "ShopUp - E-Commerce Platform for Africa",
+  "scripts": {
+    "precompress": "find . -name '*.wasm' -exec gzip -k {} \\; && find . -name '*.wasm' -exec brotli {} -o {}.br \\;"
+  },
+  "keywords": [
+    "ecommerce",
+    "africa",
+    "shopup"
+  ],
+  "author": "Alden's Innovations",
+  "license": "PROPRIETARY"
+}
