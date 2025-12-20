@@ -3,101 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShopUp - Your Online Shopping Destination</title>
+    <title>ShopUp Ghana - Your One-Stop Online Shop</title>
+    <meta name="description" content="ShopUp Ghana - Find the best deals on electronics, fashion, home goods and more. Fast delivery across Ghana.">
+    <meta name="keywords" content="online shopping Ghana, e-commerce, electronics, fashion, home goods">
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="ShopUp Ghana - Your One-Stop Online Shop">
+    <meta property="og:description" content="Find the best deals on electronics, fashion, home goods and more.">
     
-    <!-- CSS -->
-    <link rel="stylesheet" href="styles.css">
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/styles.css">
     
-    <!-- Sentry SDK from CDN -->
+    <!-- Sentry Error Tracking -->
     <script
-        src="https://browser.sentry-cdn.com/7.119.0/bundle.min.js"
-        integrity="sha384-tUpbVrqr1xQ9lC8qZcVZKZk0RqVRWjL8YmEoZ8x9x1xU8qPw7lH5gJMNzL0z0LZ8"
+        src="https://browser.sentry-cdn.com/8.47.0/bundle.min.js"
         crossorigin="anonymous"
     ></script>
     
     <!-- Sentry Configuration -->
-    <script src="sentry-config.js"></script>
+    <script src="/js/sentry-config.js"></script>
 </head>
 <body>
+    <!-- Header -->
     <header>
-        <nav class="navbar">
-            <div class="container">
+        <div class="container">
+            <nav class="navbar">
                 <div class="logo">
-                    <h1>ShopUp</h1>
+                    <h1>ShopUp Ghana</h1>
                 </div>
-                <ul class="nav-menu">
+                <ul class="nav-links">
                     <li><a href="#home">Home</a></li>
                     <li><a href="#products">Products</a></li>
                     <li><a href="#about">About</a></li>
                     <li><a href="#contact">Contact</a></li>
                 </ul>
-                <div class="nav-icons">
-                    <a href="#cart" class="cart-icon">🛒</a>
-                    <a href="#account" class="account-icon">👤</a>
+                <div class="cart-icon">
+                    🛒 <span class="cart-count">0</span>
                 </div>
-            </div>
-        </nav>
+            </nav>
+        </div>
     </header>
 
-    <main>
-        <section id="home" class="hero">
-            <div class="container">
-                <h2>Welcome to ShopUp</h2>
-                <p>Discover amazing products at great prices</p>
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h2>Welcome to ShopUp Ghana</h2>
+                <p>Your One-Stop Online Shopping Destination</p>
                 <button class="cta-button">Shop Now</button>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section id="products" class="products">
-            <div class="container">
-                <h2>Featured Products</h2>
-                <div class="product-grid">
-                    <!-- Products will be dynamically loaded here -->
+    <!-- Products Section -->
+    <section id="products" class="products">
+        <div class="container">
+            <h2>Featured Products</h2>
+            <div class="product-grid">
+                <div class="product-card">
+                    <img src="https://via.placeholder.com/250" alt="Product 1">
+                    <h3>Product Name</h3>
+                    <p class="price">GH₵ 299.99</p>
+                    <button class="add-to-cart">Add to Cart</button>
+                </div>
+                <div class="product-card">
+                    <img src="https://via.placeholder.com/250" alt="Product 2">
+                    <h3>Product Name</h3>
+                    <p class="price">GH₵ 399.99</p>
+                    <button class="add-to-cart">Add to Cart</button>
+                </div>
+                <div class="product-card">
+                    <img src="https://via.placeholder.com/250" alt="Product 3">
+                    <h3>Product Name</h3>
+                    <p class="price">GH₵ 199.99</p>
+                    <button class="add-to-cart">Add to Cart</button>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section id="about" class="about">
-            <div class="container">
-                <h2>About ShopUp</h2>
-                <p>Your trusted online shopping destination for quality products and excellent service.</p>
-            </div>
-        </section>
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2>About ShopUp Ghana</h2>
+            <p>We are Ghana's leading online marketplace, offering quality products at competitive prices with fast delivery nationwide.</p>
+        </div>
+    </section>
 
-        <section id="contact" class="contact">
-            <div class="container">
-                <h2>Contact Us</h2>
-                <form class="contact-form">
-                    <input type="text" placeholder="Your Name" required>
-                    <input type="email" placeholder="Your Email" required>
-                    <textarea placeholder="Your Message" required></textarea>
-                    <button type="submit">Send Message</button>
-                </form>
-            </div>
-        </section>
-    </main>
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2>Contact Us</h2>
+            <p>Email: info@shopupghana.com</p>
+            <p>Phone: +233 123 456 789</p>
+        </div>
+    </section>
 
+    <!-- Footer -->
     <footer>
         <div class="container">
-            <p>&copy; 2025 ShopUp. All rights reserved.</p>
-            <div class="social-links">
-                <a href="#facebook">Facebook</a>
-                <a href="#twitter">Twitter</a>
-                <a href="#instagram">Instagram</a>
-            </div>
+            <p>&copy; 2024 ShopUp Ghana. All rights reserved.</p>
         </div>
     </footer>
 
-    <!-- Logger utility -->
-    <script src="logger.js"></script>
+    <!-- Scripts -->
+    <script src="/js/logger.js"></script>
     
-    <!-- Main application script -->
-    <script src="script.js"></script>
+    <!-- Main Script -->
+    <script src="/js/script.js"></script>
 </body>
 </html>
