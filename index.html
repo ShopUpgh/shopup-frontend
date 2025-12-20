@@ -3,112 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShopUp Ghana - Your One-Stop Online Shop</title>
-    <meta name="description" content="ShopUp Ghana - Find the best deals on electronics, fashion, home goods and more. Fast delivery across Ghana.">
-    <meta name="keywords" content="online shopping Ghana, e-commerce, electronics, fashion, home goods">
-    
-    <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="ShopUp Ghana - Your One-Stop Online Shop">
-    <meta property="og:description" content="Find the best deals on electronics, fashion, home goods and more.">
-    
-    <!-- Styles -->
+    <title>ShopUp Ghana - Sell on Your Terms</title>
     <link rel="stylesheet" href="/css/styles.css">
     
-    <!-- Sentry Error Tracking -->
-    <script
-        src="https://browser.sentry-cdn.com/8.47.0/bundle.min.js"
-        crossorigin="anonymous"
-    ></script>
+    <!-- 1. SENTRY SDK - Must load FIRST from CDN -->
+    <script 
+        src="https://browser.sentry-cdn.com/8.22.0/bundle.min.js" 
+        crossorigin="anonymous" 
+        referrerpolicy="origin">
+    </script>
     
-    <!-- Sentry Configuration -->
+    <!-- 2. SENTRY CONFIG - Loads AFTER SDK is available -->
     <script src="/js/sentry-config.js"></script>
+    
+    <!-- 3. LOGGER - Loads AFTER Sentry is configured -->
+    <script src="/js/logger.js"></script>
 </head>
 <body>
-    <!-- Header -->
-    <header>
+    <!-- Navigation -->
+    <nav class="navbar">
         <div class="container">
-            <nav class="navbar">
-                <div class="logo">
-                    <h1>ShopUp Ghana</h1>
-                </div>
-                <ul class="nav-links">
-                    <li><a href="#home">Home</a></li>
-                    <li><a href="#products">Products</a></li>
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                </ul>
-                <div class="cart-icon">
-                    🛒 <span class="cart-count">0</span>
-                </div>
-            </nav>
+            <div class="nav-brand">
+                <h1>ShopUp</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="/login.html" class="nav-link-seller">Seller Login</a></li>
+                <li><a href="/seller/signup.html" class="btn-primary">Start Selling</a></li>
+            </ul>
         </div>
-    </header>
+    </nav>
 
     <!-- Hero Section -->
-    <section id="home" class="hero">
+    <section class="hero">
         <div class="container">
             <div class="hero-content">
-                <h2>Welcome to ShopUp Ghana</h2>
-                <p>Your One-Stop Online Shopping Destination</p>
-                <button class="cta-button">Shop Now</button>
+                <h1 class="hero-title">Sell on Your Terms</h1>
+                <p class="hero-subtitle">The easiest way to sell online in Ghana and across Africa. Create your online store in minutes. No technical skills needed.</p>
+                <div class="hero-cta">
+                    <a href="/seller/signup.html" class="btn-large btn-primary">Start Selling Now</a>
+                    <a href="#how-it-works" class="btn-large btn-secondary">Learn More</a>
+                </div>
+                <p class="hero-tagline">
+                    <span class="emoji">💰</span> Built with <span class="emoji">❤️</span> for Ghana and Africa
+                </p>
             </div>
         </div>
     </section>
 
-    <!-- Products Section -->
-    <section id="products" class="products">
+    <!-- Why Choose ShopUp Section -->
+    <section id="features" class="features-section">
         <div class="container">
-            <h2>Featured Products</h2>
-            <div class="product-grid">
-                <div class="product-card">
-                    <img src="https://via.placeholder.com/250" alt="Product 1">
-                    <h3>Product Name</h3>
-                    <p class="price">GH₵ 299.99</p>
-                    <button class="add-to-cart">Add to Cart</button>
+            <h2 class="section-title">Why Choose ShopUp?</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🛍️</div>
+                    <h3>Easy Setup</h3>
+                    <p>Create your online store in minutes. No coding required.</p>
                 </div>
-                <div class="product-card">
-                    <img src="https://via.placeholder.com/250" alt="Product 2">
-                    <h3>Product Name</h3>
-                    <p class="price">GH₵ 399.99</p>
-                    <button class="add-to-cart">Add to Cart</button>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>Mobile Money</h3>
+                    <p>Accept payments via MTN, Vodafone Cash, and all major payment methods.</p>
                 </div>
-                <div class="product-card">
-                    <img src="https://via.placeholder.com/250" alt="Product 3">
-                    <h3>Product Name</h3>
-                    <p class="price">GH₵ 199.99</p>
-                    <button class="add-to-cart">Add to Cart</button>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Mobile-First</h3>
+                    <p>Your customers can shop easily from any device.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🇬🇭</div>
+                    <h3>Built for Ghana</h3>
+                    <p>Designed specifically for Ghanaian entrepreneurs and businesses.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Track Everything</h3>
+                    <p>Monitor sales, inventory, and orders from your dashboard.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <h3>No Commission</h3>
+                    <p>Keep 100% of your profits. We charge a small monthly fee, not per-sale.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- About Section -->
-    <section id="about" class="about">
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="how-it-works-section">
         <div class="container">
-            <h2>About ShopUp Ghana</h2>
-            <p>We are Ghana's leading online marketplace, offering quality products at competitive prices with fast delivery nationwide.</p>
+            <h2 class="section-title">How It Works</h2>
+            
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Sign Up</h3>
+                    <p>Create your seller account in less than 2 minutes.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Add Products</h3>
+                    <p>Upload your products with photos, prices, and descriptions.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Share Your Store</h3>
+                    <p>Get your unique store link and share it on social media.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h3>Start Selling</h3>
+                    <p>Receive orders and get paid directly to your account.</p>
+                </div>
+            </div>
+
+            <div class="cta-center">
+                <a href="/seller/signup.html" class="btn-large btn-primary">Get Started Free</a>
+            </div>
         </div>
     </section>
 
-    <!-- Contact Section -->
-    <section id="contact" class="contact">
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing-section">
         <div class="container">
-            <h2>Contact Us</h2>
-            <p>Email: info@shopupghana.com</p>
-            <p>Phone: +233 123 456 789</p>
+            <h2 class="section-title">Simple, Transparent Pricing</h2>
+            <p class="section-subtitle">No hidden fees. No commission on sales. Keep 100% of your profits.</p>
+            
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Starter</h3>
+                    <div class="price">
+                        <span class="currency">GH₵</span>
+                        <span class="amount">49</span>
+                        <span class="period">/month</span>
+                    </div>
+                    <ul class="features-list">
+                        <li>✅ Up to 50 products</li>
+                        <li>✅ Mobile money payments</li>
+                        <li>✅ Order management</li>
+                        <li>✅ Basic analytics</li>
+                        <li>✅ Email support</li>
+                    </ul>
+                    <a href="/seller/signup.html" class="btn-pricing">Start Free Trial</a>
+                </div>
+                <div class="pricing-card featured">
+                    <div class="badge">Most Popular</div>
+                    <h3>Business</h3>
+                    <div class="price">
+                        <span class="currency">GH₵</span>
+                        <span class="amount">99</span>
+                        <span class="period">/month</span>
+                    </div>
+                    <ul class="features-list">
+                        <li>✅ Unlimited products</li>
+                        <li>✅ All payment methods</li>
+                        <li>✅ Advanced analytics</li>
+                        <li>✅ Customer database</li>
+                        <li>✅ Priority support</li>
+                        <li>✅ Custom domain</li>
+                    </ul>
+                    <a href="/seller/signup.html" class="btn-pricing btn-primary">Start Free Trial</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>Enterprise</h3>
+                    <div class="price">
+                        <span class="amount">Custom</span>
+                    </div>
+                    <ul class="features-list">
+                        <li>✅ Everything in Business</li>
+                        <li>✅ Multiple stores</li>
+                        <li>✅ API access</li>
+                        <li>✅ White-label option</li>
+                        <li>✅ Dedicated support</li>
+                        <li>✅ Custom integrations</li>
+                    </ul>
+                    <a href="mailto:sales@shopupgh.com" class="btn-pricing">Contact Sales</a>
+                </div>
+            </div>
+
+            <p class="pricing-note">🎉 First 30 days free on all plans. No credit card required.</p>
+        </div>
+    </section>
+
+    <!-- Social Proof Section -->
+    <section class="testimonials-section">
+        <div class="container">
+            <h2 class="section-title">Trusted by Ghanaian Entrepreneurs</h2>
+            
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"ShopUp helped me move from Instagram DMs to a professional online store. My sales doubled in the first month!"</p>
+                    <div class="testimonial-author">
+                        <strong>Ama Owusu</strong>
+                        <span>Fashion Boutique Owner, Accra</span>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"Mobile money integration was a game-changer. My customers can now pay easily without any hassle."</p>
+                    <div class="testimonial-author">
+                        <strong>Kwame Mensah</strong>
+                        <span>Electronics Retailer, Kumasi</span>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"Setting up my store took less than 10 minutes. Best decision I made for my business!"</p>
+                    <div class="testimonial-author">
+                        <strong>Grace Asante</strong>
+                        <span>Beauty Products Seller, Takoradi</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section class="final-cta-section">
+        <div class="container">
+            <h2>Ready to Start Selling?</h2>
+            <p>Join thousands of Ghanaian entrepreneurs already selling on ShopUp</p>
+            <a href="/seller/signup.html" class="btn-large btn-primary">Create Your Store Now</a>
+            <p class="cta-subtext">No credit card required • 30-day free trial • Cancel anytime</p>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer>
+    <footer class="footer">
         <div class="container">
-            <p>&copy; 2024 ShopUp Ghana. All rights reserved.</p>
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <h3>ShopUp</h3>
+                    <p>Sell on Your Terms</p>
+                    <p class="tagline">Built with ❤️ for Ghana and Africa</p>
+                    <p class="company-info">
+                        <strong>The House of Aldens Holdings</strong><br>
+                        <em>Powered by Commerce, Guided by Conscience</em>
+                    </p>
+                    <p class="division-info">
+                        <strong>Aldens Tech & Innovations</strong><br>
+                        <em>Innovating Tomorrow, Today</em>
+                    </p>
+                </div>
+                <div class="footer-column">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="/seller/signup.html">Start Selling</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="/help">Help Center</a></li>
+                        <li><a href="/contact">Contact Us</a></li>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Contact</h4>
+                    <p>Email: <a href="mailto:hello@shopupgh.com">hello@shopupgh.com</a></p>
+                    <p>Support: <a href="mailto:support@shopupgh.com">support@shopupgh.com</a></p>
+                    <p>Sales: <a href="mailto:sales@shopupgh.com">sales@shopupgh.com</a></p>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2024 ShopUp Ghana. All rights reserved.</p>
+                <p>A division of The House of Aldens Holdings</p>
+            </div>
         </div>
     </footer>
 
-    <!-- Scripts -->
-    <script src="/js/logger.js"></script>
-    
     <!-- Main Script -->
     <script src="/js/script.js"></script>
 </body>
