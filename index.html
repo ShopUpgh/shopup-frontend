@@ -3,31 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShopUp Ghana - Launch Your Online Store in Minutes</title>
-    <meta name="description" content="Create and manage your online store effortlessly. Accept mobile money payments, track inventory, and grow your business with ShopUp Ghana.">
+    <title>ShopUp - E-commerce Platform for Ghana</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <!-- Navigation -->
     <nav class="navbar">
         <div class="container">
-            <div class="nav-wrapper">
-                <a href="#" class="logo">
-                    <i class="fas fa-shopping-bag"></i>
-                    ShopUp Ghana
-                </a>
-                <ul class="nav-menu">
+            <div class="nav-content">
+                <div class="logo">
+                    <img src="assets/logo.svg" alt="ShopUp Logo">
+                    <span>ShopUp</span>
+                </div>
+                <ul class="nav-links">
                     <li><a href="#features">Features</a></li>
-                    <li><a href="#how-it-works">How It Works</a></li>
                     <li><a href="#pricing">Pricing</a></li>
-                    <li><a href="#testimonials">Testimonials</a></li>
-                    <li><a href="#" class="btn btn-outline">Login</a></li>
-                    <li><a href="#" class="btn btn-primary">Start Free Trial</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
                 </ul>
-                <button class="mobile-menu-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
+                <div class="nav-actions">
+                    <a href="#" class="btn-secondary">Sign In</a>
+                    <a href="#" class="btn-primary">Start Free Trial</a>
+                </div>
             </div>
         </div>
     </nav>
@@ -36,51 +34,29 @@
     <section class="hero">
         <div class="container">
             <div class="hero-content">
-                <div class="hero-text">
-                    <span class="badge">🇬🇭 Made for Ghana</span>
-                    <h1>Launch Your Online Store in <span class="highlight">Minutes</span></h1>
-                    <p class="hero-description">
-                        Sell products online with ease. Accept Mobile Money payments, manage inventory, 
-                        and grow your business—all from one beautiful platform designed for Ghanaian entrepreneurs.
-                    </p>
-                    <div class="hero-cta">
-                        <a href="#" class="btn btn-primary btn-large">
-                            Start Free Trial
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                        <a href="#how-it-works" class="btn btn-secondary btn-large">
-                            <i class="fas fa-play-circle"></i>
-                            Watch Demo
-                        </a>
+                <h1>Your Complete E-commerce Solution for Ghana</h1>
+                <p>Build, grow, and manage your online store with ShopUp. Accept mobile money payments, manage inventory, and reach customers across Ghana.</p>
+                <div class="hero-actions">
+                    <a href="#" class="btn-primary btn-large">Start Free Trial</a>
+                    <a href="#" class="btn-secondary btn-large">Watch Demo</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">500+</span>
+                        <span class="stat-label">Active Stores</span>
                     </div>
-                    <div class="hero-stats">
-                        <div class="stat">
-                            <i class="fas fa-check-circle"></i>
-                            <span>No credit card required</span>
-                        </div>
-                        <div class="stat">
-                            <i class="fas fa-check-circle"></i>
-                            <span>Start with free plan • Upgrade anytime</span>
-                        </div>
+                    <div class="stat">
+                        <span class="stat-number">50K+</span>
+                        <span class="stat-label">Transactions</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">99.9%</span>
+                        <span class="stat-label">Uptime</span>
                     </div>
                 </div>
-                <div class="hero-image">
-                    <img src="images/hero-dashboard.png" alt="ShopUp Dashboard Preview">
-                    <div class="floating-card card-1">
-                        <i class="fas fa-chart-line"></i>
-                        <div>
-                            <p class="small">Today's Sales</p>
-                            <p class="large">GH₵ 2,450</p>
-                        </div>
-                    </div>
-                    <div class="floating-card card-2">
-                        <i class="fas fa-shopping-cart"></i>
-                        <div>
-                            <p class="small">New Orders</p>
-                            <p class="large">24</p>
-                        </div>
-                    </div>
-                </div>
+            </div>
+            <div class="hero-image">
+                <img src="assets/hero-dashboard.png" alt="ShopUp Dashboard">
             </div>
         </div>
     </section>
@@ -89,93 +65,52 @@
     <section id="features" class="features">
         <div class="container">
             <div class="section-header">
-                <span class="section-badge">Features</span>
-                <h2>Everything You Need to Succeed</h2>
-                <p>Powerful tools designed specifically for Ghanaian online sellers</p>
+                <h2>Everything You Need to Sell Online</h2>
+                <p>Powerful features designed specifically for Ghanaian businesses</p>
             </div>
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <i class="fas fa-mobile-alt"></i>
+                        <img src="assets/icons/mobile-money.svg" alt="Mobile Money">
                     </div>
                     <h3>Mobile Money Integration</h3>
-                    <p>Accept payments via MTN, Vodafone, and AirtelTigo Mobile Money instantly. Funds directly to your wallet.</p>
+                    <p>Accept payments via MTN Mobile Money, Vodafone Cash, and AirtelTigo Money seamlessly.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <i class="fas fa-store"></i>
-                    </div>
-                    <h3>Beautiful Storefronts</h3>
-                    <p>Choose from stunning, mobile-optimized templates. Your store looks professional on any device.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-boxes"></i>
+                        <img src="assets/icons/inventory.svg" alt="Inventory">
                     </div>
                     <h3>Inventory Management</h3>
-                    <p>Track stock levels, get low-stock alerts, and manage product variations effortlessly.</p>
+                    <p>Track stock levels, manage variants, and get low stock alerts automatically.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <i class="fas fa-bell"></i>
-                    </div>
-                    <h3>Order Notifications</h3>
-                    <p>Get instant SMS and WhatsApp alerts for new orders. Never miss a sale again.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-chart-bar"></i>
+                        <img src="assets/icons/analytics.svg" alt="Analytics">
                     </div>
                     <h3>Sales Analytics</h3>
-                    <p>Understand your business with detailed reports on sales, customers, and product performance.</p>
+                    <p>Real-time insights into your sales, customers, and business performance.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <i class="fas fa-gift"></i>
+                        <img src="assets/icons/delivery.svg" alt="Delivery">
                     </div>
-                    <h3>Start Free</h3>
-                    <p>Begin with our free plan. Upgrade only when you're ready to grow.</p>
+                    <h3>Delivery Management</h3>
+                    <p>Integrate with local delivery services or manage your own delivery fleet.</p>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- How It Works Section -->
-    <section id="how-it-works" class="how-it-works">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-badge">How It Works</span>
-                <h2>Launch Your Store in 3 Simple Steps</h2>
-                <p>Get online and start selling in less than 10 minutes</p>
-            </div>
-            <div class="steps">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h3>Create Your Account</h3>
-                        <p>Sign up with your email and business details. No technical skills needed.</p>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="assets/icons/customization.svg" alt="Customization">
                     </div>
+                    <h3>Store Customization</h3>
+                    <p>Beautiful, mobile-responsive themes that you can customize to match your brand.</p>
                 </div>
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h3>Add Your Products</h3>
-                        <p>Upload product photos, descriptions, and prices. Customize your storefront design.</p>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="assets/icons/support.svg" alt="Support">
                     </div>
+                    <h3>24/7 Support</h3>
+                    <p>Get help whenever you need it from our dedicated Ghana-based support team.</p>
                 </div>
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h3>Start Selling</h3>
-                        <p>Share your store link, accept Mobile Money payments, and manage orders from your dashboard.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="cta-center">
-                <a href="#" class="btn btn-primary btn-large">
-                    Start Your Free Trial
-                    <i class="fas fa-arrow-right"></i>
-                </a>
             </div>
         </div>
     </section>
@@ -184,78 +119,76 @@
     <section id="pricing" class="pricing">
         <div class="container">
             <div class="section-header">
-                <span class="section-badge">Pricing</span>
-                <h2>Plans That Grow With Your Business</h2>
-                <p>Start free, upgrade when you're ready. No hidden fees. No commission on sales.</p>
+                <h2>Simple, Transparent Pricing</h2>
+                <p>Choose the plan that fits your business size</p>
             </div>
             <div class="pricing-grid">
-                <!-- FREE Plan -->
+                <!-- Free Plan -->
                 <div class="pricing-card">
                     <div class="pricing-header">
-                        <h3>FREE</h3>
+                        <h3>Free</h3>
                         <div class="price">
                             <span class="currency">GH₵</span>
                             <span class="amount">0</span>
-                            <span class="period">/forever</span>
+                            <span class="period">/month</span>
                         </div>
-                        <p class="pricing-description">Perfect for getting started</p>
+                        <p class="pricing-description">Perfect for testing and small starts</p>
                     </div>
                     <ul class="features-list">
-                        <li><i class="fas fa-check"></i> Up to 10 products</li>
-                        <li><i class="fas fa-check"></i> Basic storefront</li>
-                        <li><i class="fas fa-check"></i> Mobile Money payments</li>
-                        <li><i class="fas fa-check"></i> Order notifications</li>
-                        <li><i class="fas fa-check"></i> Email support</li>
-                        <li><i class="fas fa-times"></i> Custom domain</li>
-                        <li><i class="fas fa-times"></i> Advanced analytics</li>
+                        <li>Up to 10 products</li>
+                        <li>Basic mobile money integration</li>
+                        <li>Standard themes</li>
+                        <li>Email support</li>
+                        <li>5% transaction fee</li>
                     </ul>
-                    <a href="#" class="btn btn-outline btn-block">Get Started Free</a>
+                    <a href="#" class="btn-secondary btn-block">Get Started</a>
                 </div>
 
-                <!-- Starter Plan -->
+                <!-- Essential Plan -->
                 <div class="pricing-card">
                     <div class="pricing-header">
-                        <h3>Starter</h3>
+                        <h3>Essential</h3>
                         <div class="price">
                             <span class="currency">GH₵</span>
                             <span class="amount">49</span>
                             <span class="period">/month</span>
                         </div>
-                        <p class="pricing-description">For small businesses</p>
+                        <p class="pricing-description">For growing businesses</p>
                     </div>
                     <ul class="features-list">
-                        <li><i class="fas fa-check"></i> Up to 100 products</li>
-                        <li><i class="fas fa-check"></i> Custom domain</li>
-                        <li><i class="fas fa-check"></i> Mobile Money payments</li>
-                        <li><i class="fas fa-check"></i> SMS & WhatsApp notifications</li>
-                        <li><i class="fas fa-check"></i> Basic analytics</li>
-                        <li><i class="fas fa-check"></i> Email support</li>
+                        <li>Up to 100 products</li>
+                        <li>All payment methods</li>
+                        <li>Premium themes</li>
+                        <li>Priority support</li>
+                        <li>3% transaction fee</li>
+                        <li>Basic analytics</li>
                     </ul>
-                    <a href="#" class="btn btn-outline btn-block">Start Free Trial</a>
+                    <a href="#" class="btn-primary btn-block">Start Free Trial</a>
                 </div>
 
                 <!-- Business Plan -->
                 <div class="pricing-card featured">
-                    <div class="popular-badge">Most Popular</div>
+                    <div class="badge">Most Popular</div>
                     <div class="pricing-header">
                         <h3>Business</h3>
                         <div class="price">
                             <span class="currency">GH₵</span>
-                            <span class="amount">99</span>
+                            <span class="amount">149</span>
                             <span class="period">/month</span>
                         </div>
-                        <p class="pricing-description">For growing businesses</p>
+                        <p class="pricing-description">For established businesses</p>
                     </div>
                     <ul class="features-list">
-                        <li><i class="fas fa-check"></i> Unlimited products</li>
-                        <li><i class="fas fa-check"></i> Custom domain</li>
-                        <li><i class="fas fa-check"></i> All payment methods</li>
-                        <li><i class="fas fa-check"></i> Advanced notifications</li>
-                        <li><i class="fas fa-check"></i> Advanced analytics</li>
-                        <li><i class="fas fa-check"></i> Priority support</li>
-                        <li><i class="fas fa-check"></i> Marketing tools</li>
+                        <li>Unlimited products</li>
+                        <li>All payment methods</li>
+                        <li>Custom themes</li>
+                        <li>24/7 priority support</li>
+                        <li>2% transaction fee</li>
+                        <li>Advanced analytics</li>
+                        <li>API access</li>
+                        <li>Multi-user accounts</li>
                     </ul>
-                    <a href="#" class="btn btn-primary btn-block">Start Free Trial</a>
+                    <a href="#" class="btn-primary btn-block">Start Free Trial</a>
                 </div>
 
                 <!-- Enterprise Plan -->
@@ -265,98 +198,110 @@
                         <div class="price">
                             <span class="amount">Custom</span>
                         </div>
-                        <p class="pricing-description">For large businesses</p>
+                        <p class="pricing-description">For large-scale operations</p>
                     </div>
                     <ul class="features-list">
-                        <li><i class="fas fa-check"></i> Everything in Business</li>
-                        <li><i class="fas fa-check"></i> Custom integrations</li>
-                        <li><i class="fas fa-check"></i> Dedicated account manager</li>
-                        <li><i class="fas fa-check"></i> API access</li>
-                        <li><i class="fas fa-check"></i> White-label options</li>
-                        <li><i class="fas fa-check"></i> 24/7 phone support</li>
+                        <li>Everything in Business</li>
+                        <li>Custom integrations</li>
+                        <li>Dedicated account manager</li>
+                        <li>Custom transaction fees</li>
+                        <li>White-label options</li>
+                        <li>SLA guarantee</li>
+                        <li>Training & onboarding</li>
                     </ul>
-                    <a href="#" class="btn btn-outline btn-block">Contact Sales</a>
+                    <a href="#" class="btn-secondary btn-block">Contact Sales</a>
                 </div>
             </div>
-            <p class="pricing-note">🎉 Free plan forever • Paid plans: First 30 days free • No credit card required • Cancel anytime</p>
         </div>
     </section>
 
-    <!-- Testimonials Section -->
-    <section id="testimonials" class="testimonials">
+    <!-- About Section -->
+    <section id="about" class="about">
         <div class="container">
-            <div class="section-header">
-                <span class="section-badge">Testimonials</span>
-                <h2>Loved by Ghanaian Entrepreneurs</h2>
-                <p>See what our customers are saying about ShopUp</p>
-            </div>
-            <div class="testimonials-grid">
-                <div class="testimonial-card">
-                    <div class="stars">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <p>"ShopUp transformed my small fashion business. I now receive orders from all over Accra, and Mobile Money payments make everything so easy!"</p>
-                    <div class="testimonial-author">
-                        <img src="images/avatar1.jpg" alt="Ama Serwaa">
-                        <div>
-                            <h4>Ama Serwaa</h4>
-                            <p>Fashion Designer, Accra</p>
+            <div class="about-content">
+                <div class="about-text">
+                    <h2>Built for Ghanaian Entrepreneurs</h2>
+                    <p>ShopUp was created to address the unique challenges of e-commerce in Ghana. We understand the importance of mobile money, the need for reliable delivery tracking, and the value of local customer support.</p>
+                    <p>Our platform has helped hundreds of businesses transition online and grow their revenue. From small artisans to medium-sized retailers, ShopUp provides the tools you need to succeed in Ghana's digital economy.</p>
+                    <div class="about-features">
+                        <div class="about-feature">
+                            <h4>🇬🇭 Ghana-First</h4>
+                            <p>Built specifically for the Ghanaian market with local payment and delivery integrations.</p>
+                        </div>
+                        <div class="about-feature">
+                            <h4>🚀 Easy Setup</h4>
+                            <p>Get your store online in minutes, not days. No technical knowledge required.</p>
+                        </div>
+                        <div class="about-feature">
+                            <h4>📈 Grow Your Business</h4>
+                            <p>Access tools and insights that help you understand and expand your customer base.</p>
                         </div>
                     </div>
                 </div>
-                <div class="testimonial-card">
-                    <div class="stars">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <p>"Setting up my store took less than 10 minutes. The inventory management saves me hours every week. Best decision for my business!"</p>
-                    <div class="testimonial-author">
-                        <img src="images/avatar2.jpg" alt="Kwame Mensah">
-                        <div>
-                            <h4>Kwame Mensah</h4>
-                            <p>Electronics Seller, Kumasi</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="testimonial-card">
-                    <div class="stars">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <p>"The analytics help me understand what products sell best. I've doubled my revenue in just 3 months with ShopUp!"</p>
-                    <div class="testimonial-author">
-                        <img src="images/avatar3.jpg" alt="Abena Osei">
-                        <div>
-                            <h4>Abena Osei</h4>
-                            <p>Beauty Products, Takoradi</p>
-                        </div>
-                    </div>
+                <div class="about-image">
+                    <img src="assets/about-image.png" alt="Ghanaian Entrepreneur">
                 </div>
             </div>
         </div>
     </section>
 
     <!-- CTA Section -->
-    <section class="cta-section">
+    <section class="cta">
         <div class="container">
             <div class="cta-content">
-                <h2>Ready to Grow Your Business?</h2>
-                <p>Join thousands of Ghanaian entrepreneurs already selling online with ShopUp</p>
-                <a href="#" class="btn btn-primary btn-large">
-                    Start Your Free Trial
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <p class="cta-subtext">No credit card required • Start with free plan • Upgrade anytime</p>
+                <h2>Ready to Start Selling Online?</h2>
+                <p>Join hundreds of Ghanaian businesses already growing with ShopUp</p>
+                <a href="#" class="btn-primary btn-large">Start Your Free 14-Day Trial</a>
+                <p class="cta-note">No credit card required • Cancel anytime • 24/7 support</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2>Get in Touch</h2>
+                <p>Have questions? We're here to help</p>
+            </div>
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <h4>📧 Email</h4>
+                        <p>support@shopup.gh</p>
+                    </div>
+                    <div class="contact-item">
+                        <h4>📞 Phone</h4>
+                        <p>+233 XX XXX XXXX</p>
+                    </div>
+                    <div class="contact-item">
+                        <h4>📍 Address</h4>
+                        <p>Accra, Ghana</p>
+                    </div>
+                    <div class="contact-item">
+                        <h4>⏰ Support Hours</h4>
+                        <p>24/7 for Business & Enterprise plans<br>9AM - 6PM for other plans</p>
+                    </div>
+                </div>
+                <form class="contact-form">
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <input type="text" id="subject" name="subject" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary btn-block">Send Message</button>
+                </form>
             </div>
         </div>
     </section>
@@ -364,48 +309,33 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <div class="footer-grid">
-                <div class="footer-col">
-                    <div class="footer-logo">
-                        <i class="fas fa-shopping-bag"></i>
-                        ShopUp Ghana
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="logo">
+                        <img src="assets/logo.svg" alt="ShopUp Logo">
+                        <span>ShopUp</span>
                     </div>
-                    <p>Empowering Ghanaian entrepreneurs to sell online with ease.</p>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-linkedin"></i></a>
-                    </div>
+                    <p>Empowering Ghanaian businesses to succeed online.</p>
                 </div>
-                <div class="footer-col">
+                <div class="footer-section">
                     <h4>Product</h4>
                     <ul>
                         <li><a href="#features">Features</a></li>
                         <li><a href="#pricing">Pricing</a></li>
-                        <li><a href="#">Security</a></li>
-                        <li><a href="#">Roadmap</a></li>
+                        <li><a href="#">Case Studies</a></li>
+                        <li><a href="#">API Documentation</a></li>
                     </ul>
                 </div>
-                <div class="footer-col">
+                <div class="footer-section">
                     <h4>Company</h4>
                     <ul>
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">Blog</a></li>
+                        <li><a href="#about">About Us</a></li>
                         <li><a href="#">Careers</a></li>
-                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#contact">Contact</a></li>
                     </ul>
                 </div>
-                <div class="footer-col">
-                    <h4>Resources</h4>
-                    <ul>
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">Documentation</a></li>
-                        <li><a href="#">API Reference</a></li>
-                        <li><a href="#">Community</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
+                <div class="footer-section">
                     <h4>Legal</h4>
                     <ul>
                         <li><a href="#">Privacy Policy</a></li>
@@ -416,7 +346,12 @@
             </div>
             <div class="footer-bottom">
                 <p>&copy; 2024 ShopUp Ghana. All rights reserved.</p>
-                <p>Made with <i class="fas fa-heart"></i> in Ghana</p>
+                <div class="social-links">
+                    <a href="#">Facebook</a>
+                    <a href="#">Twitter</a>
+                    <a href="#">Instagram</a>
+                    <a href="#">LinkedIn</a>
+                </div>
             </div>
         </div>
     </footer>
