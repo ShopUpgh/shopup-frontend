@@ -1,4 +1,4 @@
-// logger.js - Production logging system for ShopUp
+// logger.js - Production logging system
 console.log('🔍 Logger initialized');
 
 // Export logger functions
