@@ -5,8 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShopUp Ghana - Sell on Your Terms</title>
     <link rel="stylesheet" href="/css/styles.css">
-    <!-- Logger -->
-    <script src="/js/logger.js"></script>
     
-    <!-- Sentry -->
+    <!-- 1. SENTRY SDK - Must load FIRST from CDN -->
+    <script 
+        src="https://browser.sentry-cdn.com/8.22.0/bundle.min.js" 
+        crossorigin="anonymous" 
+        referrerpolicy="origin">
+    </script>
+    
+    <!-- 2. SENTRY CONFIG - Loads AFTER SDK is available -->
     <script src="/js/sentry-config.js"></script>
+    
+    <!-- 3. LOGGER - Loads AFTER Sentry is configured -->
+    <script src="/js/logger.js"></script>
+</head>
+<body>
+    <!-- Your page content goes here -->
+    
+    <h1>ShopUp Ghana - Sell on Your Terms</h1>
+    <p>Welcome to ShopUp Ghana!</p>
+    
+    <!-- 4. YOUR MAIN SCRIPT - Loads LAST -->
+    <script src="/js/script.js" defer></script>
+</body>
+</html>
