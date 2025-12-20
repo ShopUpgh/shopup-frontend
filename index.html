@@ -14,16 +14,13 @@
       integrity="sha384-jn5Xx..." 
       crossorigin="anonymous"
     ></script>
-    <script>
-      if (typeof Sentry !== 'undefined') {
-        Sentry.init({
-          dsn: "https://your-sentry-dsn@sentry.io/your-project-id",
-          integrations: [new Sentry.BrowserTracing()],
-          tracesSampleRate: 1.0,
-          environment: "production"
-        });
-      }
-    </script>
+    <script src="/js/sentry-config.js"></script>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/styles.css">
 
     <style>
         * {
@@ -846,6 +843,11 @@
                 <button class="pricing-button">Contact Sales</button>
             </div>
         </div>
+        
+        <!-- Pricing Note -->
+        <div class="pricing-note">
+            <p><strong>Free plan forever</strong> • Paid plans: First 30 days free • No credit card required • Cancel anytime</p>
+        </div>
     </section>
 
     <!-- Testimonials Section -->
@@ -936,16 +938,23 @@
         
         <div class="footer-bottom">
             <p>&copy; 2025 ShopUp Ghana. All rights reserved.</p>
-            <div class="footer-branding">
-                <p>A product of <strong>The House of Aldens Holdings</strong></p>
+            <div class="company-branding">
+                <div class="company-info">
+                    <p class="footer-tagline">A product of <strong>The House of Aldens Holdings</strong></p>
+                </div>
+                <div class="division-info">
+                    <p class="footer-subtitle"><strong>Aldens Tech &amp; Innovations</strong> division</p>
+                </div>
             </div>
         </div>
     </footer>
 
     <!-- Logger Script -->
-    <script src="logger.js"></script>
+    <script src="/js/logger.js"></script>
 
     <!-- Main JavaScript -->
+    <script src="/js/script.js" defer></script>
+
     <script>
         // Mobile Menu Toggle
         const menuToggle = document.getElementById('menuToggle');
