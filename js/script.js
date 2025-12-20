@@ -1,72 +1,99 @@
-// script.js - Main application script for ShopUp Ghana
-console.log('✅ ShopUp loaded successfully! Sell on Your Terms.');
-console.log('🌍 Built with ❤️ for Ghana and Africa');
+// script.js - ShopUp Main JavaScript
 
-// Initialize app when DOM is ready
+console.log('ShopUp loaded successfully! Sell on Your Terms.');
+console.log('Built with ❤️ for Ghana and Africa');
+console.log('All authentication pages are now live!');
+
+// Smooth scrolling for navigation links
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('📱 ShopUp app initialized');
+    // Get all anchor links that start with #
+    const links = document.querySelectorAll('a[href^="#"]');
     
-    // Log page info using logger if available
-    if (window.logger) {
-        window.logger.info('ShopUp application started', {
-            page: document.title,
-            url: window.location.href
+    links.forEach(link => {
+        link.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            
+            // Only handle if href is not just '#' alone
+            if (href && href !== '#' && href.length > 1) {
+                e.preventDefault();
+                
+                const targetId = href.substring(1);
+                const targetElement = document.getElementById(targetId);
+                
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            } else if (href === '#') {
+                // Prevent default behavior for empty anchors
+                e.preventDefault();
+            }
+        });
+    });
+    
+    // Contact form handling
+    const contactForm = document.getElementById('contactForm');
+    if (contactForm) {
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                subject: document.getElementById('subject').value,
+                message: document.getElementById('message').value
+            };
+            
+            console.log('Contact form submitted:', formData);
+            
+            // TODO: Send to backend API
+            alert('Thank you for your message! We will get back to you soon.');
+            
+            // Reset form
+            contactForm.reset();
+            
+            // Track with logger if available
+            if (window.logger) {
+                window.logger.track('contact_form_submitted', {
+                    subject: formData.subject
+                });
+            }
         });
     }
     
-    // Check authentication status
-    checkAuthStatus();
-    
-    // Initialize any page-specific features
-    initializePageFeatures();
-});
-
-// Check if user is authenticated
-function checkAuthStatus() {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    
-    if (token && user) {
-        console.log('✅ User is authenticated');
-        if (window.logger) {
-            window.logger.info('User authenticated', { user: JSON.parse(user).email });
-        }
-    } else {
-        console.log('ℹ️ User is not authenticated');
-    }
-}
-
-// Initialize page-specific features
-function initializePageFeatures() {
-    const path = window.location.pathname;
-    
-    if (path === '/' || path === '/index.html') {
-        console.log('🏠 Home page loaded');
-        // Add home page specific initialization here
-    }
-    
-    // Log page view
+    // Track page view
     if (window.logger) {
         window.logger.pageView(document.title);
     }
+});
+
+// Mobile menu toggle (if you add mobile menu later)
+function toggleMobileMenu() {
+    const navLinks = document.querySelector('.nav-links');
+    if (navLinks) {
+        navLinks.classList.toggle('active');
+    }
 }
 
-// Global error handler
-window.addEventListener('error', function(event) {
-    console.error('❌ Global error caught:', event.error);
+// Pricing plan selection tracking
+document.addEventListener('DOMContentLoaded', function() {
+    const pricingButtons = document.querySelectorAll('.pricing-card .btn-primary, .pricing-card .btn-secondary');
     
-    if (window.logger) {
-        window.logger.error('Uncaught error', event.error);
-    }
+    pricingButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const card = this.closest('.pricing-card');
+            const planName = card.querySelector('h3').textContent;
+            
+            console.log('Selected plan:', planName);
+            
+            // Track with logger
+            if (window.logger) {
+                window.logger.track('pricing_plan_selected', {
+                    plan: planName
+                });
+            }
+        });
+    });
 });
-
-// Global promise rejection handler
-window.addEventListener('unhandledrejection', function(event) {
-    console.error('❌ Unhandled promise rejection:', event.reason);
-    
-    if (window.logger) {
-        window.logger.error('Unhandled promise rejection', event.reason);
-    }
-});
-
-console.log('🚀 All authentication pages are now live!');
