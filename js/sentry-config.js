@@ -1,58 +1,38 @@
-// Sentry Configuration for ShopUp Ghana
-// Simplified for maximum error capture
+// sentry-config.js - Sentry Error Tracking Configuration
 
-(function() {
-    'use strict';
-    
-    if (typeof Sentry === 'undefined') {
-        console.error('❌ Sentry SDK not loaded');
-        return;
-    }
+// Only initialize Sentry if we have a valid DSN
+const SENTRY_DSN = 'YOUR_ACTUAL_SENTRY_DSN_HERE'; // Replace with real DSN from Sentry dashboard
 
-    console.log('🔧 Initializing Sentry...');
-
-    // Initialize Sentry with minimal filtering
-    Sentry.init({
-        dsn: "https://15328ade5c7644a80ab839d3a7488e67@o4510484995113040.ingest.de.sentry.io/4510484995113040",
+if (window.Sentry && SENTRY_DSN && SENTRY_DSN !== 'YOUR_ACTUAL_SENTRY_DSN_HERE') {
+    window.Sentry.init({
+        dsn: SENTRY_DSN,
         
-        // Capture everything for now
+        // Set environment
+        environment: window.location.hostname === 'localhost' ? 'development' : 'production',
+        
+        // Set sample rate (100% for now, adjust in production)
         tracesSampleRate: 1.0,
         
-        // Environment
-        environment: window.location.hostname.includes('localhost') ? 'development' : 'production',
+        // Capture specific errors
+        beforeSend(event, hint) {
+            // Filter out errors you don't care about
+            if (event.exception) {
+                const error = hint.originalException;
+                
+                // Ignore common browser extension errors
+                if (error && error.message && error.message.includes('chrome-extension://')) {
+                    return null;
+                }
+            }
+            
+            return event;
+        },
         
-        // Release
+        // Add release information (optional)
         release: 'shopup@1.0.0',
-        
-        // Remove beforeSend filter - capture everything
-        
-        // Only ignore real noise
-        ignoreErrors: [
-            'ResizeObserver loop limit exceeded',
-        ],
     });
-
+    
     console.log('✅ Sentry initialized successfully');
-    console.log('📊 Environment:', window.location.hostname.includes('localhost') ? 'development' : 'production');
-    console.log('🎯 Capturing ALL error levels for testing');
-
-})();
-
-// Helper functions
-window.identifySentryUser = function(user) {
-    if (typeof Sentry !== 'undefined' && user && user.id) {
-        Sentry.setUser({
-            id: user.id,
-            email: user.email,
-            username: user.email?.split('@')[0]
-        });
-    }
-};
-
-window.captureSentryError = function(error, context = {}) {
-    if (typeof Sentry !== 'undefined') {
-        Sentry.captureException(error, {
-            contexts: { custom: context }
-        });
-    }
-};
+} else {
+    console.log('ℹ️ Sentry not initialized (DSN not configured)');
+}
