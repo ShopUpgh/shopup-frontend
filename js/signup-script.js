@@ -173,6 +173,13 @@ function validateForm(data) {
         return false;
     }
     
+    // Password confirmation validation
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    if (data.password !== confirmPassword) {
+        showToast('Passwords do not match');
+        return false;
+    }
+    
     // Phone validation
     const phoneRegex = /^0[0-9]{9}$/;
     if (!phoneRegex.test(data.phone)) {
