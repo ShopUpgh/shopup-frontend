@@ -13,7 +13,7 @@ console.log('🔑 Key configured:', SUPABASE_ANON_KEY.length > 0 ? 'Yes' : 'No')
 // Test database connection
 async function testConnection() {
     try {
-        const { data, error } = await supabase.from('customer_profiles').select('count');
+        const { data, error } = await supabase.from('sellers').select('count');
         if (error) {
             console.warn('⚠️ Database connection:', error.message);
         } else {
