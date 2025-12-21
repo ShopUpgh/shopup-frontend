@@ -174,7 +174,12 @@ function validateForm(data) {
     }
     
     // Password confirmation validation
-    const confirmPassword = document.getElementById('confirmPassword').value;
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    if (!confirmPasswordInput) {
+        showToast('Form error: Confirm password field not found');
+        return false;
+    }
+    const confirmPassword = confirmPasswordInput.value;
     if (data.password !== confirmPassword) {
         showToast('Passwords do not match');
         return false;
