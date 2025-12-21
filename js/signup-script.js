@@ -3,6 +3,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Wait for Supabase to initialize
     setTimeout(() => {
+        // Use the global supabase client
+        const supabase = window.supabaseClient || window.supabase;
+        
         if (!supabase) {
             console.error('Supabase not initialized!');
             showToast('❌ Connection error. Please refresh the page.');
@@ -13,12 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 200);
     
     const signupForm = document.getElementById('signupForm');
-    const submitBtn = document.getElementById('submitBtn');
     
-    signupForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        await handleSignup();
-    });
+    if (signupForm) {
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await handleSignup();
+        });
+    }
     
     // Real-time validation
     setupValidation();
@@ -26,6 +30,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Handle signup with Supabase
 async function handleSignup() {
+    // Get the global supabase client
+    const supabase = window.supabaseClient;
+    
+    if (!supabase) {
+        console.error('Supabase client not found!');
+        showToast('❌ Connection error. Please refresh the page.');
+        return;
+    }
+    
     const submitBtn = document.querySelector('.btn-submit') || document.querySelector('button[type="submit"]');
     
     if (!submitBtn) {
@@ -91,7 +104,6 @@ async function handleSignup() {
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Step 2: Create seller profile in database
-        // We'll use the authData.user.id directly since we know it was just created
         const storeSlug = formData.businessName
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')
@@ -173,6 +185,13 @@ function validateForm(data) {
         return false;
     }
     
+    // Password confirmation check
+    const confirmPassword = document.getElementById('confirmPassword');
+    if (confirmPassword && confirmPassword.value !== data.password) {
+        showToast('Passwords do not match');
+        return false;
+    }
+    
     // Phone validation
     const phoneRegex = /^0[0-9]{9}$/;
     if (!phoneRegex.test(data.phone)) {
@@ -186,6 +205,13 @@ function validateForm(data) {
         return false;
     }
     
+    // Terms checkbox
+    const termsCheckbox = document.getElementById('agreeTerms');
+    if (termsCheckbox && !termsCheckbox.checked) {
+        showToast('Please agree to the Terms of Service and Privacy Policy');
+        return false;
+    }
+    
     return true;
 }
 
@@ -196,24 +222,31 @@ function setupValidation() {
     const confirmPasswordInput = document.getElementById('confirmPassword');
     const phoneInput = document.getElementById('phone');
     
+    if (!emailInput || !passwordInput || !phoneInput) {
+        console.warn('Some form inputs not found for validation');
+        return;
+    }
+    
     // Email validation
     emailInput.addEventListener('blur', () => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (emailInput.value && !emailRegex.test(emailInput.value)) {
             emailInput.style.borderColor = '#e53935';
         } else {
-            emailInput.style.borderColor = '#e0e0e0';
+            emailInput.style.borderColor = '#ddd';
         }
     });
     
     // Password match validation
-    confirmPasswordInput.addEventListener('input', () => {
-        if (confirmPasswordInput.value && confirmPasswordInput.value !== passwordInput.value) {
-            confirmPasswordInput.style.borderColor = '#e53935';
-        } else {
-            confirmPasswordInput.style.borderColor = '#e0e0e0';
-        }
-    });
+    if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('input', () => {
+            if (confirmPasswordInput.value && confirmPasswordInput.value !== passwordInput.value) {
+                confirmPasswordInput.style.borderColor = '#e53935';
+            } else {
+                confirmPasswordInput.style.borderColor = '#ddd';
+            }
+        });
+    }
     
     // Phone validation
     phoneInput.addEventListener('blur', () => {
@@ -221,7 +254,7 @@ function setupValidation() {
         if (phoneInput.value && !phoneRegex.test(phoneInput.value)) {
             phoneInput.style.borderColor = '#e53935';
         } else {
-            phoneInput.style.borderColor = '#e0e0e0';
+            phoneInput.style.borderColor = '#ddd';
         }
     });
 }
@@ -230,6 +263,12 @@ function setupValidation() {
 function showToast(message) {
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toastMessage');
+    
+    if (!toast || !toastMessage) {
+        console.error('Toast elements not found');
+        alert(message); // Fallback to alert
+        return;
+    }
     
     toastMessage.textContent = message;
     toast.classList.add('show');
