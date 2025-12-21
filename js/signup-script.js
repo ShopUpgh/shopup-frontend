@@ -4,8 +4,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Wait for Supabase to initialize
     setTimeout(() => {
         if (!supabase) {
-            console.error('Supabase not initialized!');
+            console.error('Supabase client not initialized!');
             showToast('❌ Connection error. Please refresh the page.');
+            return;
+        }
+        
+        if (!supabase.auth) {
+            console.error('Supabase auth module not available!');
+            showToast('❌ Authentication service unavailable. Please refresh the page.');
             return;
         }
         
@@ -41,6 +47,15 @@ async function handleSignup() {
     submitBtn.textContent = 'Creating your store...';
     
     try {
+        // Check if Supabase is available
+        if (!supabase || !supabase.auth) {
+            console.error('Supabase client or auth module not available');
+            showToast('❌ Service unavailable. Please refresh the page.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            return;
+        }
+        
         // Get form data
         const formData = {
             email: document.getElementById('email').value.trim(),
