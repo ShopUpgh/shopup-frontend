@@ -4,11 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - ShopUp Seller</title>
-    <link rel="stylesheet" href="signup-styles.css">
+    <!-- Fixed path: styles live in /css -->
+    <link rel="stylesheet" href="css/signup-styles.css">
     
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
+
+    <!-- Fixed path: config lives in /js -->
+    <script src="js/supabase-config.js"></script>
+
+    <!-- Added: signup script lives in /js -->
+    <script src="js/signup-script.js" defer></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -291,7 +297,5 @@
     <div class="toast" id="toast">
         <span id="toastMessage"></span>
     </div>
-
-    <script src="signup-script.js"></script>
 </body>
 </html>
