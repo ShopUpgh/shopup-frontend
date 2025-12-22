@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Wait for Supabase to initialize
     setTimeout(() => {
         // Use the global supabase client
-        const supabase = window.supabaseClient || window.supabase;
+        const supabase = window.supabaseClient;
         
         if (!supabase) {
             console.error('Supabase not initialized!');
