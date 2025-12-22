@@ -49,7 +49,7 @@ async function handleLogin() {
             return;
         }
         
-        console.log('Attempting login with:', email);
+        console.log('Attempting login...');
         
         // Step 1: Sign in with Supabase Auth
         const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -123,8 +123,13 @@ function showToast(message) {
     const toastMessage = document.getElementById('toastMessage');
     
     if (!toast || !toastMessage) {
-        console.error('Toast elements not found');
-        alert(message);
+        console.error('Toast elements not found, creating fallback notification');
+        // Create a simple notification div if toast doesn't exist
+        const notification = document.createElement('div');
+        notification.style.cssText = 'position:fixed;top:20px;right:20px;background:#333;color:#fff;padding:15px 20px;border-radius:5px;z-index:10000;box-shadow:0 2px 10px rgba(0,0,0,0.2)';
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 4000);
         return;
     }
     

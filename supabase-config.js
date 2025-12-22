@@ -1,4 +1,6 @@
 // Supabase Configuration for ShopUp Ghana
+// Note: The anon key is safe to expose in client-side code as it's designed to be public.
+// Row Level Security (RLS) policies on the database protect sensitive data.
 const SUPABASE_URL = 'https://brbewkxpvihnsrbrlpzq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyYmV3a3hwdmlobnNyYnJscHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMTI4OTAsImV4cCI6MjA3ODY4ODg5MH0.SfZMbpxsNHTgoXIvn9HZnXSZAQnCSjKNpAnH4vLVVj4';
 

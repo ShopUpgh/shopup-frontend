@@ -61,7 +61,7 @@ async function handleSignup() {
             return;
         }
         
-        console.log('Attempting signup with:', formData.email);
+        console.log('Attempting signup...');
         
         // Step 1: Create auth user with Supabase
         const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -95,14 +95,13 @@ async function handleSignup() {
         const storeSlug = formData.businessName
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-+|-+$/g, '');
+            .replace(/^-+|-+$/g, '') || 'store-' + Date.now();
         
         const { data: sellerData, error: sellerError } = await supabase
             .from('sellers')
             .insert([{
                 id: authData.user.id,
                 email: formData.email,
-                password_hash: 'managed-by-supabase-auth',
                 business_name: formData.businessName,
                 first_name: formData.firstName,
                 last_name: formData.lastName,
