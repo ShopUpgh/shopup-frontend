@@ -1,6 +1,4 @@
-// ShopUp Seller Login Script with Supabase Integration
-
-console.log('Login script loaded');
+// ShopUp Login with Supabase Integration
 
 document.addEventListener('DOMContentLoaded', () => {
     // Wait for Supabase to initialize
@@ -143,5 +141,3 @@ function showToast(message) {
         toast.classList.remove('show');
     }, 4000);
 }
-
-console.log('Login script loaded with Supabase integration');
