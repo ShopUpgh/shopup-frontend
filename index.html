@@ -13,16 +13,12 @@
       src="https://browser.sentry-cdn.com/7.91.0/bundle.tracing.min.js"
       crossorigin="anonymous"
     ></script>
-    <script>
-      if (typeof Sentry !== 'undefined') {
-        Sentry.init({
-          dsn: "https://your-sentry-dsn@sentry.io/your-project-id",
-          integrations: [new Sentry.BrowserTracing()],
-          tracesSampleRate: 1.0,
-          environment: "production"
-        });
-      }
-    </script>
+
+    <!-- Sentry Config - External file handles initialization -->
+    <script src="/js/sentry-config.js"></script>
+
+    <!-- Logger -->
+    <script src="/js/logger.js"></script>
 
     <style>
         * {
