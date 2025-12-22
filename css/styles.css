@@ -2,12 +2,12 @@
    Global Styles & Variables
    =========================== */
 :root {
-    --primary-color: #2d7a3e;
-    --primary-dark: #1f5429;
-    --primary-light: #3d9a4e;
-    --secondary-color: #fbbf24;
-    --accent-color: #ef4444;
-    --text-dark: #1f2937;
+    --primary-color: #2563eb;
+    --primary-dark: #1e40af;
+    --primary-light: #3b82f6;
+    --secondary-color: #10b981;
+    --accent-color: #f59e0b;
+    --text-dark: #111827;
     --text-light: #6b7280;
     --bg-light: #f9fafb;
     --bg-white: #ffffff;
@@ -16,6 +16,9 @@
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    --ghana-red: #ce1126;
+    --ghana-gold: #fcd116;
+    --ghana-green: #006b3f;
 }
 
 * {

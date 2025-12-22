@@ -5,15 +5,16 @@
 
 :root {
     /* Primary Colors */
-    --primary: #10b981;
-    --primary-dark: #059669;
-    --primary-light: #d1fae5;
+    --primary: #2563eb;
+    --primary-dark: #1e40af;
+    --primary-light: #dbeafe;
     
     /* Secondary Colors */
-    --secondary: #f59e0b;
+    --secondary: #10b981;
     --danger: #ef4444;
     --success: #10b981;
     --warning: #f59e0b;
+    --accent: #f59e0b;
     
     /* Neutral Colors */
     --gray-900: #111827;
