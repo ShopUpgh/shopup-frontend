@@ -10,8 +10,16 @@
     return `${prefix}-${Date.now()}-${random}`;
   }
 
+  function ensure(prefix) {
+    if (typeof generate !== 'function') {
+      throw new Error('ID generator is not available');
+    }
+    return generate(prefix);
+  }
+
   global.IdGenerator = {
-    generate
+    generate,
+    ensure
   };
 
   console.log('✅ ID generator ready');

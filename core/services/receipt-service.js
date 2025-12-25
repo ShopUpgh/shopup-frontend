@@ -34,9 +34,13 @@
     const config = getConfig();
     const items = order?.items || [];
     const totals = calculateTotals(items, order?.deliveryFee, order?.tax);
+    const generator = global.IdGenerator && global.IdGenerator.ensure;
+    if (!generator) {
+      throw new Error('IdGenerator is not initialized');
+    }
 
     return {
-      id: order?.id || global.IdGenerator.generate('RCP'),
+      id: order?.id || generator('RCP'),
       orderNumber: order?.orderNumber || order?.id || 'N/A',
       issuedAt: order?.issuedAt || new Date().toISOString(),
       currency: config.currency || 'GHS',
@@ -98,84 +102,6 @@
     `;
   }
 
-  function renderReceiptWindow(win, receipt) {
-    if (!win || !win.document) {
-      return;
-    }
-
-    const doc = win.document;
-    doc.title = `Receipt ${receipt.id}`;
-    doc.body.innerHTML = '';
-
-    const style = doc.createElement('style');
-    style.textContent = `
-      body { font-family: Arial, sans-serif; padding: 16px; }
-      table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-      th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-      th { background: #f5f5f5; }
-    `;
-    const head = doc.head || doc.getElementsByTagName('head')[0] || doc.documentElement.appendChild(doc.createElement('head'));
-    head.appendChild(style);
-
-    const heading = doc.createElement('h2');
-    heading.textContent = `${receipt.issuer} - Receipt`;
-    doc.body.appendChild(heading);
-
-    const meta = [
-      ['Receipt ID', receipt.id],
-      ['Order Number', receipt.orderNumber],
-      ['Issued', receipt.issuedAt],
-      ['Payment Method', receipt.paymentMethod]
-    ];
-
-    meta.forEach(([label, value]) => {
-      const p = doc.createElement('p');
-      p.textContent = `${label}: ${value}`;
-      doc.body.appendChild(p);
-    });
-
-    const table = doc.createElement('table');
-    const thead = doc.createElement('thead');
-    const headerRow = doc.createElement('tr');
-    ['Item', 'Qty', 'Price'].forEach(text => {
-      const th = doc.createElement('th');
-      th.textContent = text;
-      headerRow.appendChild(th);
-    });
-    thead.appendChild(headerRow);
-    table.appendChild(thead);
-
-    const tbody = doc.createElement('tbody');
-    (receipt.items || []).forEach(item => {
-      const row = doc.createElement('tr');
-      const nameCell = doc.createElement('td');
-      nameCell.textContent = item.name || '';
-      const qtyCell = doc.createElement('td');
-      qtyCell.textContent = item.quantity || 0;
-      const priceCell = doc.createElement('td');
-      priceCell.textContent = `${receipt.currency || 'GHS'} ${Number(item.price || 0).toFixed(2)}`;
-      row.appendChild(nameCell);
-      row.appendChild(qtyCell);
-      row.appendChild(priceCell);
-      tbody.appendChild(row);
-    });
-    table.appendChild(tbody);
-    doc.body.appendChild(table);
-
-    const totals = [
-      ['Subtotal', receipt.totals.subtotal],
-      ['Tax', receipt.totals.tax],
-      ['Delivery', receipt.totals.deliveryFee],
-      ['Total', receipt.totals.total]
-    ];
-
-    totals.forEach(([label, value]) => {
-      const p = doc.createElement('p');
-      p.textContent = `${label}: ${receipt.currency || 'GHS'} ${Number(value || 0).toFixed(2)}`;
-      doc.body.appendChild(p);
-    });
-  }
-
   function previewReceipt(order) {
     if (!order || typeof order !== 'object') {
       console.warn('Invalid order data for receipt preview');
@@ -188,14 +114,20 @@
     const blob = blobSupported ? new Blob([html], { type: 'text/html' }) : null;
     const objectUrl = blobSupported && blob ? global.URL.createObjectURL(blob) : null;
     const safeUrl = typeof objectUrl === 'string' && objectUrl.startsWith('blob:') ? objectUrl : null;
-    const win = global.open(safeUrl || 'about:blank', 'receipt-preview', 'noopener,noreferrer');
+    if (!safeUrl) {
+      console.warn('Receipt preview skipped because a safe blob URL could not be created.');
+      return receipt;
+    }
 
-    if (safeUrl && win && typeof win.addEventListener === 'function') {
-      win.addEventListener('unload', () => global.URL.revokeObjectURL(safeUrl));
-    } else if (safeUrl && global.URL && typeof global.URL.revokeObjectURL === 'function') {
-      global.URL.revokeObjectURL(safeUrl);
-    } else if (win) {
-      renderReceiptWindow(win, receipt);
+    const win = global.open(safeUrl, 'receipt-preview', 'noopener,noreferrer');
+
+    if (safeUrl && global.URL && typeof global.URL.revokeObjectURL === 'function') {
+      const revoke = () => global.URL.revokeObjectURL(safeUrl);
+      if (win && typeof win.addEventListener === 'function') {
+        win.addEventListener('unload', revoke);
+      } else {
+        revoke();
+      }
     }
 
     return receipt;

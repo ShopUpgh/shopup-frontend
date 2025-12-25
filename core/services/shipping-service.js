@@ -42,7 +42,11 @@
 
   async function createShipment(shipment) {
     const config = getConfig();
-    const trackingNumber = shipment?.trackingNumber || global.IdGenerator.generate('SHP');
+    const generator = global.IdGenerator && global.IdGenerator.ensure;
+    if (!generator) {
+      throw new Error('IdGenerator is not initialized');
+    }
+    const trackingNumber = shipment?.trackingNumber || generator('SHP');
 
     return {
       success: true,

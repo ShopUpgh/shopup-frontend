@@ -7,9 +7,13 @@
   }
 
   function buildResponse(type, payload) {
+    const generator = global.IdGenerator && global.IdGenerator.ensure;
+    if (!generator) {
+      throw new Error('IdGenerator is not initialized');
+    }
     return {
       success: true,
-      id: global.IdGenerator.generate(type.toUpperCase()),
+      id: generator(type.toUpperCase()),
       provider: getConfig().provider || 'resend',
       payload
     };
