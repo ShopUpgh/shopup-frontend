@@ -6,18 +6,12 @@
     return (global.ConfigManager && global.ConfigManager.getServiceConfig('notification')) || {};
   }
 
-  function generateId(prefix) {
-    if (global.crypto && global.crypto.randomUUID) {
-      return `${prefix}-${global.crypto.randomUUID()}`;
-    }
-    const randomSuffix = Math.random().toString(36).slice(2, 10).toUpperCase();
-    return `${prefix}-${Date.now()}-${randomSuffix}`;
-  }
-
   function buildResponse(type, payload) {
     return {
       success: true,
-      id: generateId(type.toUpperCase()),
+      id: (global.IdGenerator && global.IdGenerator.generate)
+        ? global.IdGenerator.generate(type.toUpperCase())
+        : `${type.toUpperCase()}-${Date.now()}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`,
       provider: getConfig().provider || 'resend',
       payload
     };

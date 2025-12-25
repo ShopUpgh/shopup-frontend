@@ -8,14 +8,6 @@
     { id: 'local_courier', name: 'Local Courier', supportsGps: false }
   ];
 
-  function generateId(prefix) {
-    if (global.crypto && global.crypto.randomUUID) {
-      return `${prefix}-${global.crypto.randomUUID()}`;
-    }
-    const randomSuffix = Math.random().toString(36).slice(2, 10).toUpperCase();
-    return `${prefix}-${Date.now()}-${randomSuffix}`;
-  }
-
   function getConfig() {
     return (global.ConfigManager && global.ConfigManager.getServiceConfig('shipping')) || {};
   }
@@ -50,7 +42,11 @@
 
   async function createShipment(shipment) {
     const config = getConfig();
-    const trackingNumber = shipment?.trackingNumber || generateId('SHP');
+    const trackingNumber = shipment?.trackingNumber || (
+      global.IdGenerator && global.IdGenerator.generate
+        ? global.IdGenerator.generate('SHP')
+        : `SHP-${Date.now()}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`
+    );
 
     return {
       success: true,

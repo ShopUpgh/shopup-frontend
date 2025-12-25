@@ -15,14 +15,6 @@
       .replace(/'/g, '&#039;');
   }
 
-  function createId(prefix) {
-    if (global.crypto && global.crypto.randomUUID) {
-      return `${prefix}-${global.crypto.randomUUID()}`;
-    }
-    const random = Math.random().toString(36).slice(2, 10).toUpperCase();
-    return `${prefix}-${Date.now()}-${random}`;
-  }
-
   function calculateTotals(items, deliveryFee = 0, tax = 0) {
     const subtotal = items.reduce((sum, item) => {
       const qty = Number(item.quantity || 0);
@@ -44,7 +36,11 @@
     const totals = calculateTotals(items, order?.deliveryFee, order?.tax);
 
     return {
-      id: order?.id || createId('RCP'),
+      id: order?.id || (
+        global.IdGenerator && global.IdGenerator.generate
+          ? global.IdGenerator.generate('RCP')
+          : `RCP-${Date.now()}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`
+      ),
       orderNumber: order?.orderNumber || order?.id || 'N/A',
       issuedAt: order?.issuedAt || new Date().toISOString(),
       currency: config.currency || 'GHS',
@@ -185,10 +181,17 @@
   }
 
   function previewReceipt(order) {
-    const receipt = buildReceipt(order);
-    const win = global.open('about:blank', 'receipt-preview');
+    if (!order || typeof order !== 'object') {
+      console.warn('Invalid order data for receipt preview');
+      return null;
+    }
 
-    renderReceiptWindow(win, receipt);
+    const receipt = buildReceipt(order);
+    const win = global.open('about:blank', 'receipt-preview', 'noopener,noreferrer');
+
+    if (win) {
+      renderReceiptWindow(win, receipt);
+    }
 
     return receipt;
   }
