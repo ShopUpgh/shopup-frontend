@@ -36,11 +36,7 @@
     const totals = calculateTotals(items, order?.deliveryFee, order?.tax);
 
     return {
-      id: order?.id || (
-        global.IdGenerator && global.IdGenerator.generate
-          ? global.IdGenerator.generate('RCP')
-          : `RCP-${Date.now()}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`
-      ),
+      id: order?.id || global.IdGenerator.generate('RCP'),
       orderNumber: order?.orderNumber || order?.id || 'N/A',
       issuedAt: order?.issuedAt || new Date().toISOString(),
       currency: config.currency || 'GHS',
@@ -187,9 +183,17 @@
     }
 
     const receipt = buildReceipt(order);
-    const win = global.open('about:blank', 'receipt-preview', 'noopener,noreferrer');
+    const html = renderReceiptHTML(receipt);
+    const blobSupported = global.URL && typeof global.URL.createObjectURL === 'function';
+    const blob = blobSupported ? new Blob([html], { type: 'text/html' }) : null;
+    const objectUrl = blobSupported && blob ? global.URL.createObjectURL(blob) : null;
+    const win = global.open(objectUrl || 'about:blank', 'receipt-preview', 'noopener,noreferrer');
 
-    if (win) {
+    if (win && objectUrl) {
+      win.addEventListener('unload', () => global.URL.revokeObjectURL(objectUrl));
+    } else if (objectUrl) {
+      global.URL.revokeObjectURL(objectUrl);
+    } else if (win) {
       renderReceiptWindow(win, receipt);
     }
 

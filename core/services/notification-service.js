@@ -9,9 +9,7 @@
   function buildResponse(type, payload) {
     return {
       success: true,
-      id: (global.IdGenerator && global.IdGenerator.generate)
-        ? global.IdGenerator.generate(type.toUpperCase())
-        : `${type.toUpperCase()}-${Date.now()}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`,
+      id: global.IdGenerator.generate(type.toUpperCase()),
       provider: getConfig().provider || 'resend',
       payload
     };

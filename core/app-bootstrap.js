@@ -4,6 +4,15 @@
 (function(global) {
   const registry = {};
 
+  if (!global.IdGenerator) {
+    global.IdGenerator = {
+      generate(prefix) {
+        const random = Math.random().toString(36).slice(2, 12).toUpperCase();
+        return `${prefix}-${Date.now()}-${random}`;
+      }
+    };
+  }
+
   function registerService(name, service) {
     if (!service) {
       console.warn(`⚠️ Service "${name}" not available during bootstrap`);

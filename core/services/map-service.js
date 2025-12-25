@@ -12,13 +12,7 @@
   }
 
   function buildMapUrl(coordinates) {
-    const config = getConfig();
     const { lat, lng } = coordinates || getFallbackCenter();
-    const provider = config.provider || 'mapbox';
-
-    if (provider === 'mapbox') {
-      return `https://www.google.com/maps?q=${lat},${lng}`;
-    }
 
     return `https://www.google.com/maps?q=${lat},${lng}`;
   }
