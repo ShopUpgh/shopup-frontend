@@ -32,7 +32,11 @@
       metadata: email.metadata || {}
     };
 
-    console.log('📧 Sending email notification', finalPayload);
+    console.log('📧 Sending email notification', {
+      to: finalPayload.to,
+      subject: finalPayload.subject,
+      provider: config.provider || 'resend'
+    });
     return buildResponse('email', finalPayload);
   }
 
@@ -49,7 +53,10 @@
       provider: config.smsProvider || config.provider || 'africastalking'
     };
 
-    console.log('📱 Sending SMS notification', smsPayload);
+    console.log('📱 Sending SMS notification', {
+      to: smsPayload.to,
+      provider: smsPayload.provider
+    });
     return buildResponse('sms', smsPayload);
   }
 

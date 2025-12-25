@@ -11,8 +11,8 @@
   }
 
   function ensure(prefix) {
-    if (typeof generate !== 'function') {
-      throw new Error('ID generator is not available');
+    if (typeof prefix !== 'string' || !prefix.length) {
+      throw new Error('A prefix is required to generate an ID');
     }
     return generate(prefix);
   }

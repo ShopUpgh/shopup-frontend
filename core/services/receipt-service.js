@@ -99,7 +99,7 @@
           <p><strong>Total:</strong> ${currency} ${receipt.totals.total.toFixed(2)}</p>
         </body>
       </html>
-    `;
+    `.trim();
   }
 
   function previewReceipt(order) {
@@ -119,15 +119,24 @@
       return receipt;
     }
 
+    const revoke = () => {
+      if (global.URL && typeof global.URL.revokeObjectURL === 'function') {
+        global.URL.revokeObjectURL(safeUrl);
+      }
+    };
+
     const win = global.open(safeUrl, 'receipt-preview', 'noopener,noreferrer');
 
-    if (safeUrl && global.URL && typeof global.URL.revokeObjectURL === 'function') {
-      const revoke = () => global.URL.revokeObjectURL(safeUrl);
-      if (win && typeof win.addEventListener === 'function') {
-        win.addEventListener('unload', revoke);
-      } else {
-        revoke();
-      }
+    if (!win) {
+      revoke();
+      console.warn('Receipt preview blocked by browser popup settings.');
+      return receipt;
+    }
+
+    if (typeof win.addEventListener === 'function') {
+      win.addEventListener('unload', revoke);
+    } else {
+      revoke();
     }
 
     return receipt;

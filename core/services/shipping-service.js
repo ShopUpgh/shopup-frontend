@@ -76,7 +76,5 @@
   };
 
   global.ShippingService = ShippingService;
-  console.log('✅ Shipping service initialized', {
-    provider: getConfig().provider || 'ghana_post'
-  });
+  console.log('✅ Shipping service initialized');
 })(window);
