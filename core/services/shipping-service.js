@@ -42,7 +42,8 @@
 
   async function createShipment(shipment) {
     const config = getConfig();
-    const trackingNumber = shipment?.trackingNumber || `SHP-${Date.now()}`;
+    const randomSuffix = Math.random().toString(36).slice(2, 8).toUpperCase();
+    const trackingNumber = shipment?.trackingNumber || `SHP-${Date.now()}-${randomSuffix}`;
 
     return {
       success: true,

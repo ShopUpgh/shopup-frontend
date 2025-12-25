@@ -7,9 +7,10 @@
   }
 
   function buildResponse(type, payload) {
+    const randomSuffix = Math.random().toString(36).slice(2, 8).toUpperCase();
     return {
       success: true,
-      id: `${type.toUpperCase()}-${Date.now()}`,
+      id: `${type.toUpperCase()}-${Date.now()}-${randomSuffix}`,
       provider: getConfig().provider || 'resend',
       payload
     };

@@ -101,7 +101,7 @@
   function previewReceipt(order) {
     const receipt = buildReceipt(order);
     const html = renderReceiptHTML(receipt);
-    const win = global.open('', 'receipt-preview');
+    const win = global.open('about:blank', 'receipt-preview');
 
     if (win && win.document) {
       win.document.write(html);

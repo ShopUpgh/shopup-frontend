@@ -16,8 +16,11 @@
     const { lat, lng } = coordinates || getFallbackCenter();
     const provider = config.provider || 'mapbox';
 
-    if (provider === 'mapbox' && config.apiKey) {
-      return `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/${lng},${lat},13,0/600x400?access_token=${config.apiKey}`;
+    if (provider === 'mapbox') {
+      if (config.apiKey && config.exposeTokenInUrl) {
+        return `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/${lng},${lat},13,0/600x400?access_token=${encodeURIComponent(config.apiKey)}`;
+      }
+      return `https://www.google.com/maps?q=${lat},${lng}`;
     }
 
     return `https://www.google.com/maps?q=${lat},${lng}`;

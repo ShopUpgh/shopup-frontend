@@ -17,6 +17,7 @@
       map: {
         provider: 'mapbox',
         apiKey: '',
+        exposeTokenInUrl: false,
         fallbackCenter: { lat: 5.6037, lng: -0.187 }
       },
       receipt: {
