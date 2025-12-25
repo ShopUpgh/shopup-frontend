@@ -25,6 +25,7 @@
     registerService('notification', global.NotificationService);
     registerService('map', global.MapService);
     registerService('receipt', global.ReceiptService);
+    registerService('electronicLabel', global.ElectronicLabelService);
 
     global.AppServices = registry;
     console.log('✅ App bootstrap complete', Object.keys(registry));
