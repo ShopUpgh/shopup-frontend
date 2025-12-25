@@ -8,7 +8,17 @@
     
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
+    
+    <!-- Core System -->
+    <script src="/core/config-manager.js"></script>
+    <script src="/core/di-container.js"></script>
+    <script src="/core/services/storage-service.js"></script>
+    <script src="/core/services/logger-service.js"></script>
+    <script src="/core/services/auth-service.js"></script>
+    <script src="/core/app-bootstrap.js"></script>
+    
+    <!-- Page Controller -->
+    <script src="/controllers/signup-controller.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -291,7 +301,5 @@
     <div class="toast" id="toast">
         <span id="toastMessage"></span>
     </div>
-
-    <script src="signup-script.js"></script>
 </body>
 </html>
