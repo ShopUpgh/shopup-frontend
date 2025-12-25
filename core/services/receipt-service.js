@@ -187,12 +187,13 @@
     const blobSupported = global.URL && typeof global.URL.createObjectURL === 'function';
     const blob = blobSupported ? new Blob([html], { type: 'text/html' }) : null;
     const objectUrl = blobSupported && blob ? global.URL.createObjectURL(blob) : null;
-    const win = global.open(objectUrl || 'about:blank', 'receipt-preview', 'noopener,noreferrer');
+    const safeUrl = typeof objectUrl === 'string' && objectUrl.startsWith('blob:') ? objectUrl : null;
+    const win = global.open(safeUrl || 'about:blank', 'receipt-preview', 'noopener,noreferrer');
 
-    if (win && objectUrl) {
-      win.addEventListener('unload', () => global.URL.revokeObjectURL(objectUrl));
-    } else if (objectUrl) {
-      global.URL.revokeObjectURL(objectUrl);
+    if (safeUrl && win && typeof win.addEventListener === 'function') {
+      win.addEventListener('unload', () => global.URL.revokeObjectURL(safeUrl));
+    } else if (safeUrl && global.URL && typeof global.URL.revokeObjectURL === 'function') {
+      global.URL.revokeObjectURL(safeUrl);
     } else if (win) {
       renderReceiptWindow(win, receipt);
     }
