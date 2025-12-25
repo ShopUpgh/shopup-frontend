@@ -15,6 +15,14 @@
       .replace(/'/g, '&#039;');
   }
 
+  function createId(prefix) {
+    if (global.crypto && global.crypto.randomUUID) {
+      return `${prefix}-${global.crypto.randomUUID()}`;
+    }
+    const random = Math.random().toString(36).slice(2, 10).toUpperCase();
+    return `${prefix}-${Date.now()}-${random}`;
+  }
+
   function calculateTotals(items, deliveryFee = 0, tax = 0) {
     const subtotal = items.reduce((sum, item) => {
       const qty = Number(item.quantity || 0);
@@ -36,7 +44,7 @@
     const totals = calculateTotals(items, order?.deliveryFee, order?.tax);
 
     return {
-      id: order?.id || `RCP-${Date.now()}`,
+      id: order?.id || createId('RCP'),
       orderNumber: order?.orderNumber || order?.id || 'N/A',
       issuedAt: order?.issuedAt || new Date().toISOString(),
       currency: config.currency || 'GHS',
@@ -98,15 +106,89 @@
     `;
   }
 
+  function renderReceiptWindow(win, receipt) {
+    if (!win || !win.document) {
+      return;
+    }
+
+    const doc = win.document;
+    doc.title = `Receipt ${receipt.id}`;
+    doc.body.innerHTML = '';
+
+    const style = doc.createElement('style');
+    style.textContent = `
+      body { font-family: Arial, sans-serif; padding: 16px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+      th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+      th { background: #f5f5f5; }
+    `;
+    const head = doc.head || doc.getElementsByTagName('head')[0] || doc.documentElement.appendChild(doc.createElement('head'));
+    head.appendChild(style);
+
+    const heading = doc.createElement('h2');
+    heading.textContent = `${receipt.issuer} - Receipt`;
+    doc.body.appendChild(heading);
+
+    const meta = [
+      ['Receipt ID', receipt.id],
+      ['Order Number', receipt.orderNumber],
+      ['Issued', receipt.issuedAt],
+      ['Payment Method', receipt.paymentMethod]
+    ];
+
+    meta.forEach(([label, value]) => {
+      const p = doc.createElement('p');
+      p.textContent = `${label}: ${value}`;
+      doc.body.appendChild(p);
+    });
+
+    const table = doc.createElement('table');
+    const thead = doc.createElement('thead');
+    const headerRow = doc.createElement('tr');
+    ['Item', 'Qty', 'Price'].forEach(text => {
+      const th = doc.createElement('th');
+      th.textContent = text;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = doc.createElement('tbody');
+    (receipt.items || []).forEach(item => {
+      const row = doc.createElement('tr');
+      const nameCell = doc.createElement('td');
+      nameCell.textContent = item.name || '';
+      const qtyCell = doc.createElement('td');
+      qtyCell.textContent = item.quantity || 0;
+      const priceCell = doc.createElement('td');
+      priceCell.textContent = `${receipt.currency || 'GHS'} ${Number(item.price || 0).toFixed(2)}`;
+      row.appendChild(nameCell);
+      row.appendChild(qtyCell);
+      row.appendChild(priceCell);
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+    doc.body.appendChild(table);
+
+    const totals = [
+      ['Subtotal', receipt.totals.subtotal],
+      ['Tax', receipt.totals.tax],
+      ['Delivery', receipt.totals.deliveryFee],
+      ['Total', receipt.totals.total]
+    ];
+
+    totals.forEach(([label, value]) => {
+      const p = doc.createElement('p');
+      p.textContent = `${label}: ${receipt.currency || 'GHS'} ${Number(value || 0).toFixed(2)}`;
+      doc.body.appendChild(p);
+    });
+  }
+
   function previewReceipt(order) {
     const receipt = buildReceipt(order);
-    const html = renderReceiptHTML(receipt);
     const win = global.open('about:blank', 'receipt-preview');
 
-    if (win && win.document) {
-      win.document.write(html);
-      win.document.close();
-    }
+    renderReceiptWindow(win, receipt);
 
     return receipt;
   }

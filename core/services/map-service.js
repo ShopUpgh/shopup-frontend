@@ -17,8 +17,8 @@
     const provider = config.provider || 'mapbox';
 
     if (provider === 'mapbox') {
-      if (config.apiKey && config.exposeTokenInUrl) {
-        return `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/${lng},${lat},13,0/600x400?access_token=${encodeURIComponent(config.apiKey)}`;
+      if (config.apiKey) {
+        console.warn('Mapbox token configured; use a server-side proxy to render static maps safely.');
       }
       return `https://www.google.com/maps?q=${lat},${lng}`;
     }
