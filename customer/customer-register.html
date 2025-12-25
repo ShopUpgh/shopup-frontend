@@ -4,10 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Account - ShopUp</title>
+    
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Correct JS path (up to /js/) -->
-    <script src="../js/supabase-config.js"></script>
+    
+    <!-- Core System -->
+    <script src="/core/config-manager.js"></script>
+    <script src="/core/di-container.js"></script>
+    <script src="/core/services/storage-service.js"></script>
+    <script src="/core/services/logger-service.js"></script>
+    <script src="/core/services/auth-service.js"></script>
+    <script src="/core/app-bootstrap.js"></script>
+    
+    <!-- Page Controller -->
+    <script src="/controllers/customer-register-controller.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -462,8 +473,5 @@
             Already have an account? <a href="customer-login.html">Log in</a>
         </div>
     </div>
-
-    <!-- Correct JS path for registration logic -->
-    <script src="../js/customer-register-script.js"></script>
 </body>
 </html>
