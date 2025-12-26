@@ -11,6 +11,8 @@ let currentUser = null;
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('📱 Shared nav initializing...');
     
+    injectRevenueLink();
+
     // Wait for Supabase (check every 100ms, max 5 seconds)
     let attempts = 0;
     while (!window.supabase && attempts < 50) {
@@ -53,6 +55,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 });
+
+function injectRevenueLink() {
+    try {
+        const sidebar = document.querySelector('.sidebar-nav');
+        if (!sidebar || sidebar.querySelector('[data-nav-revenue]')) return;
+
+        const link = document.createElement('a');
+        link.href = '/revenue/dashboard.html';
+        link.className = 'nav-item';
+        link.setAttribute('data-nav-revenue', 'true');
+        link.innerHTML = `
+            <span class="nav-icon">💰</span>
+            <span class="nav-text">Revenue</span>
+            <span class="nav-badge new" style="background:#10b981;color:white;padding:2px 8px;border-radius:12px;font-size:0.7rem;margin-left:4px;">NEW</span>
+        `;
+
+        sidebar.appendChild(link);
+        console.log('✅ Revenue link added to navigation');
+    } catch (error) {
+        console.error('❌ Could not inject revenue nav link', error);
+    }
+}
 
 // Load counts from localStorage (instant display)
 function loadCachedCounts() {
