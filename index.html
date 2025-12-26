@@ -8,21 +8,10 @@
     <meta name="author" content="The House of Aldens Holdings">
     <title>ShopUp Ghana - Empower Your Business Online</title>
     
-    <!-- Sentry SDK for Error Monitoring -->
-    <script
-      src="https://browser.sentry-cdn.com/7.91.0/bundle.tracing.min.js"
-      crossorigin="anonymous"
-    ></script>
-    <script>
-      if (typeof Sentry !== 'undefined') {
-        Sentry.init({
-          dsn: "https://your-sentry-dsn@sentry.io/your-project-id",
-          integrations: [new Sentry.BrowserTracing()],
-          tracesSampleRate: 1.0,
-          environment: "production"
-        });
-      }
-    </script>
+    <!-- Sentry Error Monitoring -->
+    <script src="https://browser.sentry-cdn.com/8.0.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
+    <script src="js/sentry-config.js"></script>
+    <script src="js/sentry-error-tracking.js"></script>
 
     <style>
         * {
