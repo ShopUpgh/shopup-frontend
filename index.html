@@ -8,19 +8,24 @@
     <meta name="author" content="The House of Aldens Holdings">
     <title>ShopUp Ghana - Empower Your Business Online</title>
     
-    <!-- Sentry SDK for Error Monitoring -->
-    <script
-      src="https://browser.sentry-cdn.com/7.91.0/bundle.tracing.min.js"
-      crossorigin="anonymous"
-    ></script>
+    <!-- Sentry Loader Script -->
+    <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
+
     <script>
-      if (typeof Sentry !== 'undefined') {
+      // Only initialize if loader is present
+      if (window.Sentry) {
         Sentry.init({
-          dsn: "https://your-sentry-dsn@sentry.io/your-project-id",
-          integrations: [new Sentry.BrowserTracing()],
-          tracesSampleRate: 1.0,
-          environment: "production"
+          dsn: "https://c4c92ac8539373f9c497ba50f31a9900@o4510464682688512.ingest.de.sentry.io/4510484995113040",
+
+          // Optional but recommended for production:
+          tracesSampleRate: 0.1,     // 10% performance sampling
+          replaysSessionSampleRate: 0.0,
+          replaysOnErrorSampleRate: 0.2
         });
+
+        console.log("✅ Sentry initialized with real DSN");
+      } else {
+        console.log("ℹ️ Sentry not loaded");
       }
     </script>
 
@@ -949,7 +954,7 @@
     </footer>
 
     <!-- Logger Script -->
-    <script src="logger.js"></script>
+    <script src="/js/logger.js"></script>
 
     <!-- Main JavaScript -->
     <script>
