@@ -1,28 +1,11 @@
-// Supabase initialization helper (ESM-friendly to avoid CDN blocking)
-(async function() {
-    if (window.supabase && typeof window.supabase.createClient === 'function') {
-        window.supabaseClientFactory = window.supabase.createClient;
-        return;
-    }
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    if (typeof window.supabaseClientFactory === 'function') {
-        return;
-    }
+// ✅ Replace with real values when available
+const SUPABASE_URL = "https://brbewkxpvihnsrbrlpzq.supabase.co";
+const SUPABASE_ANON_KEY = "******";
 
-    try {
-        const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.39.0');
-        window.supabaseClientFactory = createClient;
-        console.log('✅ Supabase factory loaded via ESM');
-    } catch (error) {
-        console.warn('⚠️ Supabase ESM load failed, using local fallback:', error);
-        const stubQuery = () => ({
-            select: async () => ({ data: [], error: null }),
-            insert: async () => ({ data: [], error: null }),
-            eq: () => stubQuery()
-        });
-        window.supabaseClientFactory = () => ({
-            auth: { getUser: async () => ({ data: { user: null } }) },
-            from: () => stubQuery()
-        });
-    }
-})();
+// Create client and expose globally
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.supabase = supabase;
+
+console.log("✅ Supabase initialized (module) and attached to window.supabase");

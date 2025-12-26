@@ -1,5 +1,10 @@
 // ShopUp Signup with Supabase Integration
 
+const supabase = window.supabase;
+if (!supabase) {
+    console.error("❌ Supabase not ready. Check /js/supabase-init.js path and loading.");
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Wait for Supabase to initialize
     setTimeout(() => {
