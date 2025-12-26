@@ -1,3 +1,9 @@
+const ensurePositiveNumber = (value, field) => {
+  if (typeof value !== 'number' || value <= 0) {
+    throw new Error(`${field} must be a positive number`);
+  }
+};
+
 function createDesignStudioService() {
   return {
     name: 'Design Studio',
@@ -8,8 +14,14 @@ function createDesignStudioService() {
 function createCapitalService() {
   return {
     name: 'Capital',
-    requestAdvance: (amount) =>
-      Promise.resolve({ amount, status: 'approved', disbursed: true }),
+    requestAdvance: (amount) => {
+      try {
+        ensurePositiveNumber(amount, 'Advance amount');
+        return Promise.resolve({ amount, status: 'approved', disbursed: true });
+      } catch (e) {
+        return Promise.reject(e);
+      }
+    },
   };
 }
 
@@ -31,8 +43,14 @@ function createAdsService() {
 function createPackagingService() {
   return {
     name: 'Packaging',
-    orderKits: (quantity) =>
-      Promise.resolve({ quantity, status: 'processing' }),
+    orderKits: (quantity) => {
+      try {
+        ensurePositiveNumber(quantity, 'Packaging quantity');
+        return Promise.resolve({ quantity, status: 'processing' });
+      } catch (e) {
+        return Promise.reject(e);
+      }
+    },
   };
 }
 

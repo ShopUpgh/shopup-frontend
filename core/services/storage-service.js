@@ -4,7 +4,13 @@ function createStorageService() {
   const getItem = (key, fallback = null) => {
     if (!isStorageAvailable) return fallback;
     const value = window.localStorage.getItem(key);
-    return value !== null ? JSON.parse(value) : fallback;
+    if (value === null) return fallback;
+    try {
+      return JSON.parse(value);
+    } catch (e) {
+      console.warn(`StorageService: failed to parse stored value for key "${key}", returning fallback value`, e);
+      return fallback;
+    }
   };
 
   const setItem = (key, value) => {

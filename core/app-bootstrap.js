@@ -2,6 +2,15 @@ function AppBootstrap() {
   this.container = window.ShopUpApp && window.ShopUpApp.container;
 
   this.init = function init() {
+    if (!this.container) {
+      throw new Error('ShopUpApp container is not available');
+    }
+
+    // Core utilities
+    this.container.register('storage', createStorageService);
+    this.container.register('logger', createLoggerService);
+    this.container.register('auth', createAuthService);
+
     // PHASE 1: Core Revenue Streams
     this.container.register('shopupShip', createShopUpShipService);
     this.container.register('analytics', createAnalyticsProService);
@@ -29,7 +38,7 @@ function AppBootstrap() {
     this.container.register('electronicLabel', createElectronicLabelService);
 
     // REVENUE MANAGER (ALWAYS LAST!)
-    this.container.register('revenueManager', createRevenueManagerService);
+    this.container.register('revenueManager', (c) => createRevenueManagerService(c));
   };
 }
 

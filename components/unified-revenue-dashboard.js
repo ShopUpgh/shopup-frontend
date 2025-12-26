@@ -3,6 +3,20 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!mount || !window.ShopUpApp) return;
 
   const revenueManager = window.ShopUpApp.getService('revenueManager');
+  const resolveUserId = () => {
+    const params = new URLSearchParams(window.location.search);
+    const fromQuery = params.get('user');
+    if (fromQuery) return fromQuery;
+    try {
+      const auth = window.ShopUpApp.getService('auth');
+      const current = auth.getCurrentUser && auth.getCurrentUser();
+      if (current && current.id) return current.id;
+    } catch (e) {
+      console.warn('UnifiedRevenueDashboard: auth service unavailable, using fallback user ID', e);
+    }
+    return 'dashboard-user';
+  };
+
   const render = (dashboard) => {
     const services = Object.entries(dashboard.services || {})
       .map(([key, value]) => `<li><strong>${key}:</strong> ${value}</li>`)
@@ -19,5 +33,5 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   };
 
-  revenueManager.getDashboard('dashboard-user').then(render);
+  revenueManager.getDashboard(resolveUserId()).then(render);
 });

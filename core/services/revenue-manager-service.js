@@ -1,11 +1,13 @@
 function createRevenueManagerService(container) {
+  const defaultPricing = { amount: 10, currency: 'GHS', perService: {} };
+  const PRICING = (window.ShopUpConfig && window.ShopUpConfig.pricing) || defaultPricing;
+
   const getRegisteredServiceKeys = () =>
     Array.from(container.services.keys()).filter((key) => key !== 'revenueManager');
 
   const getServiceSummary = () => {
     const summary = {};
-    const keysToSummarize = ['shopupShip', 'analytics', 'verification', 'social', 'aiAssistant'];
-    keysToSummarize.forEach((key) => {
+    getRegisteredServiceKeys().forEach((key) => {
       try {
         const service = container.get(key);
         summary[key] = service.name || key;
@@ -38,8 +40,8 @@ function createRevenueManagerService(container) {
       const services = getRegisteredServiceKeys();
       const lineItems = services.map((service) => ({
         service,
-        amount: 10,
-        currency: 'USD',
+        amount: (PRICING.perService && PRICING.perService[service]) || PRICING.amount,
+        currency: PRICING.currency,
       }));
 
       const total = lineItems.reduce((sum, item) => sum + item.amount, 0);
@@ -49,7 +51,7 @@ function createRevenueManagerService(container) {
         billingPeriod,
         lineItems,
         total,
-        currency: 'USD',
+        currency: PRICING.currency,
       });
     },
   };
