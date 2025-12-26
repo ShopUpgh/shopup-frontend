@@ -1,0 +1,35 @@
+# ShopUp Ghana - Robots.txt
+# Allows search engines to crawl our public pages
+
+User-agent: *
+Allow: /
+
+# Disallow private/admin areas
+Disallow: /admin/
+Disallow: /customer/customer-checkout.html
+Disallow: /customer/customer-orders.html
+Disallow: /customer/customer-profile.html
+Disallow: /customer/customer-settings.html
+Disallow: /customer/privacy-settings.html
+Disallow: /seller/
+Disallow: /dashboard.html
+Disallow: /add-product.html
+Disallow: /orders.html
+
+# Allow important pages
+Allow: /products.html
+Allow: /cart.html
+Allow: /signup.html
+Allow: /login.html
+Allow: /about.html
+Allow: /contact.html
+Allow: /privacy-policy.html
+Allow: /terms-of-service.html
+Allow: /refund-policy.html
+Allow: /shipping-policy.html
+
+# Disallow search result pages (if any)
+Disallow: /*?search=
+
+# Sitemap location
+Sitemap: https://shopupghana.com/sitemap.xml

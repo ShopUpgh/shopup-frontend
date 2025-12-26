@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Settings - ShopUp Ghana</title>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-config.js"></script>
+    
+    <!-- Data Privacy Manager -->
+    <script src="../js/data-privacy.js" defer></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #2d8a3e;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+        }
+
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section p {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .section ul {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        .section li {
+            margin: 8px 0;
+            color: #555;
+        }
+
+        .btn {
+            background: #2d8a3e;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #236b30;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .compliance-badge {
+            display: inline-block;
+            background: #e7f5ff;
+            color: #0066cc;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            margin: 5px;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: #2d8a3e;
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="customer-dashboard.html" class="back-link">← Back to Dashboard</a>
+
+        <div class="header">
+            <h1>🔒 Privacy & Data Settings</h1>
+            <p>Manage your personal data and privacy preferences</p>
+            <div>
+                <span class="compliance-badge">✓ GDPR Compliant</span>
+                <span class="compliance-badge">✓ Ghana Data Protection Act 843</span>
+            </div>
+        </div>
+
+        <!-- Your Rights Section -->
+        <div class="section">
+            <h2>📋 Your Rights Under Ghana Data Protection Act</h2>
+            <p>As a ShopUp Ghana user, you have the following rights regarding your personal data:</p>
+            <ul>
+                <li><strong>Right to Access:</strong> You can request a copy of all data we hold about you</li>
+                <li><strong>Right to Rectification:</strong> You can correct inaccurate or incomplete data</li>
+                <li><strong>Right to Erasure:</strong> You can request deletion of your personal data</li>
+                <li><strong>Right to Object:</strong> You can object to processing of your data</li>
+                <li><strong>Right to Data Portability:</strong> You can receive your data in a machine-readable format</li>
+            </ul>
+        </div>
+
+        <!-- Export Data Section -->
+        <div class="section">
+            <h2>📥 Export Your Data</h2>
+            <p>Download a complete copy of all your personal information stored in ShopUp Ghana. The export includes:</p>
+            <ul>
+                <li>Account information (name, email, phone)</li>
+                <li>Order history and transaction details</li>
+                <li>Saved addresses</li>
+                <li>Product reviews and ratings</li>
+                <li>Wishlist items</li>
+            </ul>
+            <div class="info">
+                <strong>📄 Format:</strong> Your data will be exported as a JSON file that you can open with any text editor or import into other applications.
+            </div>
+            <button id="exportDataBtn" class="btn">📥 Export My Data</button>
+        </div>
+
+        <!-- Delete Account Section -->
+        <div class="section">
+            <h2>🗑️ Delete Your Account</h2>
+            <p>Request permanent deletion of your ShopUp Ghana account and associated personal data.</p>
+            
+            <div class="warning">
+                <strong>⚠️ Important Information:</strong>
+                <ul style="margin-top: 10px;">
+                    <li>Account deletion is permanent and cannot be undone</li>
+                    <li>Your personal information will be removed within 30 days</li>
+                    <li>Order history will be retained for 7 years as required by Ghana Revenue Authority for tax purposes, but your name and contact details will be anonymized</li>
+                    <li>Active orders must be completed or cancelled before deletion</li>
+                </ul>
+            </div>
+
+            <p style="margin-top: 20px;"><strong>What happens when you delete your account:</strong></p>
+            <ul>
+                <li>✓ Your login credentials are removed</li>
+                <li>✓ Personal information (name, email, phone) is deleted</li>
+                <li>✓ Saved addresses are deleted</li>
+                <li>✓ Wishlist and reviews are deleted</li>
+                <li>✓ Order details are anonymized (transaction records kept for legal compliance)</li>
+            </ul>
+
+            <button id="deleteAccountBtn" class="btn btn-danger" style="margin-top: 20px;">🗑️ Request Account Deletion</button>
+        </div>
+
+        <!-- Data We Collect Section -->
+        <div class="section">
+            <h2>📊 Data We Collect</h2>
+            <p>ShopUp Ghana collects and processes the following types of data:</p>
+            
+            <h3 style="margin-top: 20px; color: #555;">Personal Information:</h3>
+            <ul>
+                <li>Name and email address</li>
+                <li>Phone number</li>
+                <li>Delivery addresses</li>
+            </ul>
+
+            <h3 style="margin-top: 20px; color: #555;">Transaction Data:</h3>
+            <ul>
+                <li>Order history</li>
+                <li>Payment information (processed securely by Paystack)</li>
+                <li>Product reviews and ratings</li>
+            </ul>
+
+            <h3 style="margin-top: 20px; color: #555;">Technical Data:</h3>
+            <ul>
+                <li>IP address and browser information</li>
+                <li>Device type and operating system</li>
+                <li>Pages visited and time spent</li>
+            </ul>
+
+            <div class="info" style="margin-top: 20px;">
+                <strong>🔒 Security:</strong> All data is encrypted in transit (HTTPS) and at rest. Payment information is handled by Paystack (PCI DSS Level 1 certified) and never stored on our servers.
+            </div>
+        </div>
+
+        <!-- How We Use Data Section -->
+        <div class="section">
+            <h2>🎯 How We Use Your Data</h2>
+            <p>Your data is used for the following purposes:</p>
+            <ul>
+                <li>Process and fulfill your orders</li>
+                <li>Communicate order status and delivery updates</li>
+                <li>Process payments securely</li>
+                <li>Provide customer support</li>
+                <li>Improve our services and user experience</li>
+                <li>Comply with legal obligations (tax, accounting)</li>
+                <li>Prevent fraud and ensure platform security</li>
+            </ul>
+            <p style="margin-top: 15px;"><strong>We do NOT:</strong></p>
+            <ul>
+                <li>❌ Sell your personal data to third parties</li>
+                <li>❌ Use your data for purposes not disclosed to you</li>
+                <li>❌ Share your data without your consent (except as legally required)</li>
+            </ul>
+        </div>
+
+        <!-- Contact Section -->
+        <div class="section">
+            <h2>📧 Contact Our Data Protection Officer</h2>
+            <p>For questions about your privacy or to exercise your rights:</p>
+            <ul>
+                <li><strong>Email:</strong> privacy@shopup.gh</li>
+                <li><strong>Phone:</strong> +233 XX XXX XXXX</li>
+                <li><strong>Address:</strong> ShopUp Ghana, Accra, Ghana</li>
+            </ul>
+            <p style="margin-top: 15px;">We will respond to your request within 30 days as required by Ghana Data Protection Act.</p>
+        </div>
+
+        <!-- Legal Documents -->
+        <div class="section">
+            <h2>📄 Legal Documents</h2>
+            <p>Review our complete privacy and legal policies:</p>
+            <ul>
+                <li><a href="/privacy-policy.html" target="_blank">Privacy Policy (Full)</a></li>
+                <li><a href="/terms-of-service.html" target="_blank">Terms of Service</a></li>
+                <li><a href="/refund-policy.html" target="_blank">Refund & Return Policy</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            window.location.href = 'customer-login.html';
+        }
+    </script>
+</body>
+</html>
