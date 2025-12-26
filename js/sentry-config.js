@@ -1,7 +1,8 @@
 // sentry-config.js - Sentry Error Tracking Configuration
 
 // Only initialize Sentry if we have a valid DSN
-const SENTRY_DSN = 'YOUR_ACTUAL_SENTRY_DSN_HERE'; // Replace with real DSN from Sentry dashboard
+const SENTRY_DSN = 'https://c4c92ac8539373f9c497ba50f31a9900@o4510464682688512.ingest.de.sentry.io/4510484995113040
+'; // Replace with real DSN from Sentry dashboard
 
 if (window.Sentry && SENTRY_DSN && SENTRY_DSN !== 'YOUR_ACTUAL_SENTRY_DSN_HERE') {
     window.Sentry.init({
