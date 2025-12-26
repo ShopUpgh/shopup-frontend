@@ -48,6 +48,14 @@ These steps must be completed in your Supabase project before testing:
   - For `products` table: Add policy `seller_id = auth.uid()`
   - For `orders` table: Add policy `seller_id = auth.uid()`
   - For `order_items` table: Link to orders table with RLS
+  - For `sellers` table (required for signup): Enable RLS and add policy:
+    ```sql
+    ALTER TABLE sellers ENABLE ROW LEVEL SECURITY;
+    CREATE POLICY "Sellers can insert own profile"
+    ON sellers
+    FOR INSERT
+    WITH CHECK (auth.uid() = id);
+    ```
 
 - [ ] **Create Storage Bucket**
   - Go to Storage in Supabase

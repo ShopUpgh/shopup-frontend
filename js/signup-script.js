@@ -35,7 +35,8 @@ function waitForSupabaseReady(timeoutMs = 6000, intervalMs = 50) {
     const start = Date.now();
 
     const check = () => {
-      if (window.supabase) return resolve(window.supabase);
+      const supabase = window.supabase;
+      if (supabase) return resolve(supabase);
 
       if (Date.now() - start > timeoutMs) {
         return reject(new Error('Supabase not available on window within timeout'));
