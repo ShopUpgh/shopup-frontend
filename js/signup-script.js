@@ -129,6 +129,12 @@ async function handleSignup() {
       return;
     }
 
+    if (!authData.session) {
+      showToast("✅ Account created! Please check your email to verify, then login.");
+      setTimeout(() => (window.location.href = "login.html"), 1500);
+      return;
+    }
+
     const userId = authData?.user?.id;
 
     // IMPORTANT NOTE:

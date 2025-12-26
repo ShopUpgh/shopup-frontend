@@ -8,13 +8,7 @@
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-config.js"></script>
-    
-    <!-- Sentry Error Monitoring -->
-    <script src="https://browser.sentry-cdn.com/8.0.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
-    <script src="../js/sentry-config.js"></script>
-    <script src="../js/sentry-error-tracking.js"></script>
-    
-    <!-- Chart.js for analytics -->
+<!-- Chart.js for analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
@@ -232,6 +226,11 @@
             }
         }
     </style>
+
+    <!-- Sentry Loader Script -->
+    <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
+    <script src="/js/sentry-config.js"></script>
+    <script src="/js/sentry-error-tracking.js"></script>
 </head>
 <body>
     <div class="dashboard-container">

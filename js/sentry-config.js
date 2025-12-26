@@ -1,38 +1,20 @@
 // sentry-config.js - Sentry Error Tracking Configuration
 
-// Only initialize Sentry if we have a valid DSN
-const SENTRY_DSN = 'YOUR_ACTUAL_SENTRY_DSN_HERE'; // Replace with real DSN from Sentry dashboard
+const SENTRY_DSN = "https://c4c92ac8539373f9c497ba50f31a9900@o4510464682688512.ingest.de.sentry.io/4510484995113040";
 
-if (window.Sentry && SENTRY_DSN && SENTRY_DSN !== 'YOUR_ACTUAL_SENTRY_DSN_HERE') {
+if (window.Sentry) {
     window.Sentry.init({
         dsn: SENTRY_DSN,
-        
-        // Set environment
         environment: window.location.hostname === 'localhost' ? 'development' : 'production',
-        
-        // Set sample rate (100% for now, adjust in production)
-        tracesSampleRate: 1.0,
-        
-        // Capture specific errors
-        beforeSend(event, hint) {
-            // Filter out errors you don't care about
-            if (event.exception) {
-                const error = hint.originalException;
-                
-                // Ignore common browser extension errors
-                if (error && error.message && error.message.includes('chrome-extension://')) {
-                    return null;
-                }
-            }
-            
-            return event;
-        },
-        
-        // Add release information (optional)
-        release: 'shopup@1.0.0',
+        tracesSampleRate: 0.1,
+        replaysSessionSampleRate: 0.0,
+        replaysOnErrorSampleRate: 0.2
     });
-    
-    console.log('✅ Sentry initialized successfully');
-} else {
-    console.log('ℹ️ Sentry not initialized (DSN not configured)');
+
+    window.Sentry.setTag("app", "ShopUp");
+    window.Sentry.setTag("site", window.location.hostname);
+    window.Sentry.setTag("page", window.location.pathname);
+    window.Sentry.setContext("browser", {
+        userAgent: navigator.userAgent
+    });
 }
