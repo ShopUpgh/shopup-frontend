@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Pro - ShopUp Insights</title>
+    <style>
+        body { margin: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #0b1224; color: #e2e8f0; }
+        .hero { padding: 48px 20px; text-align: center; background: radial-gradient(circle at 20% 20%, rgba(56,189,248,0.2), transparent 30%), #0b1224; }
+        .hero h1 { margin: 0 0 10px; font-size: 34px; }
+        .hero p { margin: 0 auto; max-width: 700px; color: #cbd5e1; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 10px; background: #38bdf8; color: #0b1224; text-decoration: none; margin-top: 18px; font-weight: 700; }
+        .section { max-width: 980px; margin: 32px auto; padding: 0 20px; }
+        .card-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+        .card { background: #0f172a; border: 1px solid rgba(255,255,255,0.06); padding: 18px; border-radius: 12px; }
+        .card h3 { margin: 0 0 8px; }
+        .muted { color: #94a3b8; }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>Analytics Pro</h1>
+        <p>Real-time dashboards for revenue, conversions, top products, and customer cohorts.</p>
+        <a class="btn" href="/revenue/dashboard.html">Go to Revenue Dashboard →</a>
+    </div>
+
+    <section class="section">
+        <div class="card-grid">
+            <div class="card">
+                <h3>📈 Conversion tracking</h3>
+                <p class="muted">See where shoppers drop off and fix it with data-backed changes.</p>
+            </div>
+            <div class="card">
+                <h3>🛍️ Product insights</h3>
+                <p class="muted">Top sellers, low inventory alerts, and pricing recommendations.</p>
+            </div>
+            <div class="card">
+                <h3>🔔 Alerts</h3>
+                <p class="muted">Get notified when revenue spikes or when campaigns perform.</p>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
