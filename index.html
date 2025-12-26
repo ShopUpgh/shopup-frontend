@@ -7,25 +7,7 @@
     <meta name="keywords" content="Ghana ecommerce, online shop Ghana, mobile money, sell online Ghana, ShopUp">
     <meta name="author" content="The House of Aldens Holdings">
     <title>ShopUp Ghana - Empower Your Business Online</title>
-    
-    <!-- Sentry Loader Script -->
-    <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
-
-    <script>
-      // Only initialize if loader is present
-      if (window.Sentry) {
-        Sentry.init({
-          dsn: "https://c4c92ac8539373f9c497ba50f31a9900@o4510464682688512.ingest.de.sentry.io/4510484995113040",
-
-          // Optional but recommended for production:
-          tracesSampleRate: 0.1,     // 10% performance sampling
-          replaysSessionSampleRate: 0.0,
-          replaysOnErrorSampleRate: 0.2
-        });
-      }
-    </script>
-
-    <style>
+<style>
         * {
             margin: 0;
             padding: 0;
@@ -667,6 +649,10 @@
             }
         }
     </style>
+
+    <!-- Sentry Loader Script -->
+    <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
+    <script src="/js/sentry-config.js"></script>
 </head>
 <body>
     <!-- Navigation -->
