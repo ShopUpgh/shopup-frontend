@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Verified - ShopUp</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #111827;
+      --accent: #f59e0b;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.12), transparent 25%),
+                  radial-gradient(circle at 80% 0%, rgba(14, 165, 233, 0.12), transparent 20%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 0 1rem 3rem;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding-top: 2.5rem;
+    }
+    .hero {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(59, 130, 246, 0.12));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 2.5rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      font-size: 0.9rem;
+    }
+    h1 {
+      font-size: clamp(2rem, 3vw, 2.75rem);
+      margin: 0.75rem 0 0.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 1.05rem;
+      margin-bottom: 1.2rem;
+    }
+    .cta-group {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 1.2rem;
+    }
+    .cta {
+      padding: 0.9rem 1.25rem;
+      border-radius: 12px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 1rem;
+      color: #0b1220;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      box-shadow: 0 12px 30px rgba(245, 158, 11, 0.35);
+    }
+    .ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+    }
+    .card h3 { margin: 0 0 0.25rem; }
+    .muted { color: var(--muted); margin: 0.35rem 0 0; }
+    ul { padding-left: 1.2rem; margin: 0.6rem 0; color: var(--muted); }
+    .pricing {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .price {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(59, 130, 246, 0.08));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+    }
+    .price strong { font-size: 1.4rem; }
+    @media (max-width: 640px) {
+      .hero { padding: 1.75rem; }
+      .cta-group { flex-direction: column; }
+      .cta, .ghost { width: 100%; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <span class="badge">Verification</span>
+      <h1>Get Verified. Get Trusted. Get Sales. 🏅</h1>
+      <p class="sub">Verified sellers earn 40% more sales. Unlock badges, trust, and faster conversions.</p>
+      <div class="cta-group">
+        <button class="cta">Get Verified in 5 Minutes</button>
+        <button class="cta ghost">See Plans</button>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h3>Email Verification</h3>
+        <p class="muted">Free · Basic Badge</p>
+        <ul>
+          <li>Instant badge on profile</li>
+          <li>Boosts buyer confidence</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Phone Verification</h3>
+        <p class="muted">Free · Silver Badge</p>
+        <ul>
+          <li>SMS-based validation</li>
+          <li>Stronger trust signal</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Business Verification</h3>
+        <p class="muted">GH₵ 99/year · Gold Badge</p>
+        <ul>
+          <li>Business registration check</li>
+          <li>Address verification</li>
+          <li>Up to +40% sales lift</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Premium Verification</h3>
+        <p class="muted">GH₵ 299/year · Platinum Badge</p>
+        <ul>
+          <li>Background & financial checks</li>
+          <li>Insurance coverage</li>
+          <li>Priority dispute support</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:1.5rem;">
+      <h3>Social Proof</h3>
+      <p class="muted">"After getting verified, my sales jumped 50% in the first month!" — Kofi, Fashion Seller</p>
+    </section>
+
+    <section class="pricing">
+      <div class="price">
+        <strong>Basic</strong>
+        <p class="muted">FREE · Email badge</p>
+      </div>
+      <div class="price">
+        <strong>Business</strong>
+        <p class="muted">GH₵ 99/year · +40% sales</p>
+      </div>
+      <div class="price">
+        <strong>Premium</strong>
+        <p class="muted">GH₵ 299/year · +65% sales + insurance</p>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
