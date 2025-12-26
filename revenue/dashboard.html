@@ -204,22 +204,7 @@
         </section>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        if (!window.supabase || !window.supabase.createClient) {
-            const stubQuery = () => ({
-                select: async () => ({ data: [], error: null }),
-                insert: async () => ({ data: [], error: null }),
-                eq: () => stubQuery()
-            });
-            window.supabase = {
-                createClient: () => ({
-                    auth: { getUser: async () => ({ data: { user: null } }) },
-                    from: stubQuery
-                })
-            };
-        }
-    </script>
+    <script src="../js/supabase-init.js"></script>
     <script src="../js/supabase-config.js"></script>
     <script src="../js/revenue-manager-service.js"></script>
     <script src="../js/shopup-ship-service-v2.js"></script>
