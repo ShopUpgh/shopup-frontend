@@ -5,14 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login - ShopUp Seller</title>
 
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
   <!-- ✅ Correct CSS path -->
   <link rel="stylesheet" href="/css/login-styles.css" />
 
-  <!-- ✅ Sentry -->
+  <!-- ✅ Sentry (ONLY loader + centralized config) -->
   <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
   <script src="/js/sentry-config.js"></script>
 
-  <!-- ✅ Supabase module init -->
+  <!-- ✅ Supabase module init (module scripts are deferred by default) -->
   <script type="module" src="/js/supabase-init.js"></script>
 </head>
 
@@ -20,11 +22,11 @@
   <nav class="navbar">
     <div class="container">
       <div class="nav-brand">
-        <h1><a href="index.html">ShopUp</a></h1>
+        <h1><a href="/index.html">ShopUp</a></h1>
       </div>
       <div class="nav-links">
-        <a href="index.html">Home</a>
-        <a href="signup.html" class="btn-outline">Create Account</a>
+        <a href="/index.html">Home</a>
+        <a href="/signup.html" class="btn-outline">Create Account</a>
       </div>
     </div>
   </nav>
@@ -49,7 +51,7 @@
           <button type="submit" class="btn-submit">Login</button>
 
           <p class="signup-link">
-            Don’t have an account? <a href="signup.html">Create one</a>
+            Don’t have an account? <a href="/signup.html">Create one</a>
           </p>
         </form>
 
@@ -60,10 +62,8 @@
     </div>
   </section>
 
-  <!-- ✅ Logger -->
-  <script src="/js/logger.js"></script>
-
-  <!-- ✅ Login JS -->
-  <script src="/js/login-script.js"></script>
+  <!-- ✅ Logger + Login JS (deferred so they never block rendering) -->
+  <script defer src="/js/logger.js"></script>
+  <script defer src="/js/login-script.js"></script>
 </body>
 </html>
