@@ -1,299 +1,242 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - ShopUp Seller</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up - ShopUp Seller</title>
 
-    <!-- ✅ CHANGED -->
-    <link rel="stylesheet" href="/css/signup-styles.css">
-    
-    <!-- ✅ CHANGED (module init replaces CDN + supabase-config.js) -->
-    <script type="module" src="/js/supabase-init.js"></script>
+  <!-- ✅ Correct CSS path -->
+  <link rel="stylesheet" href="/css/signup-styles.css" />
+
+  <!-- ✅ Sentry -->
+  <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
+  <script src="/js/sentry-config.js"></script>
+
+  <!-- ✅ Supabase module init (Option A) -->
+  <script type="module" src="/js/supabase-init.js"></script>
 </head>
+
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <h1><a href="index.html">ShopUp</a></h1>
-            </div>
-            <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="login.html" class="btn-outline">Login</a>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Registration Form Section -->
-    <section class="signup-section">
-        <div class="container">
-            <div class="signup-container">
-                <!-- Left Side - Benefits -->
-                <div class="signup-benefits">
-                    <h2>Start Selling Today</h2>
-                    <p class="tagline">Join thousands of successful sellers on ShopUp</p>
-                    
-                    <div class="benefit-list">
-                        <div class="benefit-item">
-                            <span class="benefit-icon">✓</span>
-                            <div>
-                                <h3>Easy Setup</h3>
-                                <p>Get your store online in under 10 minutes</p>
-                            </div>
-                        </div>
-                        
-                        <div class="benefit-item">
-                            <span class="benefit-icon">✓</span>
-                            <div>
-                                <h3>Mobile Money Payments</h3>
-                                <p>Accept MTN, Vodafone Cash instantly</p>
-                            </div>
-                        </div>
-                        
-                        <div class="benefit-item">
-                            <span class="benefit-icon">✓</span>
-                            <div>
-                                <h3>Your Brand, Your Rules</h3>
-                                <p>Keep full control of your business</p>
-                            </div>
-                        </div>
-                        
-                        <div class="benefit-item">
-                            <span class="benefit-icon">✓</span>
-                            <div>
-                                <h3>Only 3% Fee</h3>
-                                <p>Simple, transparent pricing</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Side - Form -->
-                <div class="signup-form-container">
-                    <h2>Create Your Seller Account</h2>
-                    <p class="form-subtitle">Fill in your details to get started</p>
-
-                    <form id="signupForm" class="signup-form">
-                        <!-- Business Information -->
-                        <div class="form-section">
-                            <h3>Business Information</h3>
-                            
-                            <div class="form-group">
-                                <label for="businessName">Business/Shop Name *</label>
-                                <input 
-                                    type="text" 
-                                    id="businessName" 
-                                    name="businessName" 
-                                    placeholder="e.g., Ama's Fashion Store" 
-                                    required
-                                >
-                                <small>This will be your store's display name</small>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="businessCategory">Business Category *</label>
-                                <select id="businessCategory" name="businessCategory" required>
-                                    <option value="">Select a category</option>
-                                    <option value="fashion">Fashion & Clothing</option>
-                                    <option value="electronics">Electronics</option>
-                                    <option value="food">Food & Beverages</option>
-                                    <option value="beauty">Beauty & Cosmetics</option>
-                                    <option value="home">Home & Living</option>
-                                    <option value="sports">Sports & Fitness</option>
-                                    <option value="books">Books & Stationery</option>
-                                    <option value="toys">Toys & Kids</option>
-                                    <option value="automotive">Automotive</option>
-                                    <option value="services">Services</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Personal Information -->
-                        <div class="form-section">
-                            <h3>Your Information</h3>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="firstName">First Name *</label>
-                                    <input 
-                                        type="text" 
-                                        id="firstName" 
-                                        name="firstName" 
-                                        placeholder="Kwame" 
-                                        required
-                                    >
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="lastName">Last Name *</label>
-                                    <input 
-                                        type="text" 
-                                        id="lastName" 
-                                        name="lastName" 
-                                        placeholder="Mensah" 
-                                        required
-                                    >
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="email">Email Address *</label>
-                                <input 
-                                    type="email" 
-                                    id="email" 
-                                    name="email" 
-                                    placeholder="kwame@example.com" 
-                                    required
-                                >
-                            </div>
-
-                            <div class="form-group">
-                                <label for="phone">Phone Number *</label>
-                                <input 
-                                    type="tel" 
-                                    id="phone" 
-                                    name="phone" 
-                                    placeholder="0244123456" 
-                                    pattern="[0-9]{10}" 
-                                    required
-                                >
-                                <small>10 digits, e.g., 0244123456</small>
-                            </div>
-                        </div>
-
-                        <!-- Location -->
-                        <div class="form-section">
-                            <h3>Location</h3>
-                            
-                            <div class="form-group">
-                                <label for="city">City/Town *</label>
-                                <input 
-                                    type="text" 
-                                    id="city" 
-                                    name="city" 
-                                    placeholder="Accra" 
-                                    required
-                                >
-                            </div>
-
-                            <div class="form-group">
-                                <label for="region">Region *</label>
-                                <select id="region" name="region" required>
-                                    <option value="">Select region</option>
-                                    <option value="greater-accra">Greater Accra</option>
-                                    <option value="ashanti">Ashanti</option>
-                                    <option value="western">Western</option>
-                                    <option value="eastern">Eastern</option>
-                                    <option value="central">Central</option>
-                                    <option value="volta">Volta</option>
-                                    <option value="northern">Northern</option>
-                                    <option value="upper-east">Upper East</option>
-                                    <option value="upper-west">Upper West</option>
-                                    <option value="bono">Bono</option>
-                                    <option value="bono-east">Bono East</option>
-                                    <option value="ahafo">Ahafo</option>
-                                    <option value="savannah">Savannah</option>
-                                    <option value="north-east">North East</option>
-                                    <option value="oti">Oti</option>
-                                    <option value="western-north">Western North</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Password -->
-                        <div class="form-section">
-                            <h3>Security</h3>
-                            
-                            <div class="form-group">
-                                <label for="password">Password *</label>
-                                <input 
-                                    type="password" 
-                                    id="password" 
-                                    name="password" 
-                                    placeholder="Minimum 8 characters" 
-                                    minlength="8" 
-                                    required
-                                >
-                                <small>At least 8 characters</small>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="confirmPassword">Confirm Password *</label>
-                                <input 
-                                    type="password" 
-                                    id="confirmPassword" 
-                                    name="confirmPassword" 
-                                    placeholder="Re-enter your password" 
-                                    minlength="8" 
-                                    required
-                                >
-                            </div>
-                        </div>
-
-                        <!-- Terms and Conditions -->
-                        <div class="form-group checkbox-group">
-                            <label class="checkbox-label">
-                                <input 
-                                    type="checkbox" 
-                                    id="agreeTerms" 
-                                    name="agreeTerms" 
-                                    required
-                                >
-                                <span>I agree to ShopUp's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
-                            </label>
-                        </div>
-
-                        <div class="form-group checkbox-group">
-                            <label class="checkbox-label">
-                                <input 
-                                    type="checkbox" 
-                                    id="agreeMarketing" 
-                                    name="agreeMarketing"
-                                >
-                                <span>Send me updates, tips, and offers via email</span>
-                            </label>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <button type="submit" class="btn-submit">Create My Store</button>
-
-                        <p class="login-link">
-                            Already have an account? <a href="login.html">Login here</a>
-                        </p>
-                    </form>
-
-                    <!-- Success Message (Hidden by default) -->
-                    <div id="successMessage" class="success-message" style="display: none;">
-                        <div class="success-icon">✓</div>
-                        <h3>Account Created Successfully!</h3>
-                        <p>Welcome to ShopUp! Redirecting you to your dashboard...</p>
-                    </div>
-
-                    <!-- Error Message (Hidden by default) -->
-                    <div id="errorMessage" class="error-message" style="display: none;">
-                        <div class="error-icon">✕</div>
-                        <p id="errorText">Something went wrong. Please try again.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2024 ShopUp. All rights reserved. | <a href="#">Help Center</a> | <a href="#">Contact Support</a></p>
-        </div>
-    </footer>
-
-    <!-- Toast Notification -->
-    <div class="toast" id="toast">
-        <span id="toastMessage"></span>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-brand">
+        <h1><a href="index.html">ShopUp</a></h1>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="login.html" class="btn-outline">Login</a>
+      </div>
     </div>
+  </nav>
 
-    <!-- ✅ CHANGED -->
-    <script src="/js/signup-script.js"></script>
+  <!-- Registration Form Section -->
+  <section class="signup-section">
+    <div class="container">
+      <div class="signup-container">
+        <!-- Left Side - Benefits -->
+        <div class="signup-benefits">
+          <h2>Start Selling Today</h2>
+          <p class="tagline">Join thousands of successful sellers on ShopUp</p>
+
+          <div class="benefit-list">
+            <div class="benefit-item">
+              <span class="benefit-icon">✓</span>
+              <div>
+                <h3>Easy Setup</h3>
+                <p>Get your store online in under 10 minutes</p>
+              </div>
+            </div>
+
+            <div class="benefit-item">
+              <span class="benefit-icon">✓</span>
+              <div>
+                <h3>Mobile Money Payments</h3>
+                <p>Accept MTN, Vodafone Cash instantly</p>
+              </div>
+            </div>
+
+            <div class="benefit-item">
+              <span class="benefit-icon">✓</span>
+              <div>
+                <h3>Your Brand, Your Rules</h3>
+                <p>Keep full control of your business</p>
+              </div>
+            </div>
+
+            <div class="benefit-item">
+              <span class="benefit-icon">✓</span>
+              <div>
+                <h3>Only 3% Fee</h3>
+                <p>Simple, transparent pricing</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side - Form -->
+        <div class="signup-form-container">
+          <h2>Create Your Seller Account</h2>
+          <p class="form-subtitle">Fill in your details to get started</p>
+
+          <form id="signupForm" class="signup-form">
+            <!-- Business Information -->
+            <div class="form-section">
+              <h3>Business Information</h3>
+
+              <div class="form-group">
+                <label for="businessName">Business/Shop Name *</label>
+                <input type="text" id="businessName" name="businessName" placeholder="e.g., Ama's Fashion Store" required />
+                <small>This will be your store's display name</small>
+              </div>
+
+              <div class="form-group">
+                <label for="businessCategory">Business Category *</label>
+                <select id="businessCategory" name="businessCategory" required>
+                  <option value="">Select a category</option>
+                  <option value="fashion">Fashion & Clothing</option>
+                  <option value="electronics">Electronics</option>
+                  <option value="food">Food & Beverages</option>
+                  <option value="beauty">Beauty & Cosmetics</option>
+                  <option value="home">Home & Living</option>
+                  <option value="sports">Sports & Fitness</option>
+                  <option value="books">Books & Stationery</option>
+                  <option value="toys">Toys & Kids</option>
+                  <option value="automotive">Automotive</option>
+                  <option value="services">Services</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Personal Information -->
+            <div class="form-section">
+              <h3>Your Information</h3>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="firstName">First Name *</label>
+                  <input type="text" id="firstName" name="firstName" placeholder="Kwame" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="lastName">Last Name *</label>
+                  <input type="text" id="lastName" name="lastName" placeholder="Mensah" required />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" placeholder="kwame@example.com" required />
+              </div>
+
+              <div class="form-group">
+                <label for="phone">Phone Number *</label>
+                <input type="tel" id="phone" name="phone" placeholder="0244123456" pattern="[0-9]{10}" required />
+                <small>10 digits, e.g., 0244123456</small>
+              </div>
+            </div>
+
+            <!-- Location -->
+            <div class="form-section">
+              <h3>Location</h3>
+
+              <div class="form-group">
+                <label for="city">City/Town *</label>
+                <input type="text" id="city" name="city" placeholder="Accra" required />
+              </div>
+
+              <div class="form-group">
+                <label for="region">Region *</label>
+                <select id="region" name="region" required>
+                  <option value="">Select region</option>
+                  <option value="greater-accra">Greater Accra</option>
+                  <option value="ashanti">Ashanti</option>
+                  <option value="western">Western</option>
+                  <option value="eastern">Eastern</option>
+                  <option value="central">Central</option>
+                  <option value="volta">Volta</option>
+                  <option value="northern">Northern</option>
+                  <option value="upper-east">Upper East</option>
+                  <option value="upper-west">Upper West</option>
+                  <option value="bono">Bono</option>
+                  <option value="bono-east">Bono East</option>
+                  <option value="ahafo">Ahafo</option>
+                  <option value="savannah">Savannah</option>
+                  <option value="north-east">North East</option>
+                  <option value="oti">Oti</option>
+                  <option value="western-north">Western North</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-section">
+              <h3>Security</h3>
+
+              <div class="form-group">
+                <label for="password">Password *</label>
+                <input type="password" id="password" name="password" placeholder="Minimum 8 characters" minlength="8" required />
+                <small>At least 8 characters</small>
+              </div>
+
+              <div class="form-group">
+                <label for="confirmPassword">Confirm Password *</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Re-enter your password" minlength="8" required />
+              </div>
+            </div>
+
+            <!-- Terms -->
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="agreeTerms" name="agreeTerms" required />
+                <span>I agree to ShopUp's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
+              </label>
+            </div>
+
+            <div class="form-group checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="agreeMarketing" name="agreeMarketing" />
+                <span>Send me updates, tips, and offers via email</span>
+              </label>
+            </div>
+
+            <button type="submit" class="btn-submit">Create My Store</button>
+
+            <p class="login-link">
+              Already have an account? <a href="login.html">Login here</a>
+            </p>
+          </form>
+
+          <div id="successMessage" class="success-message" style="display:none;">
+            <div class="success-icon">✓</div>
+            <h3>Account Created Successfully!</h3>
+            <p>Welcome to ShopUp! Redirecting you to your dashboard...</p>
+          </div>
+
+          <div id="errorMessage" class="error-message" style="display:none;">
+            <div class="error-icon">✕</div>
+            <p id="errorText">Something went wrong. Please try again.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2024 ShopUp. All rights reserved. | <a href="#">Help Center</a> | <a href="#">Contact Support</a></p>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast">
+    <span id="toastMessage"></span>
+  </div>
+
+  <!-- ✅ Logger -->
+  <script src="/js/logger.js"></script>
+
+  <!-- ✅ Signup JS -->
+  <script src="/js/signup-script.js"></script>
 </body>
 </html>
