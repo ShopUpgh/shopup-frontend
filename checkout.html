@@ -418,7 +418,13 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="supabase-config.js"></script>
+    <!-- Sentry Error Monitoring -->
+    <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
+    <script src="/js/sentry-config.js"></script>
+    
+    <!-- Supabase -->
+    <script type="module" src="/js/supabase-init.js"></script>
+    
     <script src="order-management-script.js"></script>
 
     <script>
