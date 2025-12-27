@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - ShopUp</title>
-    
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../js/supabase-config.js"></script>
-    
-    <!-- Sentry Error Monitoring -->
-    <script src="https://browser.sentry-cdn.com/8.0.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
+
+    <!-- ✅ Sentry: ONLY Loader + Central Config (NO bundle.tracing) -->
+    <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
     <script src="../js/sentry-config.js"></script>
     <script src="../js/sentry-error-tracking.js"></script>
-    
+
+    <!-- ✅ Supabase (UMD) + your config -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-config.js"></script>
+
     <!-- Paystack -->
     <script src="https://js.paystack.co/v1/inline.js"></script>
-    
+
     <style>
         * {
             margin: 0;
@@ -208,7 +208,7 @@
 
     <div class="checkout-container">
         <h1>Checkout</h1>
-        
+
         <div id="alertContainer"></div>
 
         <div class="checkout-grid">
@@ -279,6 +279,9 @@
         </div>
     </div>
 
+    <!-- ✅ Logger (optional but recommended) -->
+    <script src="../js/logger.js"></script>
+
     <script>
         // Track page view
         if (typeof Sentry !== 'undefined') {
@@ -339,7 +342,7 @@
             try {
                 const loadOp = async () => {
                     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-                    
+
                     if (cart.length === 0) {
                         window.location.href = 'cart.html';
                         return;
@@ -373,7 +376,7 @@
 
         function displayOrderSummary() {
             const orderItems = document.getElementById('orderItems');
-            
+
             let subtotal = 0;
             let itemsHTML = '';
 
@@ -382,7 +385,7 @@
                 if (product) {
                     const itemTotal = product.price * item.quantity;
                     subtotal += itemTotal;
-                    
+
                     itemsHTML += `
                         <div class="summary-item">
                             <div>
@@ -453,7 +456,7 @@
                 }
 
                 showAlert('Order placed successfully! (Payment integration pending)', 'success');
-                
+
                 setTimeout(() => {
                     localStorage.removeItem('cart');
                     window.location.href = 'customer-dashboard.html';
