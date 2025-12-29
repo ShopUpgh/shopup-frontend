@@ -12,23 +12,19 @@
   <!-- ✅ Supabase (Module init only) -->
   <script type="module" src="/js/supabase-init.js"></script>
 
-  <!-- Paystack (kept) -->
-  <script src="https://js.paystack.co/v1/inline.js"></script>
-
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #f5f7fa;
+      color: #222;
     }
 
     .header {
-      background: white;
+      background: #fff;
       padding: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
     }
-
     .header-content {
       max-width: 1200px;
       margin: 0 auto;
@@ -36,151 +32,104 @@
       justify-content: space-between;
       align-items: center;
     }
+    .logo { font-size: 1.5em; font-weight: 800; color: #2d8a3e; }
+    .nav-links a { margin-left: 20px; text-decoration: none; color: #333; }
 
-    .logo {
-      font-size: 1.5em;
-      font-weight: bold;
-      color: #2d8a3e;
-    }
-
-    .checkout-container {
+    .wrap {
       max-width: 1200px;
       margin: 40px auto;
       padding: 0 20px;
     }
 
-    .checkout-grid {
+    .grid {
       display: grid;
       grid-template-columns: 2fr 1fr;
       gap: 30px;
+      align-items: start;
     }
 
-    .checkout-form {
-      background: white;
-      border-radius: 10px;
-      padding: 30px;
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
     }
 
-    .form-section { margin-bottom: 30px; }
+    h1 { margin-bottom: 20px; color: #333; }
+    h2 { margin-bottom: 14px; font-size: 1.1em; }
 
-    .form-section h2 {
-      margin-bottom: 20px;
-      color: #333;
-    }
-
-    .form-group { margin-bottom: 20px; }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      color: #333;
-    }
-
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .field { margin-bottom: 12px; }
+    label { display: block; font-size: 0.9em; margin-bottom: 6px; color: #444; }
     input, select, textarea {
       width: 100%;
       padding: 12px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 1em;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: #2d8a3e;
-    }
-
-    .order-summary {
-      background: white;
+      border: 1px solid #ddd;
       border-radius: 10px;
-      padding: 30px;
-      height: fit-content;
-      position: sticky;
-      top: 20px;
+      outline: none;
+      background: #fff;
     }
+    textarea { min-height: 90px; resize: vertical; }
 
-    .summary-item {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 15px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid #eee;
-      gap: 14px;
-    }
+    .muted { color: #666; font-size: 0.95em; }
 
+    .summary-row { display: flex; justify-content: space-between; margin: 10px 0; }
     .summary-total {
-      display: flex;
-      justify-content: space-between;
-      font-size: 1.3em;
-      font-weight: bold;
-      padding-top: 15px;
+      margin-top: 14px;
+      padding-top: 14px;
       border-top: 2px solid #eee;
+      font-size: 1.15em;
+      font-weight: 800;
     }
 
-    .btn-place-order {
-      width: 100%;
-      padding: 15px;
-      background: #2d8a3e;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 1.1em;
+    .items { margin-top: 10px; border-top: 1px solid #eee; padding-top: 12px; }
+    .item { display: flex; justify-content: space-between; margin: 10px 0; gap: 10px; }
+    .item-name { font-weight: 600; }
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #f1f7f3;
+      color: #2d8a3e;
       font-weight: 600;
+      font-size: 0.9em;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 800;
       cursor: pointer;
-      margin-top: 20px;
+      margin-top: 12px;
+      font-size: 1.05em;
     }
+    .btn-primary { background: #2d8a3e; color: #fff; }
+    .btn-primary:hover { background: #236d31; }
 
-    .btn-place-order:hover { background: #236d31; }
-
-    .btn-place-order:disabled {
-      background: #ccc;
-      cursor: not-allowed;
+    .btn-secondary {
+      background: #0b5ed7;
+      color: #fff;
     }
+    .btn-secondary:hover { background: #084db3; }
 
-    .payment-methods {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
-    }
-
-    .payment-method {
-      padding: 15px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      user-select: none;
-    }
-
-    .payment-method:hover { border-color: #2d8a3e; }
-
-    .payment-method.selected {
-      border-color: #2d8a3e;
-      background: #e8f5e9;
-    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .alert {
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 20px;
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #fff3cd;
+      border: 1px solid #ffe69c;
+      color: #664d03;
+      font-size: 0.95em;
     }
 
-    .alert-error {
-      background: #ffebee;
-      color: #c62828;
-      border-left: 4px solid #e53935;
-    }
-
-    .alert-success {
-      background: #e8f5e9;
-      color: #2e7d32;
-      border-left: 4px solid #43a047;
-    }
-
-    @media (max-width: 768px) {
-      .checkout-grid { grid-template-columns: 1fr; }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -189,91 +138,115 @@
   <header class="header">
     <div class="header-content">
       <div class="logo">🛍️ ShopUp</div>
-      <a href="cart.html" style="text-decoration:none;color:#333;">← Back to Cart</a>
+      <nav class="nav-links">
+        <a href="customer-dashboard.html">Home</a>
+        <a href="cart.html">Cart</a>
+        <a href="customer-orders.html">Orders</a>
+      </nav>
     </div>
   </header>
 
-  <div class="checkout-container">
+  <div class="wrap">
     <h1>Checkout</h1>
 
-    <div id="alertContainer"></div>
+    <div class="grid">
+      <!-- LEFT: Address + Payment -->
+      <section class="card">
+        <h2>Delivery Details</h2>
+        <p class="muted">Fill in your delivery information to place your order.</p>
 
-    <div class="checkout-grid">
-      <div class="checkout-form">
-        <div class="form-section">
-          <h2>Shipping Information</h2>
-
-          <div class="form-group">
+        <div class="row" style="margin-top:14px;">
+          <div class="field">
             <label for="fullName">Full Name</label>
-            <input type="text" id="fullName" required />
+            <input id="fullName" type="text" placeholder="e.g. Albert Denis" autocomplete="name" />
           </div>
+          <div class="field">
+            <label for="phone">Phone</label>
+            <input id="phone" type="tel" placeholder="e.g. +233..." autocomplete="tel" />
+          </div>
+        </div>
 
-          <div class="form-group">
+        <div class="row">
+          <div class="field">
             <label for="email">Email</label>
-            <input type="email" id="email" required />
+            <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
           </div>
-
-          <div class="form-group">
-            <label for="phone">Phone Number</label>
-            <input type="tel" id="phone" required />
-          </div>
-
-          <div class="form-group">
-            <label for="address">Delivery Address</label>
-            <textarea id="address" rows="3" required></textarea>
-          </div>
-
-          <div class="form-group">
+          <div class="field">
             <label for="city">City</label>
-            <input type="text" id="city" required />
-          </div>
-
-          <div class="form-group">
-            <label for="region">Region</label>
-            <select id="region" required>
-              <option value="">Select Region</option>
-              <option value="Greater Accra">Greater Accra</option>
-              <option value="Ashanti">Ashanti</option>
-              <option value="Western">Western</option>
-              <option value="Eastern">Eastern</option>
-              <option value="Central">Central</option>
-              <option value="Northern">Northern</option>
-              <option value="Volta">Volta</option>
-              <option value="Upper East">Upper East</option>
-              <option value="Upper West">Upper West</option>
-            </select>
+            <input id="city" type="text" placeholder="e.g. Accra" />
           </div>
         </div>
 
-        <div class="form-section">
-          <h2>Payment Method</h2>
-          <div class="payment-methods">
-            <div class="payment-method selected" data-method="card">💳 Card</div>
-            <div class="payment-method" data-method="momo">📱 Mobile Money</div>
-          </div>
+        <div class="field">
+          <label for="addressLine">Address</label>
+          <textarea id="addressLine" placeholder="House number, street, area, landmark..."></textarea>
         </div>
-      </div>
 
-      <div class="order-summary">
-        <h2>Order Summary</h2>
-        <div id="orderItems"></div>
-        <div class="summary-total">
-          <span>Total:</span>
-          <span id="totalAmount">GHS 0.00</span>
+        <div class="field">
+          <label for="notes">Delivery Notes (Optional)</label>
+          <input id="notes" type="text" placeholder="Gate code, landmark, best time to call..." />
         </div>
-        <button class="btn-place-order" id="placeOrderBtn">
-          Place Order
+
+        <h2 style="margin-top:18px;">Payment Method</h2>
+        <div class="field">
+          <label for="paymentMethod">Choose</label>
+          <select id="paymentMethod">
+            <option value="paystack">Paystack (Card / Mobile Money)</option>
+            <option value="cod">Cash on Delivery</option>
+          </select>
+        </div>
+
+        <div class="alert" id="alertBox"></div>
+
+        <button class="btn btn-secondary" id="payNowBtn" type="button">
+          Pay Now (Paystack)
         </button>
-      </div>
+
+        <button class="btn btn-primary" id="placeOrderBtn" type="button" style="display:none;">
+          Place Order (Cash on Delivery)
+        </button>
+      </section>
+
+      <!-- RIGHT: Summary -->
+      <aside class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2>Order Summary</h2>
+          <span class="pill" id="itemCountPill">0 items</span>
+        </div>
+
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span id="subtotal">GHS 0.00</span>
+        </div>
+        <div class="summary-row">
+          <span>Shipping</span>
+          <span id="shipping">GHS 0.00</span>
+        </div>
+        <div class="summary-row summary-total">
+          <span>Total</span>
+          <span id="total">GHS 0.00</span>
+        </div>
+
+        <div class="items" id="itemsList">
+          <!-- items injected -->
+        </div>
+
+        <p class="muted" style="margin-top:12px;">
+          By placing your order, you agree to ShopUp’s policies.
+        </p>
+      </aside>
     </div>
   </div>
 
   <!-- ✅ Logger -->
   <script defer src="/js/logger.js"></script>
 
+  <!-- ✅ Checkout logic -->
+  <script defer src="/js/customer-checkout-script.js"></script>
+
+  <!-- ✅ Small inline: auth gate + Sentry identify + breadcrumb -->
   <script>
     (function () {
-      // Auth check
       const authToken = localStorage.getItem("authToken");
       const currentUser = localStorage.getItem("currentUser");
 
@@ -282,184 +255,24 @@
         return;
       }
 
-      // Identify user (optional)
-      let userData = {};
       try {
-        userData = JSON.parse(currentUser || "{}");
-        if (window.Sentry && userData?.id) window.Sentry.setUser({ id: userData.id, email: userData.email, role: "customer" });
-        if (userData?.email) document.getElementById("email").value = userData.email;
+        const user = JSON.parse(currentUser || "{}");
+        if (window.Sentry && user && user.id) {
+          window.Sentry.setUser({
+            id: String(user.id),
+            email: user.email || undefined,
+            role: "customer",
+          });
+        }
       } catch {}
 
-      // Page view logging
       if (window.logger) {
-        logger.pageView(document.title);
-        logger.info("Checkout page viewed", { ts: new Date().toISOString() });
+        window.logger.pageView(document.title);
+        window.logger.info("Checkout page viewed", { ts: new Date().toISOString() });
+      } else if (window.Sentry) {
+        window.Sentry.addBreadcrumb({ category: "navigation", message: "Checkout page viewed", level: "info" });
       }
-
-      let selectedPaymentMethod = "card";
-      let cartData = [];
-      let products = [];
-      let totalAmount = 0;
-
-      function formatMoney(n) {
-        return `GHS ${Number(n || 0).toFixed(2)}`;
-      }
-
-      function showAlert(message, type) {
-        const alertContainer = document.getElementById("alertContainer");
-        alertContainer.innerHTML = `
-          <div class="alert alert-${type}">
-            ${message}
-          </div>
-        `;
-      }
-
-      async function waitForSupabase(maxMs = 8000) {
-        const start = Date.now();
-        while (!window.supabase && Date.now() - start < maxMs) {
-          await new Promise(r => setTimeout(r, 50));
-        }
-        if (!window.supabase) throw new Error("Supabase not ready (check /js/supabase-init.js)");
-      }
-
-      function selectPayment(method) {
-        selectedPaymentMethod = method;
-        document.querySelectorAll(".payment-method").forEach(el => el.classList.remove("selected"));
-        const selected = document.querySelector(`[data-method="${method}"]`);
-        if (selected) selected.classList.add("selected");
-
-        if (window.logger) logger.info("Payment method selected", { method });
-      }
-
-      async function loadOrderSummary() {
-        try {
-          const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-          cartData = cart;
-
-          if (!cart.length) {
-            window.location.href = "cart.html";
-            return;
-          }
-
-          await waitForSupabase();
-
-          const productIds = cart.map(item => item.productId);
-          const { data, error } = await window.supabase
-            .from("products")
-            .select("*")
-            .in("id", productIds);
-
-          if (error) throw error;
-
-          products = data || [];
-          displayOrderSummary();
-        } catch (err) {
-          console.error("Error loading order:", err);
-          if (window.logger) logger.error("Error loading order", err);
-          if (window.Sentry) window.Sentry.captureException(err);
-          showAlert("Failed to load order. Please refresh and try again.", "error");
-        }
-      }
-
-      function displayOrderSummary() {
-        const orderItems = document.getElementById("orderItems");
-
-        let subtotal = 0;
-        let html = "";
-
-        cartData.forEach(item => {
-          const product = products.find(p => String(p.id) === String(item.productId));
-          if (!product) return;
-
-          const price = Number(product.price || 0);
-          const qty = Number(item.quantity || 0);
-          const itemTotal = price * qty;
-
-          subtotal += itemTotal;
-
-          html += `
-            <div class="summary-item">
-              <div>
-                <strong>${product.name || "Product"}</strong><br/>
-                <small>Qty: ${qty}</small>
-              </div>
-              <div>${formatMoney(itemTotal)}</div>
-            </div>
-          `;
-        });
-
-        const shipping = 20;
-        totalAmount = subtotal + shipping;
-
-        html += `
-          <div class="summary-item">
-            <span>Subtotal:</span>
-            <span>${formatMoney(subtotal)}</span>
-          </div>
-          <div class="summary-item">
-            <span>Shipping:</span>
-            <span>${formatMoney(shipping)}</span>
-          </div>
-        `;
-
-        orderItems.innerHTML = html;
-        document.getElementById("totalAmount").textContent = formatMoney(totalAmount);
-      }
-
-      async function placeOrder() {
-        const btn = document.getElementById("placeOrderBtn");
-        btn.disabled = true;
-        btn.textContent = "Processing...";
-
-        try {
-          const fullName = document.getElementById("fullName").value.trim();
-          const email = document.getElementById("email").value.trim();
-          const phone = document.getElementById("phone").value.trim();
-          const address = document.getElementById("address").value.trim();
-          const city = document.getElementById("city").value.trim();
-          const region = document.getElementById("region").value;
-
-          if (!fullName || !email || !phone || !address || !city || !region) {
-            throw new Error("Please fill in all required fields.");
-          }
-
-          if (window.logger) {
-            logger.info("Order placement initiated", {
-              payment_method: selectedPaymentMethod,
-              total_amount: totalAmount,
-              item_count: cartData.length,
-            });
-          }
-
-          // ✅ NOTE: This is where you will connect real Paystack + save order to Supabase.
-          // For now, we keep your "success pending integration" behavior.
-          showAlert("Order placed successfully! (Payment integration pending)", "success");
-
-          setTimeout(() => {
-            localStorage.removeItem("cart");
-            window.location.href = "customer-dashboard.html";
-          }, 2000);
-
-        } catch (err) {
-          console.error("Order placement failed:", err);
-          if (window.logger) logger.error("Order placement failed", err);
-          if (window.Sentry) window.Sentry.captureException(err);
-          showAlert(err?.message || "Order placement failed. Please try again.", "error");
-          btn.disabled = false;
-          btn.textContent = "Place Order";
-        }
-      }
-
-      // UI handlers
-      document.querySelectorAll(".payment-method").forEach(el => {
-        el.addEventListener("click", () => selectPayment(el.getAttribute("data-method")));
-      });
-
-      document.getElementById("placeOrderBtn").addEventListener("click", placeOrder);
-
-      loadOrderSummary();
     })();
-  <script defer src="/js/logger.js"></script>
-<script defer src="/js/customer-checkout-script.js"></script>
+  </script>
 </body>
 </html>
