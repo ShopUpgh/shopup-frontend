@@ -1,47 +1,44 @@
 // /js/logger.js
 (function () {
-  "use strict";
+  console.log("🔍 Logger initialized");
 
-  const Logger = {
-    info(message, data = {}) {
-      console.log("ℹ️ [INFO]", message, data);
-      if (window.Sentry) {
-        Sentry.addBreadcrumb({
-          category: "log",
-          message,
-          level: "info",
-          data,
-        });
+  function safeJson(data) {
+    try { return JSON.parse(JSON.stringify(data || {})); } catch { return {}; }
+  }
+
+  function captureToSentry(level, message, extra) {
+    if (!window.Sentry) return;
+    try {
+      if (level === "error") {
+        const err = extra instanceof Error ? extra : new Error(message);
+        window.Sentry.captureException(err, { extra: { detail: safeJson(extra) } });
+      } else {
+        window.Sentry.captureMessage(message, { level, extra: safeJson(extra) });
       }
-    },
+    } catch {}
+  }
 
-    warn(message, data = {}) {
-      console.warn("⚠️ [WARN]", message, data);
-      if (window.Sentry) {
-        Sentry.captureMessage(message, { level: "warning", extra: data });
-      }
+  window.logger = {
+    info(msg, extra) {
+      console.log("ℹ️ [INFO]", msg, extra || "");
+      captureToSentry("info", msg, extra);
     },
-
-    error(message, err) {
-      console.error("❌ [ERROR]", message, err);
-      if (window.Sentry) {
-        Sentry.captureException(err || new Error(message));
-      }
+    warn(msg, extra) {
+      console.warn("⚠️ [WARN]", msg, extra || "");
+      captureToSentry("warning", msg, extra);
     },
-
+    error(msg, extra) {
+      console.error("❌ [ERROR]", msg, extra || "");
+      captureToSentry("error", msg, extra);
+    },
     pageView(title) {
-      console.log("📄 Page view:", title);
-      if (window.Sentry) {
-        Sentry.addBreadcrumb({
-          category: "navigation",
-          message: title,
-          level: "info",
-        });
-      }
+      const payload = {
+        title,
+        path: window.location.pathname,
+        ts: new Date().toISOString(),
+      };
+      console.log("📄 Page view:", title, payload);
+      captureToSentry("info", "page_view", payload);
     },
   };
-
-  window.Logger = Logger;
-
-  console.log("🔍 Logger initialized");
 })();
