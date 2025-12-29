@@ -7,10 +7,8 @@
   const ORDER_PENDING_KEY = "order_pending";
   const SHIPPING_FLAT = 20;
 
-  // OPTIONAL: if you already load Paystack elsewhere, keep this.
-  // If not loaded, this script will show a friendly error.
-  // Recommended later: load Paystack inline script on checkout only.
-  // <script src="https://js.paystack.co/v1/inline.js"></script>
+  // Edge function name (recommended)
+  const VERIFY_FUNCTION = "verify-payment";
 
   let cartData = [];
   let products = [];
@@ -35,12 +33,37 @@
     alertBox: document.getElementById("alertBox"),
   };
 
+  // --------------------------
+  // Logging helpers
+  // --------------------------
+  function logInfo(msg, data) {
+    try { window.logger?.info?.(msg, data || {}); } catch {}
+    try { window.Sentry?.addBreadcrumb?.({ category: "checkout", message: msg, level: "info", data }); } catch {}
+  }
+
+  function logError(msg, err) {
+    try { window.logger?.error?.(msg, { err: String(err?.message || err || "") }); } catch {}
+    try { window.Sentry?.captureException?.(err instanceof Error ? err : new Error(String(err))); } catch {}
+  }
+
+  // --------------------------
+  // Utils
+  // --------------------------
   function formatMoney(n) {
     return `GHS ${Number(n || 0).toFixed(2)}`;
   }
 
   function safeJsonParse(v, fallback) {
     try { return JSON.parse(v); } catch { return fallback; }
+  }
+
+  function escapeHtml(str) {
+    return String(str ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
   function showAlert(msg) {
@@ -102,7 +125,7 @@
     if (el.total) el.total.textContent = formatMoney(total);
 
     const itemCount = cartData.reduce((n, i) => n + Number(i.quantity || 0), 0);
-    if (el.itemCountPill) el.itemCountPill.textContent = `${itemCount} items`;
+    if (el.itemCountPill) el.itemCountPill.textContent = `${itemCount} item${itemCount === 1 ? "" : "s"}`;
 
     if (el.itemsList) {
       if (!cartData.length) {
@@ -110,9 +133,10 @@
         return;
       }
 
+      // Keep your template, but escape user-display strings
       el.itemsList.innerHTML = cartData.map((item) => {
         const p = getProductById(item.productId);
-        const name = p?.name || "Product";
+        const name = escapeHtml(p?.name || "Product");
         const qty = Number(item.quantity || 0);
         const price = Number(p?.price || 0);
         return `
@@ -192,9 +216,6 @@
 
   async function createOrderInSupabase(orderPayload) {
     await waitForSupabase();
-
-    // NOTE: Adjust table name/columns if your schema differs.
-    // This assumes you have an "orders" table that accepts these fields.
     const { data, error } = await window.supabase
       .from("orders")
       .insert([orderPayload])
@@ -223,7 +244,6 @@
   }
 
   function goToConfirmation(orderId) {
-    // You already have customer-order-confirmation.html in your tree
     window.location.href = `customer-order-confirmation.html?order_id=${encodeURIComponent(orderId)}`;
   }
 
@@ -232,6 +252,67 @@
     if (el.placeOrderBtn) el.placeOrderBtn.disabled = isBusy;
   }
 
+  // --------------------------
+  // Paystack helpers
+  // --------------------------
+  function getPaystackPublicKey() {
+    return (
+      window.PAYSTACK_PUBLIC_KEY ||
+      localStorage.getItem("PAYSTACK_PUBLIC_KEY") ||
+      ""
+    );
+  }
+
+  function loadPaystackScriptIfMissing() {
+    return new Promise((resolve, reject) => {
+      if (window.PaystackPop) return resolve(true);
+
+      const existing = document.querySelector('script[data-paystack="inline"]');
+      if (existing) {
+        existing.addEventListener("load", () => resolve(true));
+        existing.addEventListener("error", () => reject(new Error("Failed to load Paystack script.")));
+        return;
+      }
+
+      const s = document.createElement("script");
+      s.src = "https://js.paystack.co/v1/inline.js";
+      s.async = true;
+      s.dataset.paystack = "inline";
+      s.onload = () => resolve(true);
+      s.onerror = () => reject(new Error("Failed to load Paystack script."));
+      document.head.appendChild(s);
+    });
+  }
+
+  async function verifyPaymentServerSide(reference, expectedTotalGHS) {
+    // Best practice: verify server-side (Supabase Edge Function).
+    await waitForSupabase();
+
+    if (!window.supabase?.functions?.invoke) {
+      throw new Error("Supabase functions not available (need supabase-js v2 and functions enabled).");
+    }
+
+    const { data, error } = await window.supabase.functions.invoke(VERIFY_FUNCTION, {
+      body: {
+        reference,
+        expected_total: Number(expectedTotalGHS),
+        currency: "GHS",
+      },
+    });
+
+    if (error) throw error;
+
+    // Accept a few common response formats
+    if (data?.verified === true) return true;
+    if (data?.status === "success") return true;
+    if (data?.data?.status === "success") return true;
+
+    return false;
+  }
+
+  // --------------------------
+  // Flows
+  // --------------------------
   async function handleCOD() {
     clearAlert();
     const v = validateForm();
@@ -242,20 +323,18 @@
     try {
       const payload = buildOrderPayload("pending_fulfillment", { method: "cod" });
 
-      // store a local fallback in case insert fails
       localStorage.setItem(ORDER_PENDING_KEY, JSON.stringify(payload));
 
       const order = await createOrderInSupabase(payload);
 
-      if (window.logger) window.logger.info("COD order created", { order_id: order.id });
+      logInfo("COD order created", { order_id: order.id });
       clearCartAfterSuccess();
       localStorage.removeItem(ORDER_PENDING_KEY);
 
       goToConfirmation(order.id);
     } catch (err) {
       console.error("COD order error:", err);
-      if (window.logger) window.logger.error("COD order error", err);
-      if (window.Sentry) window.Sentry.captureException(err);
+      logError("COD order error", err);
       showAlert("We couldn't place your order right now. Please try again.");
     } finally {
       setBusy(false);
@@ -270,140 +349,31 @@
     const { total } = calcTotals();
     if (total <= 0) return showAlert("Cart total is invalid.");
 
-    // Paystack inline SDK check
-    if (!window.PaystackPop) {
-      showAlert("Paystack is not loaded yet. Add Paystack inline script on this page to enable payments.");
-      return;
-    }
+    const pk = getPaystackPublicKey();
+    if (!pk) return showAlert("Paystack public key is missing. Set window.PAYSTACK_PUBLIC_KEY (recommended).");
 
     setBusy(true);
 
     try {
+      // ensure Paystack SDK is available
+      await loadPaystackScriptIfMissing();
+
       // Step 1: Create order as pending payment
       const pendingPayload = buildOrderPayload("pending_payment", { method: "paystack" });
       localStorage.setItem(ORDER_PENDING_KEY, JSON.stringify(pendingPayload));
 
       const order = await createOrderInSupabase(pendingPayload);
-
-      if (window.logger) window.logger.info("Paystack order pending created", { order_id: order.id });
+      logInfo("Paystack order pending created", { order_id: order.id });
 
       // Step 2: Launch Paystack
-      // IMPORTANT: Paystack expects amount in PESewas (GHS * 100)
       const amountPesewas = Math.round(Number(total) * 100);
-
       const reference = `shopup_${order.id}_${Date.now()}`;
 
       const handler = window.PaystackPop.setup({
-        key: "PUT_YOUR_PUBLIC_PAYSTACK_KEY_HERE", // ✅ Replace with your PAYSTACK PUBLIC KEY (pk_live_... in production)
+        key: pk,
         email: (el.email?.value || "").trim(),
         amount: amountPesewas,
         currency: "GHS",
         ref: reference,
         metadata: {
           custom_fields: [
-            { display_name: "Order ID", variable_name: "order_id", value: String(order.id) },
-            { display_name: "Customer", variable_name: "customer_name", value: (el.fullName?.value || "").trim() }
-          ]
-        },
-        callback: async function (response) {
-          try {
-            // Step 3: Mark as paid (best practice: verify server-side via webhook, but this is a working client baseline)
-            const updated = await updateOrderInSupabase(order.id, {
-              status: "paid",
-              payment_reference: response?.reference || reference,
-            });
-
-            if (window.logger) window.logger.info("Paystack payment success", { order_id: updated.id, ref: response?.reference });
-            clearCartAfterSuccess();
-            localStorage.removeItem(ORDER_PENDING_KEY);
-
-            goToConfirmation(updated.id);
-          } catch (err) {
-            console.error("Payment success but update failed:", err);
-            if (window.logger) window.logger.error("Order update failed after paystack", err);
-            if (window.Sentry) window.Sentry.captureException(err);
-            showAlert("Payment went through, but we couldn't finalize your order. Please contact support with your payment reference.");
-          } finally {
-            setBusy(false);
-          }
-        },
-        onClose: function () {
-          setBusy(false);
-          showAlert("Payment window closed. You can try again.");
-        }
-      });
-
-      handler.openIframe();
-    } catch (err) {
-      console.error("Paystack flow error:", err);
-      if (window.logger) window.logger.error("Paystack flow error", err);
-      if (window.Sentry) window.Sentry.captureException(err);
-      showAlert("We couldn't start payment right now. Please try again.");
-      setBusy(false);
-    }
-  }
-
-  function toggleButtons() {
-    const method = el.paymentMethod?.value || "paystack";
-    if (method === "cod") {
-      if (el.payNowBtn) el.payNowBtn.style.display = "none";
-      if (el.placeOrderBtn) el.placeOrderBtn.style.display = "block";
-    } else {
-      if (el.placeOrderBtn) el.placeOrderBtn.style.display = "none";
-      if (el.payNowBtn) el.payNowBtn.style.display = "block";
-    }
-  }
-
-  async function loadProductsForCart() {
-    cartData = readCart();
-
-    if (!cartData.length) {
-      renderSummary();
-      showAlert("Your cart is empty. Go back to cart to add items.");
-      return;
-    }
-
-    await waitForSupabase();
-    const productIds = cartData.map((i) => i.productId).filter(Boolean);
-
-    const { data, error } = await window.supabase
-      .from("products")
-      .select("*")
-      .in("id", productIds);
-
-    if (error) throw error;
-
-    products = data || [];
-    renderSummary();
-  }
-
-  function wireEvents() {
-    if (el.paymentMethod) {
-      el.paymentMethod.addEventListener("change", () => {
-        clearAlert();
-        toggleButtons();
-      });
-    }
-
-    if (el.placeOrderBtn) el.placeOrderBtn.addEventListener("click", handleCOD);
-    if (el.payNowBtn) el.payNowBtn.addEventListener("click", handlePaystack);
-  }
-
-  async function init() {
-    try {
-      toggleButtons();
-      wireEvents();
-      hydrateFromUser();
-      await loadProductsForCart();
-
-      if (window.logger) window.logger.info("Checkout initialized");
-    } catch (err) {
-      console.error("Checkout init error:", err);
-      if (window.logger) window.logger.error("Checkout init error", err);
-      if (window.Sentry) window.Sentry.captureException(err);
-      showAlert("We couldn't load checkout right now. Please refresh and try again.");
-    }
-  }
-
-  init();
-})();
