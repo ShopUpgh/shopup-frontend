@@ -1,11 +1,22 @@
 // /js/sentry-config.js
 (function () {
+  /* ================================
+     🔒 Production-only gate (TOP)
+  ================================= */
+  const isProduction =
+    location.hostname === "www.shopupgh.com" ||
+    location.hostname === "shopupgh.com";
+
+  if (!isProduction) {
+    console.info("ℹ️ Sentry disabled (not production)");
+    return;
+  }
+
+  /* ================================
+     🔑 Sentry Configuration
+  ================================= */
   const SENTRY_DSN =
     "https://c4c92ac8539373f9c497ba50f31a9900@o4510464682688512.ingest.de.sentry.io/4510484995113040";
-
-  // ✅ ONLY run Sentry on production domains
-  const host = window.location.hostname;
-  const isProdDomain = host === "www.shopupgh.com" || host === "shopupgh.com";
 
   // ✅ DSN sanity check
   const looksValid =
@@ -15,27 +26,25 @@
     SENTRY_DSN.includes("sentry.io") &&
     !SENTRY_DSN.includes("your-sentry-dsn");
 
-  if (!isProdDomain) {
-    console.log("ℹ️ Sentry disabled (not production domain):", host);
-    return;
-  }
-
   if (!window.Sentry || !looksValid) {
-    console.log("ℹ️ Sentry not initialized (SDK missing or DSN invalid)");
+    console.info("ℹ️ Sentry not initialized (SDK missing or DSN invalid)");
     return;
   }
 
+  /* ================================
+     🚀 Initialize Sentry (PROD ONLY)
+  ================================= */
   window.Sentry.init({
     dsn: SENTRY_DSN,
     environment: "production",
-    tracesSampleRate: 0.2,
+    tracesSampleRate: 0.2, // keep costs low
     release: "shopup@1.0.0",
 
     beforeSend(event, hint) {
       try {
-        const err = hint && hint.originalException;
+        const err = hint?.originalException;
 
-        // common browser noise
+        // Ignore browser noise & extensions
         if (err?.message?.includes("chrome-extension://")) return null;
 
         const msg =
