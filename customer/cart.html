@@ -161,6 +161,8 @@
 
     @media (max-width: 768px) {
       .cart-grid { grid-template-columns: 1fr; }
+      .cart-item { flex-direction: column; }
+      .item-image { width: 100%; height: 220px; }
     }
   </style>
 </head>
@@ -217,9 +219,12 @@
   <!-- ✅ Logger -->
   <script defer src="/js/logger.js"></script>
 
+  <!-- ✅ Cart logic (main) -->
+  <script defer src="/js/customer-cart-script.js"></script>
+
+  <!-- ✅ Small inline: auth gate + Sentry identify + page breadcrumb -->
   <script>
     (function () {
-      // Auth check
       const authToken = localStorage.getItem("authToken");
       const currentUser = localStorage.getItem("currentUser");
 
@@ -231,194 +236,27 @@
       // Identify user (optional)
       try {
         const user = JSON.parse(currentUser || "{}");
-        if (window.Sentry && user?.id) window.Sentry.setUser({ id: user.id, email: user.email, role: "customer" });
-      } catch {}
-
-      // Page view logging
-      if (window.logger) {
-        logger.pageView(document.title);
-        logger.info("Cart page viewed", { ts: new Date().toISOString() });
-      } else if (window.Sentry) {
-        window.Sentry.addBreadcrumb({ category: "navigation", message: "Cart page viewed", level: "info" });
-      }
-
-      let cartData = [];
-      let products = [];
-
-      function formatMoney(n) {
-        return `GHS ${Number(n || 0).toFixed(2)}`;
-      }
-
-      async function waitForSupabase(maxMs = 8000) {
-        const start = Date.now();
-        while (!window.supabase && Date.now() - start < maxMs) {
-          await new Promise(r => setTimeout(r, 50));
-        }
-        if (!window.supabase) throw new Error("Supabase not ready (check /js/supabase-init.js)");
-      }
-
-      async function loadCart() {
-        try {
-          const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-          cartData = cart;
-
-          if (cart.length === 0) {
-            displayCart();
-            return;
-          }
-
-          await waitForSupabase();
-
-          const productIds = cart.map(i => i.productId);
-
-          const { data, error } = await window.supabase
-            .from("products")
-            .select("*")
-            .in("id", productIds);
-
-          if (error) throw error;
-
-          products = data || [];
-          displayCart();
-        } catch (err) {
-          console.error("Error loading cart:", err);
-          if (window.logger) logger.error("Error loading cart", err);
-          if (window.Sentry) window.Sentry.captureException(err);
-
-          // Fail-safe UI
-          const cartItems = document.getElementById("cartItems");
-          cartItems.innerHTML = `
-            <div class="empty-cart">
-              <div class="empty-cart-icon">⚠️</div>
-              <h2>We couldn't load your cart right now</h2>
-              <p>Please refresh the page or try again in a moment.</p>
-            </div>
-          `;
-          document.getElementById("cartSummary").style.display = "none";
-        }
-      }
-
-      function displayCart() {
-        const cartItems = document.getElementById("cartItems");
-        const cartSummary = document.getElementById("cartSummary");
-
-        if (!cartData || cartData.length === 0) {
-          cartItems.innerHTML = `
-            <div class="empty-cart">
-              <div class="empty-cart-icon">🛒</div>
-              <h2>Your cart is empty</h2>
-              <p>Add some products to get started!</p>
-              <a href="customer-dashboard.html"
-                 style="display:inline-block;margin-top:20px;padding:10px 20px;background:#2d8a3e;color:white;text-decoration:none;border-radius:8px;">
-                Continue Shopping
-              </a>
-            </div>
-          `;
-          cartSummary.style.display = "none";
-          return;
-        }
-
-        cartSummary.style.display = "block";
-
-        cartItems.innerHTML = cartData.map(item => {
-          const product = products.find(p => String(p.id) === String(item.productId));
-          if (!product) return "";
-
-          const img = product.image_url || "../images/placeholder.png";
-          const name = product.name || "Product";
-          const price = Number(product.price || 0);
-
-          return `
-            <div class="cart-item">
-              <img src="${img}" alt="${name}" class="item-image">
-              <div class="item-details">
-                <div class="item-name">${name}</div>
-                <div class="item-price">${formatMoney(price)}</div>
-                <div class="quantity-controls">
-                  <button class="qty-btn" data-action="dec" data-id="${item.productId}">-</button>
-                  <span>${item.quantity}</span>
-                  <button class="qty-btn" data-action="inc" data-id="${item.productId}">+</button>
-                </div>
-              </div>
-              <button class="remove-btn" data-action="remove" data-id="${item.productId}">🗑️ Remove</button>
-            </div>
-          `;
-        }).join("");
-
-        updateSummary();
-      }
-
-      function updateSummary() {
-        const subtotal = cartData.reduce((total, item) => {
-          const product = products.find(p => String(p.id) === String(item.productId));
-          const price = Number(product?.price || 0);
-          return total + (price * Number(item.quantity || 0));
-        }, 0);
-
-        const shipping = subtotal > 0 ? 20 : 0;
-        const total = subtotal + shipping;
-
-        document.getElementById("subtotal").textContent = formatMoney(subtotal);
-        document.getElementById("shipping").textContent = formatMoney(shipping);
-        document.getElementById("total").textContent = formatMoney(total);
-      }
-
-      function saveCart() {
-        localStorage.setItem("cart", JSON.stringify(cartData));
-      }
-
-      function updateQuantity(productId, change) {
-        const item = cartData.find(i => String(i.productId) === String(productId));
-        if (!item) return;
-
-        item.quantity = Number(item.quantity || 0) + Number(change || 0);
-        if (item.quantity <= 0) {
-          removeItem(productId);
-          return;
-        }
-
-        saveCart();
-        displayCart();
-
-        if (window.logger) logger.info("Cart quantity updated", { productId, change, quantity: item.quantity });
-      }
-
-      function removeItem(productId) {
-        cartData = cartData.filter(i => String(i.productId) !== String(productId));
-        saveCart();
-        displayCart();
-
-        if (window.logger) logger.info("Cart item removed", { productId });
-      }
-
-      function proceedToCheckout() {
-        if (window.logger) {
-          logger.info("Proceeding to checkout", {
-            item_count: cartData.length,
-            total_items: cartData.reduce((sum, i) => sum + Number(i.quantity || 0), 0),
+        if (window.Sentry && user && user.id) {
+          window.Sentry.setUser({
+            id: String(user.id),
+            email: user.email || undefined,
+            role: "customer",
           });
         }
-        window.location.href = "customer-checkout.html";
+      } catch {}
+
+      // Breadcrumb / page view
+      if (window.logger) {
+        window.logger.pageView(document.title);
+        window.logger.info("Cart page viewed", { ts: new Date().toISOString() });
+      } else if (window.Sentry) {
+        window.Sentry.addBreadcrumb({
+          category: "navigation",
+          message: "Cart page viewed",
+          level: "info",
+        });
       }
-
-      // Delegated click handling
-      document.addEventListener("click", (e) => {
-        const btn = e.target.closest("[data-action]");
-        if (!btn) return;
-
-        const action = btn.getAttribute("data-action");
-        const id = btn.getAttribute("data-id");
-
-        if (action === "inc") updateQuantity(id, 1);
-        if (action === "dec") updateQuantity(id, -1);
-        if (action === "remove") removeItem(id);
-      });
-
-      document.getElementById("checkoutBtn").addEventListener("click", proceedToCheckout);
-
-      loadCart();
     })();
-  <script defer src="/js/logger.js"></script>
-<script defer src="/js/customer-checkout-script.js"></script>
+  </script>
 </body>
 </html>
