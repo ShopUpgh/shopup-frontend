@@ -1,92 +1,51 @@
 // /js/login-script.js
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("loginForm");
-  const emailEl = document.getElementById("email");
-  const passwordEl = document.getElementById("password");
-  const submitBtn =
-    document.querySelector('button[type="submit"]') ||
-    document.querySelector(".btn-submit");
+(function () {
+  const form = document.getElementById("sellerLoginForm");
+  if (!form) return;
 
-  if (!form || !emailEl || !passwordEl) {
-    window.logger?.error("Login form elements missing");
-    return;
-  }
+  const msg = document.getElementById("msg");
+  const btn = document.getElementById("btn");
 
-  // Supabase should be created by /js/supabase-init.js (module)
-  if (!window.supabase) {
-    window.logger?.error("Supabase not initialized on login page");
+  function show(type, text) {
+    msg.className = "msg " + (type === "error" ? "err" : "ok");
+    msg.textContent = text;
+    msg.style.display = "block";
   }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-
-    const email = (emailEl.value || "").trim();
-    const password = passwordEl.value || "";
-
-    if (!email || !password) {
-      showToast("❌ Enter email and password");
-      return;
-    }
-
-    const originalText = submitBtn ? submitBtn.textContent : "";
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Signing in...";
-    }
+    msg.style.display = "none";
+    btn.disabled = true;
 
     try {
+      if (!window.supabase) throw new Error("Supabase not ready");
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (window.logger) logger.info("Seller login attempt", { email });
+
       const { data, error } = await window.supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) {
-        window.logger?.warn("Login failed", { message: error.message });
-        showToast("❌ " + error.message);
-        return;
+      if (error) throw error;
+
+      localStorage.setItem("authToken", data.session.access_token);
+      localStorage.setItem("currentUser", JSON.stringify(data.user));
+      localStorage.setItem("role", "seller");
+
+      if (window.Sentry) {
+        window.Sentry.setUser({ id: data.user.id, email: data.user.email, role: "seller" });
       }
 
-      // If email not verified yet (depends on your Supabase settings)
-      const user = data?.user;
-      if (user && user.email_confirmed_at === null) {
-        showToast("📩 Please verify your email before logging in.");
-        window.logger?.info("Login blocked: email not verified", { email });
-        // Optionally sign out
-        await window.supabase.auth.signOut();
-        return;
-      }
-
-      showToast("✅ Login successful!");
-
-      window.logger?.info("Seller login success", {
-        userId: user?.id,
-        email: user?.email,
-      });
-
-      setTimeout(() => {
-        window.location.href = "dashboard.html";
-      }, 700);
+      show("ok", "Login successful. Redirecting…");
+      setTimeout(() => (window.location.href = "/seller/seller-dashboard-enhanced.html"), 800);
     } catch (err) {
-      window.logger?.error("Login exception", err);
-      showToast("❌ Something went wrong. Please try again.");
-    } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-      }
+      if (window.logger) logger.error("Seller login failed", err);
+      show("error", err?.message || "Login failed");
+      btn.disabled = false;
     }
   });
-});
-
-// Toast helper (matches your signup toast pattern)
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  const toastMessage = document.getElementById("toastMessage");
-  if (!toast || !toastMessage) {
-    alert(message);
-    return;
-  }
-  toastMessage.textContent = message;
-  toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 4000);
-}
+})();
