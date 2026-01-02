@@ -65,6 +65,9 @@
   };
 
   // Optional: hard-silence direct console.* in production
+  // Note: This intentionally overrides console methods to eliminate noise in production.
+  // Third-party libraries should use their own logging mechanisms or window.log API.
+  // Errors and warnings are preserved for critical issue detection.
   if (IS_PROD) {
     console.log = () => {};
     console.info = () => {};
