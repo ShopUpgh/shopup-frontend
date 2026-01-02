@@ -3,6 +3,16 @@
 
 console.log('Help Center module loaded');
 
+// Configuration - Update these values for your deployment
+const HELP_CENTER_CONFIG = {
+    support: {
+        email: 'support@shopup.gh',
+        phone: '+233 XXX XXX XXXX', // TODO: Replace with actual phone number
+        hours: 'Mon-Fri, 9 AM - 6 PM (Ghana Time)',
+        responseTime: 'Within 24 hours'
+    }
+};
+
 // Help Center Data
 const helpCenterData = {
     faqs: [
@@ -118,12 +128,7 @@ const helpCenterData = {
             file: 'DEPLOYMENT_GUIDE.md'
         }
     ],
-    support: {
-        email: 'support@shopup.gh',
-        phone: '+233 XXX XXX XXXX',
-        hours: 'Mon-Fri, 9 AM - 6 PM (Ghana Time)',
-        responseTime: 'Within 24 hours'
-    },
+    support: HELP_CENTER_CONFIG.support,
     videos: [
         {
             title: 'Getting Started with ShopUp',
@@ -457,13 +462,19 @@ window.submitHelpForm = function(event) {
     const subject = document.getElementById('contactSubject').value;
     const message = document.getElementById('contactMessage').value;
 
-    // In a real implementation, this would send to a backend
+    // TODO: Integrate with backend email service
+    // Implementation options:
+    // 1. Use Supabase Edge Function to send email via Resend
+    // 2. Use mailto: link to open user's email client
+    // 3. Store in database table for admin review
     console.log('Help form submitted:', { name, email, subject, message });
     
-    alert('✅ Thank you for contacting us! We\'ll get back to you within 24 hours via email.');
-    
-    // Reset form
-    event.target.reset();
+    // Temporary placeholder - replace with proper notification system
+    // Consider using a toast notification instead of alert()
+    if (confirm('✅ Thank you for contacting us!\n\nWe\'ll get back to you within 24 hours via email.\n\nClick OK to close this form.')) {
+        // Reset form only after user confirms
+        event.target.reset();
+    }
 };
 
 // Initialize when DOM is ready

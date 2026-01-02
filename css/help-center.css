@@ -558,6 +558,13 @@
         padding: 0 20px;
         overflow-x: auto;
         white-space: nowrap;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    }
+
+    /* Ensure tabs are keyboard accessible on mobile */
+    .help-tab:focus {
+        outline: 2px solid #667eea;
+        outline-offset: -2px;
     }
 
     .help-tab {
