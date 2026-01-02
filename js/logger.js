@@ -1,6 +1,16 @@
 // /js/logger.js
-(function () {
-  console.log("🔍 Logger initialized");
+// Production-safe logging utility - silences console logs in production
+(() => {
+  const host = (location.hostname || "").toLowerCase();
+
+  // Treat your real domain + vercel prod alias as production
+  const IS_PROD =
+    host === "shopupgh.com" ||
+    host === "www.shopupgh.com" ||
+    host.endsWith(".shopupgh.com");
+
+  // Only allow logs in non-prod
+  const canLog = !IS_PROD;
 
   function safeJson(data) {
     try { return JSON.parse(JSON.stringify(data || {})); } catch { return {}; }
@@ -18,13 +28,25 @@
     } catch {}
   }
 
+  // Safe logger API (your code can call window.log.* anywhere)
+  window.log = {
+    info: (...args) => canLog && console.info(...args),
+    warn: (...args) => canLog && console.warn(...args),
+    debug: (...args) => canLog && console.debug(...args),
+    log: (...args) => canLog && console.log(...args),
+    
+    // Always allow errors (but keep them minimal in prod)
+    error: (...args) => console.error(...args),
+  };
+
+  // Legacy support: keep window.logger for backward compatibility
   window.logger = {
     info(msg, extra) {
-      console.log("ℹ️ [INFO]", msg, extra || "");
+      if (canLog) console.log("ℹ️ [INFO]", msg, extra || "");
       captureToSentry("info", msg, extra);
     },
     warn(msg, extra) {
-      console.warn("⚠️ [WARN]", msg, extra || "");
+      if (canLog) console.warn("⚠️ [WARN]", msg, extra || "");
       captureToSentry("warning", msg, extra);
     },
     error(msg, extra) {
@@ -37,8 +59,18 @@
         path: window.location.pathname,
         ts: new Date().toISOString(),
       };
-      console.log("📄 Page view:", title, payload);
+      if (canLog) console.log("📄 Page view:", title, payload);
       captureToSentry("info", "page_view", payload);
     },
   };
+
+  // Optional: hard-silence direct console.* in production
+  if (IS_PROD) {
+    console.log = () => {};
+    console.info = () => {};
+    console.debug = () => {};
+    // keep warn/error so you can still see real problems
+  }
+
+  window.log.info("🔍 Logger initialized", { IS_PROD });
 })();
