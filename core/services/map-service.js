@@ -1,0 +1,49 @@
+// core/services/map-service.js
+// Basic mapping helpers for ShopUp
+
+(function(global) {
+  function getConfig() {
+    return (global.ConfigManager && global.ConfigManager.getServiceConfig('map')) || {};
+  }
+
+  function getFallbackCenter() {
+    const config = getConfig();
+    return config.fallbackCenter || { lat: 5.6037, lng: -0.187 };
+  }
+
+  function buildMapUrl(coordinates) {
+    const { lat, lng } = coordinates || getFallbackCenter();
+
+    return `https://www.google.com/maps?q=${lat},${lng}`;
+  }
+
+  async function geocode(address) {
+    const center = getFallbackCenter();
+    return {
+      query: address,
+      coordinates: center,
+      provider: getConfig().provider || 'mapbox',
+      tokenConfigured: Boolean(getConfig().apiKey)
+    };
+  }
+
+  async function reverseGeocode(coordinates) {
+    const { lat, lng } = coordinates || getFallbackCenter();
+    return {
+      address: `GPS ${lat.toFixed(5)}, ${lng.toFixed(5)}`,
+      provider: getConfig().provider || 'mapbox'
+    };
+  }
+
+  const MapService = {
+    getConfig,
+    geocode,
+    reverseGeocode,
+    buildMapUrl
+  };
+
+  global.MapService = MapService;
+  console.log('✅ Map service initialized', {
+    provider: getConfig().provider || 'mapbox'
+  });
+})(window);
