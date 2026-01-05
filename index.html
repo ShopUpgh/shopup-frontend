@@ -4,444 +4,155 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <meta name="description" content="ShopUp - Ghana's premier e-commerce platform for local businesses. Start selling online with powerful tools, mobile money integration, and 24/7 support." />
-  <meta name="keywords" content="Ghana ecommerce, online shop Ghana, mobile money, sell online Ghana, ShopUp, e-commerce platform Ghana" />
+  <meta name="description" content="ShopUp - Ghana's Premier E-commerce Platform for Local Businesses. Sell online with mobile money and powerful tools." />
+  <meta name="keywords" content="Ghana ecommerce, online shop Ghana, mobile money, sell online Ghana, ShopUp" />
   <meta name="author" content="The House of Aldens Holdings" />
 
-  <title>ShopUp Ghana - Empower Your Business Online</title>
+  <title>ShopUp Ghana – Empower Your Business Online</title>
 
   <!-- ✅ CSS -->
   <link rel="stylesheet" href="/css/styles.css">
-  <!-- Optional: only keep if your homepage uses storefront-specific sections/classes -->
-  <!-- <link rel="stylesheet" href="/css/storefront-styles.css"> -->
+  <link rel="stylesheet" href="/css/storefront-styles.css">
 
   <!-- ✅ Sentry -->
   <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
   <script src="/js/sentry-config.js"></script>
-
-  <!-- Optional: Preconnect for faster font loading if you later add Google Fonts -->
-  <!-- <link rel="preconnect" href="https://fonts.googleapis.com"> -->
-  <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> -->
 </head>
 
 <body>
 
-  <!-- =========================
-       NAVBAR
-  ========================== -->
+  <!-- ================= NAVBAR ================= -->
   <header class="navbar">
-    <div class="container">
-      <a class="logo" href="/">
-        <span class="logo-icon" aria-hidden="true">🛒</span>
-        <span class="logo-text">ShopUpGhana</span>
-      </a>
+    <div class="container navbar-content">
+      <a href="/" class="logo">ShopUp<span>Ghana</span></a>
 
-      <nav aria-label="Primary navigation">
-        <ul class="nav-menu" id="navMenu">
-          <li><a href="#features">Features</a></li>
-          <li><a href="#how-it-works">How It Works</a></li>
-          <li><a href="#pricing">Pricing</a></li>
-          <li><a href="#testimonials">Testimonials</a></li>
-          <li><a href="/seller/seller-login.html">Seller Login</a></li>
-          <li><a class="btn-primary" href="/seller/seller-register.html">Get Started</a></li>
-        </ul>
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#testimonials">Testimonials</a>
+        <a href="/seller-login.html" class="btn-outline">Seller Login</a>
+        <a href="/customer-register.html" class="btn-primary">Get Started</a>
       </nav>
-
-      <button class="mobile-menu-toggle" id="mobileToggle" aria-label="Open menu" aria-controls="navMenu" aria-expanded="false">
-        ☰
-      </button>
     </div>
   </header>
 
-  <!-- =========================
-       HERO
-  ========================== -->
-  <main>
-    <section class="hero" id="top">
-      <div class="container">
-        <div class="hero-content fade-in">
-          <h1>
-            Empower Your Business Online <span class="highlight">in Ghana</span>
-          </h1>
-          <p>
-            Ghana’s premier e-commerce platform designed for local businesses.
-            Launch your online store, accept Mobile Money & card payments, and manage orders with ease.
-          </p>
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-text">
+        <h1>Empower Your Business Online</h1>
+        <p>
+          Ghana’s premier e-commerce platform designed for local businesses.
+          Sell online with mobile money, smart tools, and 24/7 support.
+        </p>
 
-          <div class="hero-cta">
-            <a class="btn btn-primary" href="/seller/seller-register.html">
-              Start Free Trial <span aria-hidden="true">→</span>
-            </a>
-            <a class="btn btn-secondary" href="#how-it-works">
-              Learn More <span aria-hidden="true">↓</span>
-            </a>
-          </div>
-        </div>
-
-        <div class="hero-visual fade-in" aria-hidden="true">
-          <!-- Replace with your actual image -->
-          <img src="/assets/hero-shopup.jpg" alt="ShopUp Ghana online store dashboard preview" onerror="this.style.display='none';" />
-
-          <div class="hero-card card-1">
-            <div class="hero-card-icon">💳</div>
-            <div class="hero-card-content">
-              <h4>Payments</h4>
-              <p>MoMo + Card</p>
-            </div>
-          </div>
-
-          <div class="hero-card card-2">
-            <div class="hero-card-icon">📦</div>
-            <div class="hero-card-content">
-              <h4>Orders</h4>
-              <p>Real-time</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================
-         FEATURES
-    ========================== -->
-    <section class="features" id="features">
-      <div class="container">
-        <div class="section-header">
-          <span class="section-badge">Built for Ghana</span>
-          <h2>Everything you need to sell online</h2>
-          <p>
-            From storefront creation to payments and order tracking — ShopUp gives you the tools to grow.
-          </p>
-        </div>
-
-        <div class="features-grid">
-          <article class="feature-card">
-            <span class="feature-icon" aria-hidden="true">🏪</span>
-            <h3>Instant Storefront</h3>
-            <p>Create a professional online store in minutes — no coding needed.</p>
-          </article>
-
-          <article class="feature-card">
-            <span class="feature-icon" aria-hidden="true">📱</span>
-            <h3>Mobile Money + Cards</h3>
-            <p>Accept MTN MoMo, Telecel Cash, AirtelTigo Money and card payments securely.</p>
-          </article>
-
-          <article class="feature-card">
-            <span class="feature-icon" aria-hidden="true">📦</span>
-            <h3>Order Management</h3>
-            <p>Track orders, update statuses, and keep customers informed automatically.</p>
-          </article>
-
-          <article class="feature-card">
-            <span class="feature-icon" aria-hidden="true">📈</span>
-            <h3>Sales Analytics</h3>
-            <p>Understand what sells, who buys, and when — so you can scale smarter.</p>
-          </article>
-
-          <article class="feature-card">
-            <span class="feature-icon" aria-hidden="true">🛡️</span>
-            <h3>Secure by Design</h3>
-            <p>Security monitoring, safe payment verification, and reliable performance.</p>
-          </article>
-
-          <article class="feature-card">
-            <span class="feature-icon" aria-hidden="true">🤝</span>
-            <h3>Local Support</h3>
-            <p>Get help when you need it — onboarding, guidance, and practical support.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================
-         HOW IT WORKS
-    ========================== -->
-    <section class="about" id="how-it-works">
-      <div class="container">
-        <div class="about-visual">
-          <!-- Replace with your actual image -->
-          <img src="/assets/how-it-works.jpg" alt="How ShopUp works illustration" onerror="this.style.display='none';" />
-
-          <div class="about-stats" aria-hidden="true">
-            <div class="stat-item">
-              <span class="stat-number">5 min</span>
-              <span class="stat-label">Setup time</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number">MoMo</span>
-              <span class="stat-label">Built-in payments</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number">24/7</span>
-              <span class="stat-label">Monitoring</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number">GH</span>
-              <span class="stat-label">Local focus</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="about-content">
-          <h2>How ShopUp works</h2>
-          <p>
-            ShopUp helps local businesses move from WhatsApp/Instagram selling to a real online store.
-            You get a storefront, product management, secure checkout, and order tracking.
-          </p>
-
-          <div class="success-story">
-            <h4>Simple. Fast. Professional.</h4>
-            <p>
-              Create your store, add products, share your link — and start receiving orders instantly.
-            </p>
-          </div>
-
-          <ul class="about-features">
-            <li>Create your seller account</li>
-            <li>Add products with images and prices</li>
-            <li>Share your shop link to customers</li>
-            <li>Receive payments and fulfill orders</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================
-         PRICING
-    ========================== -->
-    <section class="pricing" id="pricing">
-      <div class="container">
-        <div class="section-header">
-          <span class="section-badge">Pricing</span>
-          <h2>Choose the plan that fits your business</h2>
-          <p>Start small and upgrade as you grow. Cancel anytime.</p>
-        </div>
-
-        <div class="pricing-grid">
-          <article class="pricing-card">
-            <h3>Starter</h3>
-            <p class="price">GHS 0 <span>/ mo</span></p>
-            <ul class="pricing-features">
-              <li>Basic storefront</li>
-              <li>Product listings</li>
-              <li>Order management</li>
-              <li>Standard support</li>
-            </ul>
-            <a class="btn btn-outline" href="/seller/seller-register.html">Start Free</a>
-          </article>
-
-          <article class="pricing-card featured">
-            <div class="pricing-badge">Most Popular</div>
-            <h3>Business</h3>
-            <p class="price">GHS 99 <span>/ mo</span></p>
-            <ul class="pricing-features">
-              <li>Everything in Starter</li>
-              <li>Mobile Money + card checkout</li>
-              <li>Advanced analytics</li>
-              <li>Priority support</li>
-            </ul>
-            <a class="btn btn-primary" href="/seller/seller-register.html">Get Started</a>
-          </article>
-
-          <article class="pricing-card">
-            <h3>Enterprise</h3>
-            <p class="price">Custom <span>/ mo</span></p>
-            <ul class="pricing-features">
-              <li>Dedicated onboarding</li>
-              <li>Custom integrations</li>
-              <li>Service-level support</li>
-              <li>Multi-team access</li>
-            </ul>
-            <a class="btn btn-outline" href="/contact.html">Talk to Sales</a>
-          </article>
-        </div>
-
-        <div class="pricing-note">
-          <p>
-            <strong>Tip:</strong> If you’re just starting, choose Starter and upgrade once you see consistent orders.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================
-         TESTIMONIALS
-    ========================== -->
-    <section class="testimonials" id="testimonials">
-      <div class="container">
-        <div class="section-header">
-          <span class="section-badge">Testimonials</span>
-          <h2>Loved by local businesses</h2>
-          <p>Real results from real sellers across Ghana.</p>
-        </div>
-
-        <div class="testimonials-grid">
-          <article class="testimonial-card">
-            <div class="testimonial-content">
-              <div class="testimonial-rating" aria-label="5 star rating">★★★★★</div>
-              <p class="testimonial-text">
-                “ShopUp helped me move from WhatsApp selling to a real store. My customers trust it more.”
-              </p>
-              <div class="testimonial-author">
-                <div class="author-avatar" aria-hidden="true">A</div>
-                <div class="author-info">
-                  <h4>Ama K.</h4>
-                  <p>Beauty & Cosmetics</p>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <article class="testimonial-card">
-            <div class="testimonial-content">
-              <div class="testimonial-rating" aria-label="5 star rating">★★★★★</div>
-              <p class="testimonial-text">
-                “Mobile Money checkout is smooth. I can track orders without stress.”
-              </p>
-              <div class="testimonial-author">
-                <div class="author-avatar" aria-hidden="true">K</div>
-                <div class="author-info">
-                  <h4>Kofi M.</h4>
-                  <p>Electronics Seller</p>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <article class="testimonial-card">
-            <div class="testimonial-content">
-              <div class="testimonial-rating" aria-label="5 star rating">★★★★★</div>
-              <p class="testimonial-text">
-                “The dashboard makes everything easier. I’m finally running my business like a brand.”
-              </p>
-              <div class="testimonial-author">
-                <div class="author-avatar" aria-hidden="true">E</div>
-                <div class="author-info">
-                  <h4>Efua S.</h4>
-                  <p>Fashion & Apparel</p>
-                </div>
-              </div>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- =========================
-         FINAL CTA
-    ========================== -->
-    <section class="features" aria-label="Get started">
-      <div class="container">
-        <div class="section-header">
-          <span class="section-badge">Start Today</span>
-          <h2>Ready to sell online?</h2>
-          <p>Join ShopUp and build a professional online presence for your business.</p>
-        </div>
-
-        <div class="text-center">
-          <a class="btn btn-primary" href="/seller/seller-register.html" style="display:inline-block; padding: 1rem 2rem; border-radius: 10px;">
-            Create Your Store <span aria-hidden="true">→</span>
-          </a>
-          <div class="mb-2"></div>
-          <a class="btn btn-secondary" href="/seller/seller-login.html" style="display:inline-block; padding: 1rem 2rem; border-radius: 10px;">
-            Seller Login
-          </a>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- =========================
-       FOOTER
-  ========================== -->
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-content">
-        <div class="company-branding">
-          <h3>ShopUp Ghana</h3>
-          <div class="company-info">
-            <p>
-              ShopUp is Ghana’s e-commerce platform built to help local businesses sell online
-              with professional tools, secure checkout, and scalable growth features.
-            </p>
-          </div>
-
-          <div class="division-info">
-            <p><strong>Built by:</strong> The House of Aldens Holdings</p>
-          </div>
-
-          <div class="footer-social" aria-label="Social links">
-            <a class="social-icon" href="#" aria-label="Instagram">IG</a>
-            <a class="social-icon" href="#" aria-label="X">X</a>
-            <a class="social-icon" href="#" aria-label="Facebook">FB</a>
-          </div>
-        </div>
-
-        <div class="footer-links">
-          <h4>Product</h4>
-          <ul>
-            <li><a href="#features">Features</a></li>
-            <li><a href="#pricing">Pricing</a></li>
-            <li><a href="#how-it-works">How it works</a></li>
-          </ul>
-        </div>
-
-        <div class="footer-links">
-          <h4>Sellers</h4>
-          <ul>
-            <li><a href="/seller/seller-register.html">Get Started</a></li>
-            <li><a href="/seller/seller-login.html">Seller Login</a></li>
-            <li><a href="/seller/seller-dashboard.html">Dashboard</a></li>
-          </ul>
-        </div>
-
-        <div class="footer-links">
-          <h4>Legal</h4>
-          <ul>
-            <li><a href="/privacy-policy.html">Privacy Policy</a></li>
-            <li><a href="/terms-of-service.html">Terms of Service</a></li>
-            <li><a href="/refund-policy.html">Refund Policy</a></li>
-            <li><a href="/shipping-policy.html">Shipping Policy</a></li>
-          </ul>
+        <div class="hero-actions">
+          <a href="/customer-register.html" class="btn-primary">Start Free Trial</a>
+          <a href="#features" class="btn-secondary">Learn More</a>
         </div>
       </div>
 
-      <div class="footer-bottom">
-        <p>© <span id="year"></span> ShopUp Ghana. All rights reserved.</p>
+      <div class="hero-visual">
+        <div class="hero-card">
+          <h3>🇬🇭 Built for Ghana</h3>
+          <p>Mobile Money • Local Sellers • Fast Setup</p>
+        </div>
       </div>
     </div>
+  </section>
+
+  <!-- ================= FEATURES ================= -->
+  <section id="features" class="section">
+    <div class="container">
+      <h2 class="section-title">Why Choose ShopUp?</h2>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>Mobile Money Ready</h3>
+          <p>Accept MTN MoMo, Vodafone Cash, AirtelTigo & cards.</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>Seller Dashboard</h3>
+          <p>Manage products, orders, customers, and revenue.</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>Fast Store Setup</h3>
+          <p>Launch your online shop in minutes — no coding needed.</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>Secure & Reliable</h3>
+          <p>Built with enterprise-grade security and monitoring.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= HOW IT WORKS ================= -->
+  <section id="how-it-works" class="section alt-bg">
+    <div class="container">
+      <h2 class="section-title">How It Works</h2>
+
+      <div class="steps-grid">
+        <div class="step">
+          <span>1</span>
+          <h4>Create Account</h4>
+          <p>Register as a seller and set up your store.</p>
+        </div>
+
+        <div class="step">
+          <span>2</span>
+          <h4>Add Products</h4>
+          <p>Upload products, prices, and photos.</p>
+        </div>
+
+        <div class="step">
+          <span>3</span>
+          <h4>Start Selling</h4>
+          <p>Share your store and receive payments instantly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CTA ================= -->
+  <section class="cta">
+    <div class="container cta-box">
+      <h2>Ready to Grow Your Business?</h2>
+      <p>Join thousands of Ghanaian businesses going digital.</p>
+      <a href="/customer-register.html" class="btn-primary">Get Started Free</a>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>
+        <h3>ShopUp Ghana</h3>
+        <p>Empowering African businesses through technology.</p>
+      </div>
+
+      <div>
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Contact</a>
+        <a href="#">Careers</a>
+      </div>
+
+      <div>
+        <h4>Legal</h4>
+        <a href="/privacy-policy.html">Privacy Policy</a>
+        <a href="/terms-of-service.html">Terms of Service</a>
+      </div>
+    </div>
+
+    <p class="footer-bottom">
+      © 2026 ShopUp Ghana. Built by Alden’s Innovations.
+    </p>
   </footer>
-
-  <!-- =========================
-       SCRIPTS
-  ========================== -->
-  <script>
-    // Footer year
-    document.getElementById('year').textContent = new Date().getFullYear();
-
-    // Mobile menu toggle (matches your CSS: .nav-menu.active)
-    const toggle = document.getElementById('mobileToggle');
-    const menu = document.getElementById('navMenu');
-
-    toggle?.addEventListener('click', () => {
-      const isOpen = menu.classList.toggle('active');
-      toggle.setAttribute('aria-expanded', String(isOpen));
-      toggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
-      toggle.textContent = isOpen ? '✕' : '☰';
-    });
-
-    // Close menu on link click (mobile)
-    menu?.querySelectorAll('a').forEach(a => {
-      a.addEventListener('click', () => {
-        if (menu.classList.contains('active')) {
-          menu.classList.remove('active');
-          toggle.setAttribute('aria-expanded', 'false');
-          toggle.textContent = '☰';
-        }
-      });
-    });
-  </script>
 
 </body>
 </html>
