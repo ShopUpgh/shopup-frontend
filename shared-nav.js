@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     if (!window.supabase) {
         console.error('❌ Supabase not available after 5 seconds');
+        addRevenueNavLink();
         return;
     }
     
@@ -44,6 +45,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('❌ Error in shared nav initialization:', error);
     }
+
+    // Add Revenue link to seller navigation
+    addRevenueNavLink();
     
     // Listen for storage changes (if counts update in another tab)
     window.addEventListener('storage', (e) => {
@@ -146,5 +150,26 @@ window.updateNavigationCounts = async function() {
         console.error('❌ Error updating navigation counts:', error);
     }
 };
+
+function addRevenueNavLink() {
+    const targets = [
+        document.querySelector('.sidebar-menu'),
+        document.querySelector('.sidebar-nav'),
+        document.querySelector('.nav-links'),
+        document.getElementById('sellerNav'),
+    ].filter(Boolean);
+
+    targets.forEach((nav) => {
+        if (nav.querySelector('[data-revenue-link]')) return;
+        const link = document.createElement('a');
+        link.href = '/revenue/dashboard.html';
+        link.textContent = '💰 Revenue';
+        link.setAttribute('data-revenue-link', 'true');
+        if (!link.className) {
+            link.className = 'menu-item';
+        }
+        nav.appendChild(link);
+    });
+}
 
 console.log('✅ Shared navigation script loaded');
