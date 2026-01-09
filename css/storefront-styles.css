@@ -1,346 +1,221 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Checkout - ShopUp</title>
+/* ============================================
+   SHOPUP CHECKOUT (SCOPED)
+   Requires: <body class="storefront">
+   File: /css/checkout.css
+   ============================================ */
 
-  <!-- ✅ Platform CSS -->
-  <link rel="stylesheet" href="/css/styles.css">
-  <link rel="stylesheet" href="/css/storefront-styles.css">
+body.storefront {
+  background: var(--gray-50);
+}
 
-  <!-- ✅ Sentry: Loader + Central Config ONLY -->
-  <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
-  <script src="/js/sentry-config.js"></script>
+/* Header on checkout (your .header) */
+body.storefront .header {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  padding: var(--spacing-md) 0;
+  position: sticky;
+  top: 0;
+  z-index: 99;
+  box-shadow: var(--shadow-sm);
+}
 
-  <!-- ✅ Supabase (Module init only) -->
-  <script type="module" src="/js/supabase-init.js"></script>
+body.storefront .header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
 
-  <!-- ✅ Scoped page styles -->
-  <style>
-    body.storefront {
-      background: #f5f7fa;
-      color: #222;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
+body.storefront .logo {
+  font-size: var(--font-size-xl);
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+}
 
-    body.storefront .header {
-      background: #fff;
-      padding: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-    }
+body.storefront .nav-links a {
+  margin-left: 18px;
+  text-decoration: none;
+  color: var(--gray-700);
+  font-weight: 700;
+  transition: color var(--transition-fast);
+}
 
-    body.storefront .header-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+body.storefront .nav-links a:hover {
+  color: var(--primary);
+}
 
-    body.storefront .logo {
-      font-size: 1.5em;
-      font-weight: 800;
-      color: #2d8a3e;
-    }
+/* Main layout */
+body.storefront .wrap {
+  max-width: 1200px;
+  margin: 28px auto;
+  padding: 0 var(--spacing-md);
+}
 
-    body.storefront .nav-links a {
-      margin-left: 20px;
-      text-decoration: none;
-      color: #333;
-      font-weight: 600;
-    }
+body.storefront h1 {
+  margin: 0 0 16px 0;
+  font-size: var(--font-size-3xl);
+  line-height: 1.1;
+}
 
-    body.storefront .wrap {
-      max-width: 1200px;
-      margin: 40px auto;
-      padding: 0 20px;
-    }
+body.storefront h2 {
+  margin: 0 0 12px 0;
+  font-size: var(--font-size-lg);
+}
 
-    body.storefront .grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 30px;
-      align-items: start;
-    }
+/* Grid */
+body.storefront .grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-lg);
+  align-items: start;
+}
 
-    body.storefront .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-    }
+/* Cards */
+body.storefront .card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+}
 
-    body.storefront h1 { margin-bottom: 20px; }
-    body.storefront h2 { margin-bottom: 14px; font-size: 1.1em; }
+/* Form */
+body.storefront .row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
 
-    body.storefront .row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
+body.storefront .field {
+  margin-bottom: 12px;
+}
 
-    body.storefront .field { margin-bottom: 12px; }
+body.storefront label {
+  display: block;
+  font-size: 0.9em;
+  margin-bottom: 6px;
+  color: var(--gray-700);
+  font-weight: 700;
+}
 
-    body.storefront label {
-      display: block;
-      font-size: 0.9em;
-      margin-bottom: 6px;
-      color: #444;
-      font-weight: 600;
-    }
+body.storefront input,
+body.storefront select,
+body.storefront textarea {
+  width: 100%;
+}
 
-    body.storefront input,
-    body.storefront select,
-    body.storefront textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      outline: none;
-      background: #fff;
-    }
+body.storefront textarea {
+  min-height: 96px;
+}
 
-    body.storefront textarea {
-      min-height: 90px;
-      resize: vertical;
-    }
+/* Summary */
+body.storefront .pill {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-weight: 800;
+  font-size: 0.9em;
+}
 
-    body.storefront .muted {
-      color: #666;
-      font-size: 0.95em;
-    }
+body.storefront .summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+  color: var(--gray-800);
+}
 
-    body.storefront .summary-row {
-      display: flex;
-      justify-content: space-between;
-      margin: 10px 0;
-    }
+body.storefront .summary-total {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 2px solid var(--gray-200);
+  font-size: 1.15em;
+  font-weight: 900;
+  color: var(--gray-900);
+}
 
-    body.storefront .summary-total {
-      margin-top: 14px;
-      padding-top: 14px;
-      border-top: 2px solid #eee;
-      font-size: 1.15em;
-      font-weight: 800;
-    }
+body.storefront .items {
+  margin-top: 10px;
+  border-top: 1px solid var(--gray-200);
+  padding-top: 12px;
+}
 
-    body.storefront .items {
-      margin-top: 10px;
-      border-top: 1px solid #eee;
-      padding-top: 12px;
-    }
+body.storefront .item {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+  gap: 12px;
+}
 
-    body.storefront .item {
-      display: flex;
-      justify-content: space-between;
-      margin: 10px 0;
-      gap: 10px;
-    }
+body.storefront .item-name {
+  font-weight: 800;
+  color: var(--gray-900);
+}
 
-    body.storefront .item-name {
-      font-weight: 600;
-    }
+/* Buttons */
+body.storefront .btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 900;
+  cursor: pointer;
+  font-size: 1.02em;
+  transition: transform var(--transition-fast), background var(--transition-fast);
+}
 
-    body.storefront .pill {
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: #f1f7f3;
-      color: #2d8a3e;
-      font-weight: 700;
-      font-size: 0.9em;
-    }
+body.storefront .btn:hover {
+  transform: translateY(-1px);
+}
 
-    body.storefront .btn {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 10px;
-      font-weight: 800;
-      cursor: pointer;
-      margin-top: 12px;
-      font-size: 1.05em;
-    }
+body.storefront .btn-primary {
+  background: var(--primary);
+  color: var(--white);
+}
 
-    body.storefront .btn-primary {
-      background: #2d8a3e;
-      color: #fff;
-    }
+body.storefront .btn-primary:hover {
+  background: var(--primary-dark);
+}
 
-    body.storefront .btn-primary:hover {
-      background: #236d31;
-    }
+body.storefront .btn-secondary {
+  background: var(--gray-900);
+  color: var(--white);
+}
 
-    body.storefront .btn-secondary {
-      background: #0b5ed7;
-      color: #fff;
-    }
+body.storefront .btn-secondary:hover {
+  background: var(--gray-800);
+}
 
-    body.storefront .btn-secondary:hover {
-      background: #084db3;
-    }
+/* Alert */
+body.storefront .alert {
+  display: none;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: #fff3cd;
+  border: 1px solid #ffe69c;
+  color: #664d03;
+  font-size: 0.95em;
+}
 
-    body.storefront .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    body.storefront .alert {
-      display: none;
-      margin-top: 12px;
-      padding: 12px;
-      border-radius: 10px;
-      background: #fff3cd;
-      border: 1px solid #ffe69c;
-      color: #664d03;
-      font-size: 0.95em;
-    }
-
-    @media (max-width: 900px) {
-      body.storefront .grid { grid-template-columns: 1fr; }
-      body.storefront .row { grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
-
-<body class="storefront">
-
-  <!-- Header -->
-  <header class="header">
-    <div class="header-content">
-      <div class="logo">🛍️ ShopUp</div>
-      <nav class="nav-links">
-        <a href="customer-dashboard.html">Home</a>
-        <a href="cart.html">Cart</a>
-        <a href="customer-orders.html">Orders</a>
-      </nav>
-    </div>
-  </header>
-
-  <div class="wrap">
-    <h1>Checkout</h1>
-
-    <div class="grid">
-      <!-- LEFT -->
-      <section class="card">
-        <h2>Delivery Details</h2>
-        <p class="muted">Fill in your delivery information to place your order.</p>
-
-        <div class="row" style="margin-top:14px;">
-          <div class="field">
-            <label for="fullName">Full Name</label>
-            <input id="fullName" type="text" placeholder="e.g. Albert Denis" autocomplete="name" />
-          </div>
-          <div class="field">
-            <label for="phone">Phone</label>
-            <input id="phone" type="tel" placeholder="e.g. +233..." autocomplete="tel" />
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label for="email">Email</label>
-            <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
-          </div>
-          <div class="field">
-            <label for="city">City</label>
-            <input id="city" type="text" placeholder="e.g. Accra" />
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="addressLine">Address</label>
-          <textarea id="addressLine" placeholder="House number, street, area, landmark..."></textarea>
-        </div>
-
-        <div class="field">
-          <label for="notes">Delivery Notes (Optional)</label>
-          <input id="notes" type="text" placeholder="Gate code, landmark, best time to call..." />
-        </div>
-
-        <h2 style="margin-top:18px;">Payment Method</h2>
-        <div class="field">
-          <label for="paymentMethod">Choose</label>
-          <select id="paymentMethod">
-            <option value="paystack">Paystack (Card / Mobile Money)</option>
-            <option value="cod">Cash on Delivery</option>
-          </select>
-        </div>
-
-        <div class="alert" id="alertBox"></div>
-
-        <button class="btn btn-secondary" id="payNowBtn" type="button">
-          Pay Now (Paystack)
-        </button>
-
-        <button class="btn btn-primary" id="placeOrderBtn" type="button" style="display:none;">
-          Place Order (Cash on Delivery)
-        </button>
-      </section>
-
-      <!-- RIGHT -->
-      <aside class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h2>Order Summary</h2>
-          <span class="pill" id="itemCountPill">0 items</span>
-        </div>
-
-        <div class="summary-row">
-          <span>Subtotal</span>
-          <span id="subtotal">GHS 0.00</span>
-        </div>
-        <div class="summary-row">
-          <span>Shipping</span>
-          <span id="shipping">GHS 0.00</span>
-        </div>
-        <div class="summary-row summary-total">
-          <span>Total</span>
-          <span id="total">GHS 0.00</span>
-        </div>
-
-        <div class="items" id="itemsList"></div>
-
-        <p class="muted" style="margin-top:12px;">
-          By placing your order, you agree to ShopUp’s policies.
-        </p>
-      </aside>
-    </div>
-  </div>
-
-  <!-- ✅ Logger -->
-  <script defer src="/js/logger.js"></script>
-
-  <!-- ✅ Checkout logic -->
-  <script defer src="/js/customer-checkout-script.js"></script>
-
-  <!-- ✅ Auth + Sentry identity -->
-  <script>
-    (function () {
-      const authToken = localStorage.getItem("authToken");
-      const currentUser = localStorage.getItem("currentUser");
-
-      if (!authToken) {
-        window.location.href = "customer-login.html";
-        return;
-      }
-
-      try {
-        const user = JSON.parse(currentUser || "{}");
-        if (window.Sentry && user && user.id) {
-          window.Sentry.setUser({
-            id: String(user.id),
-            email: user.email || undefined,
-            role: "customer",
-          });
-        }
-      } catch {}
-
-      if (window.logger) {
-        window.logger.pageView(document.title);
-      }
-    })();
-  </script>
-
-</body>
-</html>
+/* Responsive */
+@media (max-width: 900px) {
+  body.storefront .grid {
+    grid-template-columns: 1fr;
+  }
+  body.storefront .row {
+    grid-template-columns: 1fr;
+  }
+  body.storefront h1 {
+    font-size: 28px;
+  }
+}
