@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Checkout - ShopUp</title>
 
+  <!-- ✅ Platform CSS -->
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/storefront-styles.css">
+
   <!-- ✅ Sentry: Loader + Central Config ONLY -->
   <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
   <script src="/js/sentry-config.js"></script>
@@ -12,56 +16,83 @@
   <!-- ✅ Supabase (Module init only) -->
   <script type="module" src="/js/supabase-init.js"></script>
 
+  <!-- ✅ Scoped page styles -->
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    body.storefront {
       background: #f5f7fa;
       color: #222;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
-    .header {
+    body.storefront .header {
       background: #fff;
       padding: 20px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.08);
     }
-    .header-content {
+
+    body.storefront .header-content {
       max-width: 1200px;
       margin: 0 auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .logo { font-size: 1.5em; font-weight: 800; color: #2d8a3e; }
-    .nav-links a { margin-left: 20px; text-decoration: none; color: #333; }
 
-    .wrap {
+    body.storefront .logo {
+      font-size: 1.5em;
+      font-weight: 800;
+      color: #2d8a3e;
+    }
+
+    body.storefront .nav-links a {
+      margin-left: 20px;
+      text-decoration: none;
+      color: #333;
+      font-weight: 600;
+    }
+
+    body.storefront .wrap {
       max-width: 1200px;
       margin: 40px auto;
       padding: 0 20px;
     }
 
-    .grid {
+    body.storefront .grid {
       display: grid;
       grid-template-columns: 2fr 1fr;
       gap: 30px;
       align-items: start;
     }
 
-    .card {
+    body.storefront .card {
       background: #fff;
       border-radius: 12px;
       padding: 24px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.06);
     }
 
-    h1 { margin-bottom: 20px; color: #333; }
-    h2 { margin-bottom: 14px; font-size: 1.1em; }
+    body.storefront h1 { margin-bottom: 20px; }
+    body.storefront h2 { margin-bottom: 14px; font-size: 1.1em; }
 
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .field { margin-bottom: 12px; }
-    label { display: block; font-size: 0.9em; margin-bottom: 6px; color: #444; }
-    input, select, textarea {
+    body.storefront .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    body.storefront .field { margin-bottom: 12px; }
+
+    body.storefront label {
+      display: block;
+      font-size: 0.9em;
+      margin-bottom: 6px;
+      color: #444;
+      font-weight: 600;
+    }
+
+    body.storefront input,
+    body.storefront select,
+    body.storefront textarea {
       width: 100%;
       padding: 12px;
       border: 1px solid #ddd;
@@ -69,12 +100,24 @@
       outline: none;
       background: #fff;
     }
-    textarea { min-height: 90px; resize: vertical; }
 
-    .muted { color: #666; font-size: 0.95em; }
+    body.storefront textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
 
-    .summary-row { display: flex; justify-content: space-between; margin: 10px 0; }
-    .summary-total {
+    body.storefront .muted {
+      color: #666;
+      font-size: 0.95em;
+    }
+
+    body.storefront .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+    }
+
+    body.storefront .summary-total {
       margin-top: 14px;
       padding-top: 14px;
       border-top: 2px solid #eee;
@@ -82,20 +125,34 @@
       font-weight: 800;
     }
 
-    .items { margin-top: 10px; border-top: 1px solid #eee; padding-top: 12px; }
-    .item { display: flex; justify-content: space-between; margin: 10px 0; gap: 10px; }
-    .item-name { font-weight: 600; }
-    .pill {
+    body.storefront .items {
+      margin-top: 10px;
+      border-top: 1px solid #eee;
+      padding-top: 12px;
+    }
+
+    body.storefront .item {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+      gap: 10px;
+    }
+
+    body.storefront .item-name {
+      font-weight: 600;
+    }
+
+    body.storefront .pill {
       display: inline-block;
       padding: 6px 10px;
       border-radius: 999px;
       background: #f1f7f3;
       color: #2d8a3e;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 0.9em;
     }
 
-    .btn {
+    body.storefront .btn {
       width: 100%;
       padding: 14px;
       border: none;
@@ -105,18 +162,31 @@
       margin-top: 12px;
       font-size: 1.05em;
     }
-    .btn-primary { background: #2d8a3e; color: #fff; }
-    .btn-primary:hover { background: #236d31; }
 
-    .btn-secondary {
+    body.storefront .btn-primary {
+      background: #2d8a3e;
+      color: #fff;
+    }
+
+    body.storefront .btn-primary:hover {
+      background: #236d31;
+    }
+
+    body.storefront .btn-secondary {
       background: #0b5ed7;
       color: #fff;
     }
-    .btn-secondary:hover { background: #084db3; }
 
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    body.storefront .btn-secondary:hover {
+      background: #084db3;
+    }
 
-    .alert {
+    body.storefront .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    body.storefront .alert {
       display: none;
       margin-top: 12px;
       padding: 12px;
@@ -128,13 +198,15 @@
     }
 
     @media (max-width: 900px) {
-      .grid { grid-template-columns: 1fr; }
-      .row { grid-template-columns: 1fr; }
+      body.storefront .grid { grid-template-columns: 1fr; }
+      body.storefront .row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 
-<body>
+<body class="storefront">
+
+  <!-- Header -->
   <header class="header">
     <div class="header-content">
       <div class="logo">🛍️ ShopUp</div>
@@ -150,7 +222,7 @@
     <h1>Checkout</h1>
 
     <div class="grid">
-      <!-- LEFT: Address + Payment -->
+      <!-- LEFT -->
       <section class="card">
         <h2>Delivery Details</h2>
         <p class="muted">Fill in your delivery information to place your order.</p>
@@ -207,7 +279,7 @@
         </button>
       </section>
 
-      <!-- RIGHT: Summary -->
+      <!-- RIGHT -->
       <aside class="card">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <h2>Order Summary</h2>
@@ -227,9 +299,7 @@
           <span id="total">GHS 0.00</span>
         </div>
 
-        <div class="items" id="itemsList">
-          <!-- items injected -->
-        </div>
+        <div class="items" id="itemsList"></div>
 
         <p class="muted" style="margin-top:12px;">
           By placing your order, you agree to ShopUp’s policies.
@@ -244,7 +314,7 @@
   <!-- ✅ Checkout logic -->
   <script defer src="/js/customer-checkout-script.js"></script>
 
-  <!-- ✅ Small inline: auth gate + Sentry identify + breadcrumb -->
+  <!-- ✅ Auth + Sentry identity -->
   <script>
     (function () {
       const authToken = localStorage.getItem("authToken");
@@ -268,11 +338,9 @@
 
       if (window.logger) {
         window.logger.pageView(document.title);
-        window.logger.info("Checkout page viewed", { ts: new Date().toISOString() });
-      } else if (window.Sentry) {
-        window.Sentry.addBreadcrumb({ category: "navigation", message: "Checkout page viewed", level: "info" });
       }
     })();
   </script>
+
 </body>
 </html>
