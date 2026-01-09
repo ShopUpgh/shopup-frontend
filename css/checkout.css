@@ -62,9 +62,6 @@ body.storefront .row {
   gap: 12px;
 }
 
-body.storefront .top-gap { margin-top: 14px; }
-body.storefront .section-gap { margin-top: 18px; }
-
 body.storefront .field { margin-bottom: 12px; }
 
 body.storefront label {
@@ -94,12 +91,6 @@ body.storefront textarea {
 body.storefront .muted {
   color: #666;
   font-size: 0.95em;
-}
-
-body.storefront .summary-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 body.storefront .summary-row {
@@ -187,8 +178,6 @@ body.storefront .alert {
   color: #664d03;
   font-size: 0.95em;
 }
-
-body.storefront .policy-note { margin-top: 12px; }
 
 @media (max-width: 900px) {
   body.storefront .grid { grid-template-columns: 1fr; }
