@@ -1,162 +1,244 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Checkout - ShopUp</title>
+/* /css/checkout.css */
+/* Checkout page styles (scoped to body.storefront) */
 
-  <!-- ✅ Platform CSS -->
-  <link rel="stylesheet" href="/css/styles.css">
-  <link rel="stylesheet" href="/css/storefront-styles.css">
+body.storefront {
+  background: var(--gray-50);
+  color: var(--gray-900);
+}
 
-  <!-- ✅ Checkout page CSS -->
-  <link rel="stylesheet" href="/css/checkout.css">
+/* Header */
+body.storefront .header {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 18px 0;
+  box-shadow: var(--shadow-sm);
+}
 
-  <!-- ✅ Sentry: Loader + Central Config ONLY -->
-  <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
-  <script src="/js/sentry-config.js"></script>
+body.storefront .header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
 
-  <!-- ✅ Supabase (Module init only) -->
-  <script type="module" src="/js/supabase-init.js"></script>
-</head>
+body.storefront .logo {
+  font-size: 1.4rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+}
 
-<body class="storefront">
+body.storefront .nav-links a {
+  margin-left: 18px;
+  text-decoration: none;
+  color: var(--gray-700);
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: color var(--transition-fast);
+}
 
-  <!-- Header -->
-  <header class="header">
-    <div class="header-content">
-      <div class="logo">🛍️ ShopUp</div>
-      <nav class="nav-links">
-        <a href="customer-dashboard.html">Home</a>
-        <a href="cart.html">Cart</a>
-        <a href="customer-orders.html">Orders</a>
-      </nav>
-    </div>
-  </header>
+body.storefront .nav-links a:hover {
+  color: var(--primary);
+}
 
-  <div class="wrap">
-    <h1>Checkout</h1>
+/* Layout */
+body.storefront .wrap {
+  max-width: 1200px;
+  margin: 34px auto;
+  padding: 0 var(--spacing-md);
+}
 
-    <div class="grid">
-      <!-- LEFT -->
-      <section class="card">
-        <h2>Delivery Details</h2>
-        <p class="muted">Fill in your delivery information to place your order.</p>
+body.storefront h1 {
+  margin: 0 0 18px;
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 900;
+}
 
-        <div class="row" style="margin-top:14px;">
-          <div class="field">
-            <label for="fullName">Full Name</label>
-            <input id="fullName" type="text" placeholder="e.g. Albert Denis" autocomplete="name" />
-          </div>
-          <div class="field">
-            <label for="phone">Phone</label>
-            <input id="phone" type="tel" placeholder="e.g. +233..." autocomplete="tel" />
-          </div>
-        </div>
+body.storefront .grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 22px;
+  align-items: start;
+}
 
-        <div class="row">
-          <div class="field">
-            <label for="email">Email</label>
-            <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
-          </div>
-          <div class="field">
-            <label for="city">City</label>
-            <input id="city" type="text" placeholder="e.g. Accra" />
-          </div>
-        </div>
+body.storefront .card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
+}
 
-        <div class="field">
-          <label for="addressLine">Address</label>
-          <textarea id="addressLine" placeholder="House number, street, area, landmark..."></textarea>
-        </div>
+body.storefront h2 {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--gray-900);
+}
 
-        <div class="field">
-          <label for="notes">Delivery Notes (Optional)</label>
-          <input id="notes" type="text" placeholder="Gate code, landmark, best time to call..." />
-        </div>
+/* Form */
+body.storefront .row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
 
-        <h2 style="margin-top:18px;">Payment Method</h2>
-        <div class="field">
-          <label for="paymentMethod">Choose</label>
-          <select id="paymentMethod">
-            <option value="paystack">Paystack (Card / Mobile Money)</option>
-            <option value="cod">Cash on Delivery</option>
-          </select>
-        </div>
+body.storefront .field {
+  margin-bottom: 12px;
+}
 
-        <div class="alert" id="alertBox"></div>
+body.storefront label {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+  color: var(--gray-700);
+  font-weight: 800;
+}
 
-        <button class="btn btn-secondary" id="payNowBtn" type="button">
-          Pay Now (Paystack)
-        </button>
+body.storefront input,
+body.storefront select,
+body.storefront textarea {
+  width: 100%;
+  padding: 12px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 12px;
+  outline: none;
+  background: var(--white);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  font-size: 1rem;
+}
 
-        <button class="btn btn-primary" id="placeOrderBtn" type="button" style="display:none;">
-          Place Order (Cash on Delivery)
-        </button>
-      </section>
+body.storefront input:focus,
+body.storefront select:focus,
+body.storefront textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
 
-      <!-- RIGHT -->
-      <aside class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h2>Order Summary</h2>
-          <span class="pill" id="itemCountPill">0 items</span>
-        </div>
+body.storefront textarea {
+  min-height: 92px;
+  resize: vertical;
+}
 
-        <div class="summary-row">
-          <span>Subtotal</span>
-          <span id="subtotal">GHS 0.00</span>
-        </div>
-        <div class="summary-row">
-          <span>Shipping</span>
-          <span id="shipping">GHS 0.00</span>
-        </div>
-        <div class="summary-row summary-total">
-          <span>Total</span>
-          <span id="total">GHS 0.00</span>
-        </div>
+body.storefront .muted {
+  color: var(--gray-600);
+  font-size: 0.95rem;
+}
 
-        <div class="items" id="itemsList"></div>
+/* Summary */
+body.storefront .summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 0;
+  color: var(--gray-800);
+}
 
-        <p class="muted" style="margin-top:12px;">
-          By placing your order, you agree to ShopUp’s policies.
-        </p>
-      </aside>
-    </div>
-  </div>
+body.storefront .summary-total {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 2px solid var(--gray-200);
+  font-size: 1.1rem;
+  font-weight: 900;
+}
 
-  <!-- ✅ Logger -->
-  <script defer src="/js/logger.js"></script>
+body.storefront .items {
+  margin-top: 12px;
+  border-top: 1px solid var(--gray-200);
+  padding-top: 12px;
+}
 
-  <!-- ✅ Checkout logic -->
-  <script defer src="/js/customer-checkout-script.js"></script>
+body.storefront .item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 0;
+}
 
-  <!-- ✅ Auth + Sentry identity -->
-  <script>
-    (function () {
-      const authToken = localStorage.getItem("authToken");
-      const currentUser = localStorage.getItem("currentUser");
+body.storefront .item-name {
+  font-weight: 800;
+  color: var(--gray-900);
+}
 
-      if (!authToken) {
-        window.location.href = "customer-login.html";
-        return;
-      }
+body.storefront .pill {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-weight: 900;
+  font-size: 0.9rem;
+}
 
-      try {
-        const user = JSON.parse(currentUser || "{}");
-        if (window.Sentry && user && user.id) {
-          window.Sentry.setUser({
-            id: String(user.id),
-            email: user.email || undefined,
-            role: "customer",
-          });
-        }
-      } catch {}
+/* Buttons */
+body.storefront .btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  margin-top: 12px;
+  font-size: 1.02rem;
+  transition: transform var(--transition-fast), filter var(--transition-fast), background var(--transition-fast);
+}
 
-      if (window.logger) {
-        window.logger.pageView(document.title);
-      }
-    })();
-  </script>
+body.storefront .btn:active {
+  transform: translateY(1px);
+}
 
-</body>
-</html>
+body.storefront .btn-primary {
+  background: var(--primary);
+  color: var(--white);
+}
+
+body.storefront .btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+body.storefront .btn-secondary {
+  background: var(--gray-900);
+  color: var(--white);
+}
+
+body.storefront .btn-secondary:hover {
+  filter: brightness(1.1);
+}
+
+body.storefront .btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Alert */
+body.storefront .alert {
+  display: none;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff3cd;
+  border: 1px solid #ffe69c;
+  color: #664d03;
+  font-size: 0.95rem;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  body.storefront .grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.storefront .row {
+    grid-template-columns: 1fr;
+  }
+
+  body.storefront .nav-links a {
+    margin-left: 12px;
+  }
+}
