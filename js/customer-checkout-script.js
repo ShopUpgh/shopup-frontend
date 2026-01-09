@@ -5,13 +5,13 @@
   // --------------------------
   // Storage keys (MATCH cart.html)
   // --------------------------
-  const CART_KEY_PRIMARY = "shopup_cart"; // ✅ what your cart.html uses
-  const CART_KEY_FALLBACK = "cart";       // ✅ backward compatibility
+  const CART_KEY_PRIMARY = "shopup_cart";
+  const CART_KEY_FALLBACK = "cart";
   const CURRENT_USER_KEY = "currentUser";
   const ORDER_PENDING_KEY = "order_pending";
 
   // Money / rules
-  const SHIPPING_FLAT = 20;                 // change if needed
+  const SHIPPING_FLAT = 20; // change if needed
   const VERIFY_FUNCTION = "verify-payment"; // Supabase Edge Function
 
   let cartData = [];
@@ -87,20 +87,7 @@
     if (el.placeOrderBtn) el.placeOrderBtn.disabled = isBusy;
   }
 
-  // ✅ FIXED: reliable supabase readiness
-  async function waitForSupabase(maxMs = 10000) {
-    // Best path: use a ready promise if present
-    if (window.supabaseReady) {
-      const client = await Promise.race([
-        window.supabaseReady,
-        new Promise((_, rej) => setTimeout(() => rej(new Error("Supabase ready timeout")), maxMs)),
-      ]);
-      if (!client) throw new Error("Supabase not initialized (missing URL/key).");
-      window.supabase = client; // guarantee
-      return;
-    }
-
-    // Fallback: poll
+  async function waitForSupabase(maxMs = 8000) {
     const start = Date.now();
     while (!window.supabase && Date.now() - start < maxMs) {
       await new Promise((r) => setTimeout(r, 50));
@@ -133,6 +120,8 @@
   }
 
   function normalizeCartItem(item) {
+    // A) { id, name, price, quantity }
+    // B) { productId, quantity } or { product_id, quantity }
     if (!item) return null;
 
     const quantity = Number(item.quantity || 0);
@@ -229,41 +218,64 @@
 
     if (!el.itemsList) return;
 
+    // Clear existing
+    el.itemsList.textContent = "";
+
     if (!cartData.length) {
-      el.itemsList.innerHTML = `<p class="muted">Your cart is empty. Go back to cart.</p>`;
+      const p = document.createElement("p");
+      p.className = "muted";
+      p.textContent = "Your cart is empty. Go back to cart.";
+      el.itemsList.appendChild(p);
       return;
     }
 
-    el.itemsList.innerHTML = cartData
-      .map((raw) => {
-        const item = normalizeCartItem(raw);
-        if (!item) return "";
+    // Render items
+    cartData.forEach((raw) => {
+      const item = normalizeCartItem(raw);
+      if (!item) return;
 
-        let name = "Product";
-        let price = 0;
+      let name = "Product";
+      let price = 0;
 
-        if (item.price != null && item.name) {
-          name = item.name;
-          price = item.price;
-        } else {
-          const p = getProductById(item.productId) || {};
-          name = p.name || "Product";
-          price = Number(p.price || 0);
-        }
+      // Direct-price cart
+      if (item.price != null && item.name) {
+        name = item.name;
+        price = item.price;
+      } else {
+        // productId cart
+        const p = getProductById(item.productId) || {};
+        name = p.name || "Product";
+        price = Number(p.price || 0);
+      }
 
-        const qty = Number(item.quantity || 0);
+      const qty = Number(item.quantity || 0);
 
-        return `
-          <div class="item">
-            <div>
-              <div class="item-name">${escapeHtml(name)}</div>
-              <div class="muted">Qty: ${qty}</div>
-            </div>
-            <div style="font-weight:700;">${formatMoney(price * qty)}</div>
-          </div>
-        `;
-      })
-      .join("");
+      const wrapper = document.createElement("div");
+      wrapper.className = "item";
+
+      const left = document.createElement("div");
+
+      const title = document.createElement("div");
+      title.className = "item-name";
+      // escapeHtml not needed since using textContent
+      title.textContent = String(name);
+
+      const meta = document.createElement("div");
+      meta.className = "muted";
+      meta.textContent = `Qty: ${qty}`;
+
+      left.appendChild(title);
+      left.appendChild(meta);
+
+      const right = document.createElement("div");
+      right.style.fontWeight = "700";
+      right.textContent = formatMoney(price * qty);
+
+      wrapper.appendChild(left);
+      wrapper.appendChild(right);
+
+      el.itemsList.appendChild(wrapper);
+    });
   }
 
   function hydrateFromUser() {
@@ -304,6 +316,7 @@
         const item = normalizeCartItem(raw);
         if (!item) return null;
 
+        // Direct-price cart
         if (item.price != null && item.name) {
           return {
             product_id: item.id || null,
@@ -313,6 +326,7 @@
           };
         }
 
+        // productId cart
         const p = getProductById(item.productId) || {};
         return {
           product_id: item.productId,
@@ -339,8 +353,8 @@
       total,
 
       items,
-      status,
-      payment_method: payment.method,
+      status, // "pending_payment" | "paid" | "pending_fulfillment"
+      payment_method: payment.method, // "paystack" | "cod"
       payment_reference: payment.reference || null,
     };
   }
@@ -504,6 +518,7 @@
           try {
             logInfo("Paystack callback received", { ref: response?.reference });
 
+            // 3) server-side verify
             const verified = await verifyPaymentServerSide(response.reference, total);
             if (!verified) {
               showAlert("Payment could not be verified. If you were charged, contact support with your reference.");
@@ -514,6 +529,7 @@
               return;
             }
 
+            // 4) update order -> PAID
             const updated = await updateOrderInSupabase(order.id, {
               status: "paid",
               payment_reference: response.reference,
