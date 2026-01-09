@@ -1,162 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Checkout - ShopUp</title>
+// /js/supabase-init.js
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-  <!-- ✅ Platform CSS -->
-  <link rel="stylesheet" href="/css/styles.css">
-  <link rel="stylesheet" href="/css/storefront-styles.css">
+// ✅ ShopUp Ghana (Production / Live)
+const SUPABASE_URL = "https://brbewkxpvihnsrbrlpzq.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmV3a3hwdmlobnNyYnJscHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMTI4OTAsImV4cCI6MjA3ODY4ODg5MH0.SfZMbpxsNHTgoXIvn9HZnXSZAQnCSjKNpAnH4vLVVj4";
 
-  <!-- ✅ Checkout page CSS -->
-  <link rel="stylesheet" href="/css/checkout.css">
+// Optional: quiet logs in production
+const DEBUG = false;
 
-  <!-- ✅ Sentry: Loader + Central Config ONLY -->
-  <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
-  <script src="/js/sentry-config.js"></script>
+// A ready promise any script can await: await window.supabaseReady;
+window.supabaseReady = (async () => {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.warn("⚠️ Supabase not initialized: missing SUPABASE_URL / SUPABASE_ANON_KEY");
+    return null;
+  }
 
-  <!-- ✅ Supabase (Module init only) -->
-  <script type="module" src="/js/supabase-init.js"></script>
-</head>
+  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+    global: {
+      headers: {
+        "x-application-name": "shopup-frontend",
+      },
+    },
+  });
 
-<body class="storefront">
+  // Attach to window for non-module scripts
+  window.supabase = client;
 
-  <!-- Header -->
-  <header class="header">
-    <div class="header-content">
-      <div class="logo">🛍️ ShopUp</div>
-      <nav class="nav-links">
-        <a href="customer-dashboard.html">Home</a>
-        <a href="cart.html">Cart</a>
-        <a href="customer-orders.html">Orders</a>
-      </nav>
-    </div>
-  </header>
+  if (DEBUG) {
+    console.log("✅ Supabase initialized (ShopUp Ghana)");
+    console.log("📍 Project URL:", SUPABASE_URL);
+    console.log("🔧 functions.invoke:", typeof window.supabase?.functions?.invoke);
+  }
 
-  <div class="wrap">
-    <h1>Checkout</h1>
+  return client;
+})();
 
-    <div class="grid">
-      <!-- LEFT -->
-      <section class="card">
-        <h2>Delivery Details</h2>
-        <p class="muted">Fill in your delivery information to place your order.</p>
-
-        <div class="row" style="margin-top:14px;">
-          <div class="field">
-            <label for="fullName">Full Name</label>
-            <input id="fullName" type="text" placeholder="e.g. Albert Denis" autocomplete="name" />
-          </div>
-          <div class="field">
-            <label for="phone">Phone</label>
-            <input id="phone" type="tel" placeholder="e.g. +233..." autocomplete="tel" />
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label for="email">Email</label>
-            <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
-          </div>
-          <div class="field">
-            <label for="city">City</label>
-            <input id="city" type="text" placeholder="e.g. Accra" />
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="addressLine">Address</label>
-          <textarea id="addressLine" placeholder="House number, street, area, landmark..."></textarea>
-        </div>
-
-        <div class="field">
-          <label for="notes">Delivery Notes (Optional)</label>
-          <input id="notes" type="text" placeholder="Gate code, landmark, best time to call..." />
-        </div>
-
-        <h2 style="margin-top:18px;">Payment Method</h2>
-        <div class="field">
-          <label for="paymentMethod">Choose</label>
-          <select id="paymentMethod">
-            <option value="paystack">Paystack (Card / Mobile Money)</option>
-            <option value="cod">Cash on Delivery</option>
-          </select>
-        </div>
-
-        <div class="alert" id="alertBox"></div>
-
-        <button class="btn btn-secondary" id="payNowBtn" type="button">
-          Pay Now (Paystack)
-        </button>
-
-        <button class="btn btn-primary" id="placeOrderBtn" type="button" style="display:none;">
-          Place Order (Cash on Delivery)
-        </button>
-      </section>
-
-      <!-- RIGHT -->
-      <aside class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h2>Order Summary</h2>
-          <span class="pill" id="itemCountPill">0 items</span>
-        </div>
-
-        <div class="summary-row">
-          <span>Subtotal</span>
-          <span id="subtotal">GHS 0.00</span>
-        </div>
-        <div class="summary-row">
-          <span>Shipping</span>
-          <span id="shipping">GHS 0.00</span>
-        </div>
-        <div class="summary-row summary-total">
-          <span>Total</span>
-          <span id="total">GHS 0.00</span>
-        </div>
-
-        <div class="items" id="itemsList"></div>
-
-        <p class="muted" style="margin-top:12px;">
-          By placing your order, you agree to ShopUp’s policies.
-        </p>
-      </aside>
-    </div>
-  </div>
-
-  <!-- ✅ Logger -->
-  <script defer src="/js/logger.js"></script>
-
-  <!-- ✅ Checkout logic -->
-  <script defer src="/js/customer-checkout-script.js"></script>
-
-  <!-- ✅ Auth + Sentry identity -->
-  <script>
-    (function () {
-      const authToken = localStorage.getItem("authToken");
-      const currentUser = localStorage.getItem("currentUser");
-
-      if (!authToken) {
-        window.location.href = "customer-login.html";
-        return;
-      }
-
-      try {
-        const user = JSON.parse(currentUser || "{}");
-        if (window.Sentry && user && user.id) {
-          window.Sentry.setUser({
-            id: String(user.id),
-            email: user.email || undefined,
-            role: "customer",
-          });
-        }
-      } catch {}
-
-      if (window.logger) {
-        window.logger.pageView(document.title);
-      }
-    })();
-  </script>
-
-</body>
-</html>
+export {}; // keep this file as a module
