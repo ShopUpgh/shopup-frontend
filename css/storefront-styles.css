@@ -14,6 +14,8 @@ body.storefront {
 
   /* Secondary Colors */
   --secondary: #f59e0b;
+
+  /* Status Colors */
   --danger: #ef4444;
   --success: #10b981;
   --warning: #f59e0b;
@@ -30,6 +32,14 @@ body.storefront {
   --gray-100: #f3f4f6;
   --gray-50: #f9fafb;
   --white: #ffffff;
+
+  /* ✅ Added (commonly used across pages) */
+  --border: var(--gray-200);
+  --text-light: var(--gray-600);
+  --muted: var(--gray-600);
+  --surface: var(--white);
+  --surface-2: var(--gray-50);
+  --focus-ring: 0 0 0 3px var(--primary-light);
 
   /* Spacing */
   --spacing-xs: 4px;
@@ -73,6 +83,9 @@ body.storefront {
   background-color: var(--white);
 }
 
+/* -----------------------------
+   Global Resets (scoped)
+   ----------------------------- */
 body.storefront * {
   box-sizing: border-box;
 }
@@ -80,6 +93,169 @@ body.storefront * {
 body.storefront img {
   max-width: 100%;
   height: auto;
+}
+
+body.storefront a {
+  color: inherit;
+  text-decoration: none;
+}
+
+body.storefront a:hover {
+  color: var(--primary);
+}
+
+body.storefront button {
+  font-family: inherit;
+}
+
+body.storefront ::selection {
+  background: var(--primary-light);
+}
+
+/* -----------------------------
+   Common Utilities (scoped)
+   These help checkout/login pages look consistent.
+   ----------------------------- */
+body.storefront .muted { color: var(--text-light); }
+body.storefront .text-light { color: var(--text-light); }
+
+body.storefront .card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+body.storefront .card.padded {
+  padding: var(--spacing-lg);
+}
+
+body.storefront .divider {
+  height: 1px;
+  background: var(--border);
+  margin: var(--spacing-lg) 0;
+}
+
+body.storefront .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--gray-100);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 4px 10px;
+  font-size: var(--font-size-sm);
+  color: var(--gray-700);
+}
+
+/* ✅ Alerts */
+body.storefront .alert {
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  border: 1px solid var(--border);
+  background: var(--gray-50);
+  color: var(--gray-800);
+}
+
+body.storefront .alert-danger {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.08);
+  color: #7f1d1d;
+}
+
+body.storefront .alert-success {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.10);
+  color: #064e3b;
+}
+
+/* ✅ Buttons */
+body.storefront .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+  user-select: none;
+}
+
+body.storefront .btn:active {
+  transform: translateY(1px);
+}
+
+body.storefront .btn-primary {
+  background: var(--primary);
+  color: var(--white);
+}
+
+body.storefront .btn-primary:hover {
+  background: var(--primary-dark);
+  box-shadow: var(--shadow-md);
+}
+
+body.storefront .btn-outline {
+  background: var(--white);
+  border-color: var(--border);
+  color: var(--gray-900);
+}
+
+body.storefront .btn-outline:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+body.storefront .btn-danger {
+  background: var(--danger);
+  color: var(--white);
+}
+
+body.storefront .btn-danger:hover {
+  background: #dc2626;
+}
+
+body.storefront .btn[disabled],
+body.storefront button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ✅ Inputs / Forms */
+body.storefront input,
+body.storefront select,
+body.storefront textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--gray-900);
+  font-size: var(--font-size-base);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+body.storefront input:focus,
+body.storefront select:focus,
+body.storefront textarea:focus {
+  border-color: var(--primary);
+  box-shadow: var(--focus-ring);
+}
+
+body.storefront label {
+  font-weight: 700;
+  color: var(--gray-700);
+  font-size: var(--font-size-sm);
+}
+
+body.storefront textarea {
+  min-height: 110px;
+  resize: vertical;
 }
 
 /* -----------------------------
@@ -94,7 +270,6 @@ body.storefront .container {
 /* ============================================
    Navigation Bar (scoped)
    ============================================ */
-
 body.storefront .navbar {
   background: var(--white);
   border-bottom: 1px solid var(--gray-200);
@@ -207,7 +382,6 @@ body.storefront .badge {
 /* ============================================
    Hero Section (scoped)
    ============================================ */
-
 body.storefront .hero {
   background: linear-gradient(135deg, var(--primary) 0%, #0d9488 50%, var(--gray-900) 100%);
   color: var(--white);
@@ -292,7 +466,6 @@ body.storefront .cta-button:hover {
 /* ============================================
    Section Headers (scoped)
    ============================================ */
-
 body.storefront .section-header {
   text-align: center;
   margin-bottom: var(--spacing-xl);
@@ -312,7 +485,6 @@ body.storefront .section-header p {
 /* ============================================
    Featured Sellers (scoped)
    ============================================ */
-
 body.storefront .featured-sellers {
   padding: var(--spacing-2xl) 0;
   background: var(--gray-50);
@@ -386,7 +558,6 @@ body.storefront .sellers-loading {
 /* ============================================
    Categories (scoped)
    ============================================ */
-
 body.storefront .categories-section {
   padding: var(--spacing-2xl) 0;
 }
@@ -425,7 +596,6 @@ body.storefront .category-icon {
 /* ============================================
    Filter Section (scoped)
    ============================================ */
-
 body.storefront .filter-section {
   padding: var(--spacing-2xl) 0;
   background: var(--gray-50);
@@ -464,7 +634,7 @@ body.storefront .filter-group select {
 body.storefront .filter-group select:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-light);
+  box-shadow: var(--focus-ring);
 }
 
 body.storefront .filter-reset {
@@ -486,7 +656,6 @@ body.storefront .filter-reset:hover {
 /* ============================================
    Results Info (scoped)
    ============================================ */
-
 body.storefront .results-info {
   padding: var(--spacing-lg) 0;
   background: var(--gray-50);
@@ -501,7 +670,6 @@ body.storefront .results-info p {
 /* ============================================
    Products Grid (scoped)
    ============================================ */
-
 body.storefront .products-section {
   padding: var(--spacing-2xl) 0;
 }
@@ -643,7 +811,6 @@ body.storefront .btn-view-product:hover {
 /* ============================================
    Empty & Loading States (scoped)
    ============================================ */
-
 body.storefront .empty-state {
   text-align: center;
   padding: var(--spacing-2xl);
@@ -682,33 +849,9 @@ body.storefront .reset-btn:hover {
   background: var(--primary-dark);
 }
 
-body.storefront .loading-state {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--spacing-2xl);
-  gap: var(--spacing-lg);
-}
-
-body.storefront .spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid var(--gray-200);
-  border-top-color: var(--primary);
-  border-radius: var(--radius-full);
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 /* ============================================
    Newsletter (scoped)
    ============================================ */
-
 body.storefront .newsletter {
   padding: var(--spacing-2xl);
   background: linear-gradient(135deg, var(--primary), var(--secondary));
@@ -766,7 +909,6 @@ body.storefront .subscribe-btn:hover {
 /* ============================================
    Trust Section (scoped)
    ============================================ */
-
 body.storefront .trust-section {
   padding: var(--spacing-2xl) 0;
   background: var(--gray-50);
@@ -802,7 +944,6 @@ body.storefront .trust-item p {
 /* ============================================
    Footer (scoped)
    ============================================ */
-
 body.storefront .footer {
   background: var(--gray-900);
   color: var(--white);
@@ -825,6 +966,8 @@ body.storefront .footer-section h4 {
 
 body.storefront .footer-section ul {
   list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 body.storefront .footer-section li {
@@ -855,6 +998,7 @@ body.storefront .footer-bottom {
 body.storefront .footer-bottom-left p {
   font-size: var(--font-size-sm);
   color: var(--gray-400);
+  margin: 0;
 }
 
 body.storefront .social-links {
@@ -876,7 +1020,6 @@ body.storefront .social-links a:hover {
 /* ============================================
    Responsive (scoped)
    ============================================ */
-
 @media (max-width: 768px) {
   body.storefront .navbar .container {
     grid-template-columns: 1fr;
