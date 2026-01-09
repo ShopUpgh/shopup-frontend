@@ -1,1024 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="ShopUp - Ghana's Premier E-commerce Platform for Local Businesses. Sell online with ease using our powerful tools and mobile money integration.">
-    <meta name="keywords" content="Ghana ecommerce, online shop Ghana, mobile money, sell online Ghana, ShopUp">
-    <meta name="author" content="The House of Aldens Holdings">
-    <title>ShopUp Ghana - Empower Your Business Online</title>
-    
-    <!-- Sentry SDK for Error Monitoring -->
-    <script
-      src="https://browser.sentry-cdn.com/7.91.0/bundle.tracing.min.js"
-      crossorigin="anonymous"
-    ></script>
-    <script>
-      if (typeof Sentry !== 'undefined') {
-        Sentry.init({
-          dsn: "https://your-sentry-dsn@sentry.io/your-project-id",
-          integrations: [new Sentry.BrowserTracing()],
-          tracesSampleRate: 1.0,
-          environment: "production"
-        });
-      }
-    </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta name="description" content="ShopUp - Ghana's Premier E-commerce Platform for Local Businesses. Sell online with mobile money and powerful tools." />
+  <meta name="keywords" content="Ghana ecommerce, online shop Ghana, mobile money, sell online Ghana, ShopUp" />
+  <meta name="author" content="The House of Aldens Holdings" />
 
-        :root {
-            --primary-color: #2563eb;
-            --secondary-color: #10b981;
-            --accent-color: #f59e0b;
-            --dark-bg: #1f2937;
-            --light-bg: #f9fafb;
-            --text-dark: #111827;
-            --text-light: #6b7280;
-            --white: #ffffff;
-            --ghana-red: #ce1126;
-            --ghana-gold: #fcd116;
-            --ghana-green: #006b3f;
-        }
+  <title>ShopUp Ghana – Empower Your Business Online</title>
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: var(--text-dark);
-            overflow-x: hidden;
-        }
+  <!-- ✅ CSS -->
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/storefront-styles.css">
 
-        /* Navigation */
-        nav {
-            background: var(--white);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            transition: all 0.3s ease;
-        }
-
-        nav.scrolled {
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        }
-
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--primary-color);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .logo span {
-            color: var(--ghana-gold);
-        }
-
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-            align-items: center;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: var(--text-dark);
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover {
-            color: var(--primary-color);
-        }
-
-        .cta-button {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: var(--white);
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            display: inline-block;
-        }
-
-        .cta-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
-        }
-
-        /* Mobile Menu Toggle */
-        .menu-toggle {
-            display: none;
-            flex-direction: column;
-            cursor: pointer;
-            gap: 4px;
-        }
-
-        .menu-toggle span {
-            width: 25px;
-            height: 3px;
-            background: var(--text-dark);
-            transition: all 0.3s ease;
-        }
-
-        /* Hero Section */
-        .hero {
-            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #10b981 100%);
-            color: var(--white);
-            padding: 6rem 2rem;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.1)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
-            background-size: cover;
-            background-position: bottom;
-            opacity: 0.3;
-        }
-
-        .hero-content {
-            max-width: 800px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
-
-        .hero h1 {
-            font-size: 3.5rem;
-            font-weight: 900;
-            margin-bottom: 1.5rem;
-            line-height: 1.2;
-            animation: fadeInUp 0.8s ease;
-        }
-
-        .hero p {
-            font-size: 1.3rem;
-            margin-bottom: 2rem;
-            opacity: 0.95;
-            animation: fadeInUp 0.8s ease 0.2s backwards;
-        }
-
-        .hero-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-            animation: fadeInUp 0.8s ease 0.4s backwards;
-        }
-
-        .hero-buttons .cta-button {
-            padding: 1rem 2rem;
-            font-size: 1.1rem;
-        }
-
-        .secondary-button {
-            background: var(--white);
-            color: var(--primary-color);
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            display: inline-block;
-        }
-
-        .secondary-button:hover {
-            background: var(--light-bg);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-
-        /* Features Section */
-        .features {
-            padding: 5rem 2rem;
-            background: var(--light-bg);
-        }
-
-        .section-title {
-            text-align: center;
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 1rem;
-            color: var(--text-dark);
-        }
-
-        .section-subtitle {
-            text-align: center;
-            font-size: 1.2rem;
-            color: var(--text-light);
-            margin-bottom: 3rem;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .features-grid {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-
-        .feature-card {
-            background: var(--white);
-            padding: 2rem;
-            border-radius: 12px;
-            text-align: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-
-        .feature-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        }
-
-        .feature-icon {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            display: inline-block;
-        }
-
-        .feature-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: var(--text-dark);
-        }
-
-        .feature-card p {
-            color: var(--text-light);
-            line-height: 1.8;
-        }
-
-        /* How It Works Section */
-        .how-it-works {
-            padding: 5rem 2rem;
-            background: var(--white);
-        }
-
-        .steps-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            display: grid;
-            gap: 3rem;
-        }
-
-        .step {
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-        }
-
-        .step:nth-child(even) {
-            flex-direction: row-reverse;
-        }
-
-        .step-number {
-            flex-shrink: 0;
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: var(--white);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            font-weight: 800;
-            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
-        }
-
-        .step-content h3 {
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
-            color: var(--text-dark);
-        }
-
-        .step-content p {
-            color: var(--text-light);
-            font-size: 1.1rem;
-            line-height: 1.8;
-        }
-
-        /* Pricing Section */
-        .pricing {
-            padding: 5rem 2rem;
-            background: var(--light-bg);
-        }
-
-        .pricing-grid {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-        }
-
-        .pricing-card {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 2.5rem;
-            text-align: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            position: relative;
-            border: 2px solid transparent;
-        }
-
-        .pricing-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-        }
-
-        .pricing-card.featured {
-            border-color: var(--primary-color);
-            box-shadow: 0 10px 40px rgba(37, 99, 235, 0.2);
-        }
-
-        .pricing-badge {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: var(--white);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .pricing-card h3 {
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-            color: var(--text-dark);
-        }
-
-        .pricing-price {
-            font-size: 3rem;
-            font-weight: 800;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .pricing-price span {
-            font-size: 1.2rem;
-            color: var(--text-light);
-            font-weight: 400;
-        }
-
-        .pricing-period {
-            color: var(--text-light);
-            margin-bottom: 2rem;
-            font-size: 1rem;
-        }
-
-        .pricing-features {
-            list-style: none;
-            margin-bottom: 2rem;
-            text-align: left;
-        }
-
-        .pricing-features li {
-            padding: 0.75rem 0;
-            color: var(--text-dark);
-            border-bottom: 1px solid var(--light-bg);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .pricing-features li::before {
-            content: '✓';
-            color: var(--secondary-color);
-            font-weight: 800;
-            font-size: 1.2rem;
-        }
-
-        .pricing-button {
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: var(--white);
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: block;
-            text-align: center;
-        }
-
-        .pricing-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
-        }
-
-        .pricing-card:not(.featured) .pricing-button {
-            background: var(--dark-bg);
-        }
-
-        /* Testimonials Section */
-        .testimonials {
-            padding: 5rem 2rem;
-            background: var(--white);
-        }
-
-        .testimonials-grid {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-        }
-
-        .testimonial-card {
-            background: var(--light-bg);
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
-        }
-
-        .testimonial-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
-        }
-
-        .testimonial-text {
-            font-size: 1.1rem;
-            color: var(--text-dark);
-            margin-bottom: 1.5rem;
-            font-style: italic;
-            line-height: 1.8;
-        }
-
-        .testimonial-author {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .author-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--white);
-            font-weight: 800;
-            font-size: 1.2rem;
-        }
-
-        .author-info h4 {
-            color: var(--text-dark);
-            font-size: 1.1rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .author-info p {
-            color: var(--text-light);
-            font-size: 0.9rem;
-        }
-
-        /* Final CTA Section */
-        .final-cta {
-            padding: 5rem 2rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: var(--white);
-            text-align: center;
-        }
-
-        .final-cta h2 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 1rem;
-        }
-
-        .final-cta p {
-            font-size: 1.3rem;
-            margin-bottom: 2rem;
-            opacity: 0.95;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .final-cta .cta-button {
-            background: var(--white);
-            color: var(--primary-color);
-            padding: 1.25rem 2.5rem;
-            font-size: 1.2rem;
-        }
-
-        /* Footer */
-        footer {
-            background: var(--dark-bg);
-            color: var(--white);
-            padding: 3rem 2rem 1.5rem;
-        }
-
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 3rem;
-            margin-bottom: 2rem;
-        }
-
-        .footer-section h3 {
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
-            color: var(--ghana-gold);
-        }
-
-        .footer-section ul {
-            list-style: none;
-        }
-
-        .footer-section ul li {
-            margin-bottom: 0.75rem;
-        }
-
-        .footer-section a {
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .footer-section a:hover {
-            color: var(--white);
-        }
-
-        .footer-bottom {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding-top: 2rem;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            text-align: center;
-            color: rgba(255,255,255,0.7);
-        }
-
-        .footer-branding {
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            color: rgba(255,255,255,0.6);
-        }
-
-        .footer-branding strong {
-            color: var(--ghana-gold);
-        }
-
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: var(--white);
-                flex-direction: column;
-                padding: 2rem;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            }
-
-            .nav-links.active {
-                display: flex;
-            }
-
-            .menu-toggle {
-                display: flex;
-            }
-
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-
-            .hero p {
-                font-size: 1.1rem;
-            }
-
-            .section-title {
-                font-size: 2rem;
-            }
-
-            .step {
-                flex-direction: column !important;
-                text-align: center;
-            }
-
-            .pricing-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .testimonials-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .footer-content {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
-        }
-    </style>
+  <!-- ✅ Sentry -->
+  <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
+  <script src="/js/sentry-config.js"></script>
 </head>
+
 <body>
-    <!-- Navigation -->
-    <nav id="navbar">
-        <div class="nav-container">
-            <a href="index.html" class="logo">ShopUp<span>Ghana</span></a>
-            <div class="menu-toggle" id="menuToggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-            <ul class="nav-links" id="navLinks">
-                <li><a href="#features">Features</a></li>
-                <li><a href="#how-it-works">How It Works</a></li>
-                <li><a href="#pricing">Pricing</a></li>
-                <li><a href="#testimonials">Testimonials</a></li>
-                <li><a href="/seller/seller-login.html">Seller Login</a></li>
-                <li><a href="/customer/customer-register.html" class="cta-button">Get Started</a></li>
-            </ul>
+
+  <!-- ================= NAVBAR ================= -->
+  <header class="navbar">
+    <div class="container navbar-content">
+      <a href="/" class="logo">ShopUp<span>Ghana</span></a>
+
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#testimonials">Testimonials</a>
+        <a href="/seller-login.html" class="btn-outline">Seller Login</a>
+        <a href="/customer-register.html" class="btn-primary">Get Started</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-text">
+        <h1>Empower Your Business Online</h1>
+        <p>
+          Ghana’s premier e-commerce platform designed for local businesses.
+          Sell online with mobile money, smart tools, and 24/7 support.
+        </p>
+
+        <div class="hero-actions">
+          <a href="/customer-register.html" class="btn-primary">Start Free Trial</a>
+          <a href="#features" class="btn-secondary">Learn More</a>
         </div>
-    </nav>
+      </div>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1>Empower Your Business Online 🇬🇭</h1>
-            <p>Ghana's premier e-commerce platform designed for local businesses. Start selling online today with powerful tools, mobile money integration, and 24/7 support.</p>
-            <div class="hero-buttons">
-                <a href="/customer/customer-register.html" class="cta-button">Start Free Trial</a>
-                <a href="#how-it-works" class="secondary-button">Learn More</a>
-            </div>
+      <div class="hero-visual">
+        <div class="hero-card">
+          <h3>🇬🇭 Built for Ghana</h3>
+          <p>Mobile Money • Local Sellers • Fast Setup</p>
         </div>
-    </section>
+      </div>
+    </div>
+  </section>
 
-    <!-- Features Section -->
-    <section class="features" id="features">
-        <h2 class="section-title">Why Choose ShopUp?</h2>
-        <p class="section-subtitle">Everything you need to grow your business online, built specifically for Ghana</p>
-        
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🛍️</div>
-                <h3>Easy Store Setup</h3>
-                <p>Launch your online store in minutes with our intuitive platform. No technical skills required.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">💰</div>
-                <h3>Mobile Money Integration</h3>
-                <p>Accept payments via MTN, AirtelTigo, and Vodafone Cash. Get paid instantly and securely.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">📱</div>
-                <h3>Mobile-First Design</h3>
-                <p>Your store looks amazing on all devices. Optimized for the way Ghanaians shop online.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">🇬🇭</div>
-                <h3>Local Support</h3>
-                <p>Get help in English, Twi, Ga, and Ewe. Our team understands your business needs.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">📊</div>
-                <h3>Analytics & Insights</h3>
-                <p>Track sales, customer behavior, and inventory in real-time with powerful dashboards.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">🚀</div>
-                <h3>Fast & Reliable</h3>
-                <p>Lightning-fast loading times and 99.9% uptime guarantee. Your store is always open.</p>
-            </div>
+  <!-- ================= FEATURES ================= -->
+  <section id="features" class="section">
+    <div class="container">
+      <h2 class="section-title">Why Choose ShopUp?</h2>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>Mobile Money Ready</h3>
+          <p>Accept MTN MoMo, Vodafone Cash, AirtelTigo & cards.</p>
         </div>
-    </section>
 
-    <!-- How It Works Section -->
-    <section class="how-it-works" id="how-it-works">
-        <h2 class="section-title">How It Works</h2>
-        <p class="section-subtitle">Get your online store up and running in three simple steps</p>
-        
-        <div class="steps-container">
-            <div class="step">
-                <div class="step-number">1</div>
-                <div class="step-content">
-                    <h3>Sign Up & Customize</h3>
-                    <p>Create your account in seconds and personalize your store with your brand colors, logo, and product catalog. Our intuitive interface makes setup a breeze.</p>
-                </div>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">2</div>
-                <div class="step-content">
-                    <h3>Add Products & Set Prices</h3>
-                    <p>Upload your products with photos, descriptions, and prices in Ghana Cedis. Organize your inventory and set up payment options including mobile money.</p>
-                </div>
-            </div>
-            
-            <div class="step">
-                <div class="step-number">3</div>
-                <div class="step-content">
-                    <h3>Launch & Start Selling</h3>
-                    <p>Go live with your store and start accepting orders. Share your store link on social media, WhatsApp, and watch your sales grow!</p>
-                </div>
-            </div>
+        <div class="feature-card">
+          <h3>Seller Dashboard</h3>
+          <p>Manage products, orders, customers, and revenue.</p>
         </div>
-    </section>
 
-    <!-- Pricing Section -->
-    <section class="pricing" id="pricing">
-        <h2 class="section-title">Simple, Transparent Pricing</h2>
-        <p class="section-subtitle">Choose the plan that fits your business needs. All plans include mobile money integration.</p>
-        
-        <div class="pricing-grid">
-            <!-- Free Plan -->
-            <div class="pricing-card">
-                <h3>Free</h3>
-                <div class="pricing-price">GH₵ 0<span>/mo</span></div>
-                <p class="pricing-period">Perfect for getting started</p>
-                <ul class="pricing-features">
-                    <li>Up to 10 products</li>
-                    <li>Basic store customization</li>
-                    <li>Mobile money payments</li>
-                    <li>Email support</li>
-                    <li>SSL certificate</li>
-                </ul>
-                <a href="/customer/customer-register.html" class="pricing-button">Start Free</a>
-            </div>
-            
-            <!-- Essential Plan -->
-            <div class="pricing-card">
-                <h3>Essential</h3>
-                <div class="pricing-price">GH₵ 99<span>/mo</span></div>
-                <p class="pricing-period">For growing businesses</p>
-                <ul class="pricing-features">
-                    <li>Up to 100 products</li>
-                    <li>Advanced customization</li>
-                    <li>All payment methods</li>
-                    <li>Priority email support</li>
-                    <li>Basic analytics</li>
-                    <li>Custom domain</li>
-                </ul>
-                <a href="/customer/customer-register.html" class="pricing-button">Get Started</a>
-            </div>
-            
-            <!-- Business Plan (Featured) -->
-            <div class="pricing-card featured">
-                <span class="pricing-badge">Most Popular</span>
-                <h3>Business</h3>
-                <div class="pricing-price">GH₵ 249<span>/mo</span></div>
-                <p class="pricing-period">For established businesses</p>
-                <ul class="pricing-features">
-                    <li>Unlimited products</li>
-                    <li>Full customization</li>
-                    <li>All payment methods</li>
-                    <li>24/7 phone & chat support</li>
-                    <li>Advanced analytics</li>
-                    <li>Custom domain</li>
-                    <li>Multi-user accounts</li>
-                    <li>API access</li>
-                </ul>
-                <a href="/customer/customer-register.html" class="pricing-button">Get Started</a>
-            </div>
-            
-            <!-- Enterprise Plan -->
-            <div class="pricing-card">
-                <h3>Enterprise</h3>
-                <div class="pricing-price">Custom</div>
-                <p class="pricing-period">For large-scale operations</p>
-                <ul class="pricing-features">
-                    <li>Everything in Business</li>
-                    <li>Dedicated account manager</li>
-                    <li>Custom integrations</li>
-                    <li>White-label solution</li>
-                    <li>SLA guarantee</li>
-                    <li>Training & onboarding</li>
-                    <li>Custom features</li>
-                </ul>
-                <a href="mailto:sales@shopupgh.com" class="pricing-button">Contact Sales</a>
-            </div>
+        <div class="feature-card">
+          <h3>Fast Store Setup</h3>
+          <p>Launch your online shop in minutes — no coding needed.</p>
         </div>
-        <p style="text-align: center; margin-top: 3rem; font-size: 1.1rem; color: var(--text-light);">🎉 Free plan forever • Paid plans: First 30 days free • No credit card required • Cancel anytime</p>
-    </section>
 
-    <!-- Testimonials Section -->
-    <section class="testimonials" id="testimonials">
-        <h2 class="section-title">What Our Customers Say</h2>
-        <p class="section-subtitle">Join thousands of successful businesses across Ghana</p>
-        
-        <div class="testimonials-grid">
-            <div class="testimonial-card">
-                <p class="testimonial-text">"ShopUp transformed my small fashion boutique into a thriving online business. The mobile money integration is seamless and my customers love how easy it is to shop!"</p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">AK</div>
-                    <div class="author-info">
-                        <h4>Akosua Mensah</h4>
-                        <p>Fashion Boutique Owner, Accra</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="testimonial-card">
-                <p class="testimonial-text">"Within 3 months of launching on ShopUp, my sales tripled! The platform is so easy to use and the support team is always there when I need help."</p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">KO</div>
-                    <div class="author-info">
-                        <h4>Kwame Osei</h4>
-                        <p>Electronics Store, Kumasi</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="testimonial-card">
-                <p class="testimonial-text">"Best decision I made for my business! ShopUp's analytics help me understand my customers better and make smarter inventory decisions."</p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">EA</div>
-                    <div class="author-info">
-                        <h4>Efua Asante</h4>
-                        <p>Beauty Products, Takoradi</p>
-                    </div>
-                </div>
-            </div>
+        <div class="feature-card">
+          <h3>Secure & Reliable</h3>
+          <p>Built with enterprise-grade security and monitoring.</p>
         </div>
-    </section>
+      </div>
+    </div>
+  </section>
 
-    <!-- Final CTA Section -->
-    <section class="final-cta">
-        <h2>Ready to Grow Your Business?</h2>
-        <p>Join thousands of Ghanaian entrepreneurs who are already selling online with ShopUp. Start your free trial today - no credit card required!</p>
-        <a href="/customer/customer-register.html" class="cta-button">Start Your Free Trial</a>
-    </section>
+  <!-- ================= HOW IT WORKS ================= -->
+  <section id="how-it-works" class="section alt-bg">
+    <div class="container">
+      <h2 class="section-title">How It Works</h2>
 
-    <!-- Footer -->
-    <footer>
-        <div class="footer-content">
-            <div class="footer-section">
-                <h3>ShopUp Ghana</h3>
-                <p>Empowering Ghanaian businesses to thrive online with world-class e-commerce tools and local support.</p>
-            </div>
-            
-            <div class="footer-section">
-                <h3>Quick Links</h3>
-                <ul>
-                    <li><a href="#features">Features</a></li>
-                    <li><a href="#pricing">Pricing</a></li>
-                    <li><a href="#how-it-works">How It Works</a></li>
-                    <li><a href="#testimonials">Testimonials</a></li>
-                </ul>
-            </div>
-            
-            <div class="footer-section">
-                <h3>Support</h3>
-                <ul>
-                    <li><a href="#">Help Center</a></li>
-                    <li><a href="#">Contact Us</a></li>
-                    <li><a href="#">Terms of Service</a></li>
-                    <li><a href="#">Privacy Policy</a></li>
-                </ul>
-            </div>
-            
-            <div class="footer-section">
-                <h3>Contact</h3>
-                <ul>
-                    <li>📧 support@shopupgh.com</li>
-                    <li>📱 +233 XX XXX XXXX</li>
-                    <li>📍 Accra, Ghana</li>
-                </ul>
-            </div>
+      <div class="steps-grid">
+        <div class="step">
+          <span>1</span>
+          <h4>Create Account</h4>
+          <p>Register as a seller and set up your store.</p>
         </div>
-        
-        <div class="footer-bottom">
-            <p>&copy; 2025 ShopUp Ghana. All rights reserved.</p>
-            <div class="footer-branding">
-                <p>A product of <strong>The House of Aldens Holdings</strong></p>
-                <p style="margin-top: 0.5rem;"><em>Powered by Commerce, Guided by Conscience</em></p>
-                <p style="margin-top: 0.5rem;"><strong>Aldens Tech & Innovations</strong> - <em>Innovating Tomorrow, Today</em></p>
-            </div>
+
+        <div class="step">
+          <span>2</span>
+          <h4>Add Products</h4>
+          <p>Upload products, prices, and photos.</p>
         </div>
-    </footer>
 
-    <!-- Logger Script -->
-    <script src="/js/logger.js"></script>
+        <div class="step">
+          <span>3</span>
+          <h4>Start Selling</h4>
+          <p>Share your store and receive payments instantly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <!-- Main JavaScript -->
-    <script>
-        // Mobile Menu Toggle
-        const menuToggle = document.getElementById('menuToggle');
-        const navLinks = document.getElementById('navLinks');
-        
-        if (menuToggle) {
-            menuToggle.addEventListener('click', () => {
-                navLinks.classList.toggle('active');
-            });
-        }
+  <!-- ================= CTA ================= -->
+  <section class="cta">
+    <div class="container cta-box">
+      <h2>Ready to Grow Your Business?</h2>
+      <p>Join thousands of Ghanaian businesses going digital.</p>
+      <a href="/customer-register.html" class="btn-primary">Get Started Free</a>
+    </div>
+  </section>
 
-        // Navbar Scroll Effect
-        const navbar = document.getElementById('navbar');
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
-        });
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>
+        <h3>ShopUp Ghana</h3>
+        <p>Empowering African businesses through technology.</p>
+      </div>
 
-        // Smooth Scrolling for Anchor Links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                const href = this.getAttribute('href');
-                if (href && href !== '#' && href.length > 1) {
-                    e.preventDefault();
-                    const target = document.querySelector(href);
-                    if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                        // Close mobile menu if open
-                        navLinks.classList.remove('active');
-                    }
-                }
-            });
-        });
+      <div>
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Contact</a>
+        <a href="#">Careers</a>
+      </div>
 
-        // Log page view
-        if (typeof logger !== 'undefined') {
-            logger.info('Landing page loaded', { timestamp: new Date().toISOString() });
-        }
+      <div>
+        <h4>Legal</h4>
+        <a href="/privacy-policy.html">Privacy Policy</a>
+        <a href="/terms-of-service.html">Terms of Service</a>
+      </div>
+    </div>
 
-        // Track CTA button clicks
-        document.querySelectorAll('.cta-button').forEach(button => {
-            button.addEventListener('click', (e) => {
-                if (typeof logger !== 'undefined') {
-                    logger.info('CTA button clicked', { 
-                        buttonText: e.target.textContent,
-                        location: e.target.closest('section')?.className || 'navigation'
-                    });
-                }
-            });
-        });
+    <p class="footer-bottom">
+      © 2026 ShopUp Ghana. Built by Alden’s Innovations.
+    </p>
+  </footer>
 
-        // Track pricing card interactions
-        document.querySelectorAll('.pricing-button').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const card = e.target.closest('.pricing-card');
-                const planName = card.querySelector('h3').textContent;
-                if (typeof logger !== 'undefined') {
-                    logger.info('Pricing plan selected', { plan: planName });
-                }
-            });
-        });
-    </script>
 </body>
 </html>
