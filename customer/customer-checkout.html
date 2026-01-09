@@ -21,7 +21,6 @@
 </head>
 
 <body class="storefront">
-
   <!-- Header -->
   <header class="header">
     <div class="header-content">
@@ -43,7 +42,7 @@
         <h2>Delivery Details</h2>
         <p class="muted">Fill in your delivery information to place your order.</p>
 
-        <div class="row" style="margin-top:14px;">
+        <div class="row top-gap">
           <div class="field">
             <label for="fullName">Full Name</label>
             <input id="fullName" type="text" placeholder="e.g. Albert Denis" autocomplete="name" />
@@ -75,7 +74,7 @@
           <input id="notes" type="text" placeholder="Gate code, landmark, best time to call..." />
         </div>
 
-        <h2 style="margin-top:18px;">Payment Method</h2>
+        <h2 class="section-gap">Payment Method</h2>
         <div class="field">
           <label for="paymentMethod">Choose</label>
           <select id="paymentMethod">
@@ -97,7 +96,7 @@
 
       <!-- RIGHT -->
       <aside class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="summary-head">
           <h2>Order Summary</h2>
           <span class="pill" id="itemCountPill">0 items</span>
         </div>
@@ -117,7 +116,7 @@
 
         <div class="items" id="itemsList"></div>
 
-        <p class="muted" style="margin-top:12px;">
+        <p class="muted policy-note">
           By placing your order, you agree to ShopUp’s policies.
         </p>
       </aside>
@@ -157,6 +156,5 @@
       }
     })();
   </script>
-
 </body>
 </html>
