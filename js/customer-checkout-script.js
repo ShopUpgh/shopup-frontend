@@ -11,7 +11,7 @@
   const ORDER_PENDING_KEY = "order_pending";
 
   // Money / rules
-  const SHIPPING_FLAT = 20;               // change if needed
+  const SHIPPING_FLAT = 20;                 // change if needed
   const VERIFY_FUNCTION = "verify-payment"; // Supabase Edge Function
 
   let cartData = [];
@@ -87,7 +87,20 @@
     if (el.placeOrderBtn) el.placeOrderBtn.disabled = isBusy;
   }
 
-  async function waitForSupabase(maxMs = 8000) {
+  // ✅ FIXED: reliable supabase readiness
+  async function waitForSupabase(maxMs = 10000) {
+    // Best path: use a ready promise if present
+    if (window.supabaseReady) {
+      const client = await Promise.race([
+        window.supabaseReady,
+        new Promise((_, rej) => setTimeout(() => rej(new Error("Supabase ready timeout")), maxMs)),
+      ]);
+      if (!client) throw new Error("Supabase not initialized (missing URL/key).");
+      window.supabase = client; // guarantee
+      return;
+    }
+
+    // Fallback: poll
     const start = Date.now();
     while (!window.supabase && Date.now() - start < maxMs) {
       await new Promise((r) => setTimeout(r, 50));
@@ -110,8 +123,6 @@
 
   function writeCart(cart) {
     localStorage.setItem(CART_KEY_PRIMARY, JSON.stringify(cart || []));
-    // Optionally keep fallback synced:
-    // localStorage.setItem(CART_KEY_FALLBACK, JSON.stringify(cart || []));
   }
 
   // --------------------------
@@ -122,14 +133,11 @@
   }
 
   function normalizeCartItem(item) {
-    // Support both shapes:
-    // A) { id, name, price, quantity }
-    // B) { productId, quantity } or { product_id, quantity }
     if (!item) return null;
 
     const quantity = Number(item.quantity || 0);
 
-    // If it already has price + name, keep it
+    // Direct-price cart
     if (item.price != null && item.name) {
       return {
         id: item.id ?? item.productId ?? item.product_id ?? null,
@@ -141,13 +149,9 @@
       };
     }
 
-    // Else treat it as product reference
+    // productId cart
     const pid = item.productId ?? item.product_id ?? item.id ?? null;
-    return {
-      id: pid,
-      productId: pid,
-      quantity,
-    };
+    return { id: pid, productId: pid, quantity };
   }
 
   function getProductById(id) {
@@ -170,7 +174,6 @@
 
     if (!ids.length) return;
 
-    // Try to load minimal product fields
     const { data, error } = await window.supabase
       .from("products")
       .select("id,name,price,sku,category,image_url,status,is_active")
@@ -181,7 +184,7 @@
   }
 
   // --------------------------
-  // Totals (works for both cart formats)
+  // Totals
   // --------------------------
   function calcSubtotal() {
     return cartData.reduce((sum, raw) => {
@@ -193,7 +196,7 @@
         return sum + Number(item.price || 0) * Number(item.quantity || 0);
       }
 
-      // productId cart (use loaded products)
+      // productId cart
       const p = getProductById(item.productId);
       const price = Number(p?.price || 0);
       return sum + price * Number(item.quantity || 0);
@@ -239,18 +242,17 @@
         let name = "Product";
         let price = 0;
 
-        // Direct-price cart
         if (item.price != null && item.name) {
           name = item.name;
           price = item.price;
         } else {
-          // productId cart
           const p = getProductById(item.productId) || {};
           name = p.name || "Product";
           price = Number(p.price || 0);
         }
 
         const qty = Number(item.quantity || 0);
+
         return `
           <div class="item">
             <div>
@@ -297,29 +299,29 @@
     const user = safeJsonParse(localStorage.getItem(CURRENT_USER_KEY) || "{}", {});
     const { subtotal, shipping, total } = calcTotals();
 
-    const items = cartData.map((raw) => {
-      const item = normalizeCartItem(raw);
-      if (!item) return null;
+    const items = cartData
+      .map((raw) => {
+        const item = normalizeCartItem(raw);
+        if (!item) return null;
 
-      // Direct-price cart
-      if (item.price != null && item.name) {
+        if (item.price != null && item.name) {
+          return {
+            product_id: item.id || null,
+            name: item.name || "Product",
+            price: Number(item.price || 0),
+            quantity: Number(item.quantity || 0),
+          };
+        }
+
+        const p = getProductById(item.productId) || {};
         return {
-          product_id: item.id || null,
-          name: item.name || "Product",
-          price: Number(item.price || 0),
+          product_id: item.productId,
+          name: p.name || "Product",
+          price: Number(p.price || 0),
           quantity: Number(item.quantity || 0),
         };
-      }
-
-      // productId cart
-      const p = getProductById(item.productId) || {};
-      return {
-        product_id: item.productId,
-        name: p.name || "Product",
-        price: Number(p.price || 0),
-        quantity: Number(item.quantity || 0),
-      };
-    }).filter(Boolean);
+      })
+      .filter(Boolean);
 
     return {
       user_id: user?.id || null,
@@ -337,8 +339,8 @@
       total,
 
       items,
-      status, // "pending_payment" | "paid" | "pending_fulfillment"
-      payment_method: payment.method, // "paystack" | "cod"
+      status,
+      payment_method: payment.method,
       payment_reference: payment.reference || null,
     };
   }
@@ -421,7 +423,6 @@
 
     if (error) throw error;
 
-    // Accept a few common formats
     if (data?.verified === true) return true;
     if (data?.status === "success") return true;
     if (data?.data?.status === "success") return true;
@@ -500,11 +501,9 @@
           order_id: order.id,
         },
         callback: async function (response) {
-          // response.reference is the Paystack ref
           try {
             logInfo("Paystack callback received", { ref: response?.reference });
 
-            // 3) server-side verify
             const verified = await verifyPaymentServerSide(response.reference, total);
             if (!verified) {
               showAlert("Payment could not be verified. If you were charged, contact support with your reference.");
@@ -515,7 +514,6 @@
               return;
             }
 
-            // 4) update order -> PAID
             const updated = await updateOrderInSupabase(order.id, {
               status: "paid",
               payment_reference: response.reference,
@@ -534,7 +532,6 @@
           }
         },
         onClose: function () {
-          // User closed without paying
           logInfo("Paystack popup closed", { order_id: order.id });
           setBusy(false);
           showAlert("Payment was cancelled. You can try again.");
@@ -568,7 +565,6 @@
       cartData = readCart();
       hydrateFromUser();
 
-      // Only fetch products if cart uses productId format
       if (cartData.length && cartUsesProductIdShape()) {
         await loadProductsForCartIfNeeded();
       }
@@ -576,11 +572,7 @@
       renderSummary();
       syncPaymentButtons();
 
-      // Events
-      el.paymentMethod?.addEventListener("change", () => {
-        syncPaymentButtons();
-      });
-
+      el.paymentMethod?.addEventListener("change", syncPaymentButtons);
       el.payNowBtn?.addEventListener("click", handlePaystack);
       el.placeOrderBtn?.addEventListener("click", handleCOD);
 
@@ -594,7 +586,6 @@
     }
   }
 
-  // DOM ready
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
