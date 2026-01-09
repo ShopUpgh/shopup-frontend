@@ -4,155 +4,360 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <meta name="description" content="ShopUp - Ghana's Premier E-commerce Platform for Local Businesses. Sell online with mobile money and powerful tools." />
+  <title>ShopUp Ghana - Empower Your Business Online</title>
+
+  <!-- ✅ SEO -->
+  <meta name="description" content="ShopUp - Ghana's premier e-commerce platform for local businesses. Sell online with ease using smart tools, Mobile Money integration, and 24/7 support." />
   <meta name="keywords" content="Ghana ecommerce, online shop Ghana, mobile money, sell online Ghana, ShopUp" />
   <meta name="author" content="The House of Aldens Holdings" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://www.shopupgh.com/" />
 
-  <title>ShopUp Ghana – Empower Your Business Online</title>
+  <!-- ✅ Open Graph / Social -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="ShopUp Ghana - Empower Your Business Online" />
+  <meta property="og:description" content="Launch your online shop in minutes. Mobile Money ready. Built for Ghana." />
+  <meta property="og:url" content="https://www.shopupgh.com/" />
+  <meta property="og:image" content="https://www.shopupgh.com/og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ShopUp Ghana - Empower Your Business Online" />
+  <meta name="twitter:description" content="Sell online with ease using smart tools, Mobile Money integration, and 24/7 support." />
+  <meta name="twitter:image" content="https://www.shopupgh.com/og.png" />
 
-  <!-- ✅ CSS -->
-  <link rel="stylesheet" href="/css/styles.css">
-  <link rel="stylesheet" href="/css/storefront-styles.css">
+  <!-- ✅ Favicons (optional: add these files later) -->
+  <link rel="icon" href="favicon.ico" />
+
+  <!-- ✅ Styles (match your project folders) -->
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/storefront-styles.css" />
 
   <!-- ✅ Sentry -->
   <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
-  <script src="/js/sentry-config.js"></script>
+  <script src="js/sentry-config.js"></script>
+
+  <!-- ✅ Minimal “polish” only (animations + hero illustration positioning) -->
+  <style>
+    /* Keep this tiny: only animation/polish. Your main design stays in styles.css */
+    .reveal { opacity: 0; transform: translateY(12px); transition: opacity .7s ease, transform .7s ease; }
+    .reveal.is-visible { opacity: 1; transform: translateY(0); }
+    .hero-illustration { width: 100%; height: auto; display: block; }
+    .badge-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:14px; }
+    .badge { display:inline-flex; gap:8px; align-items:center; padding:10px 12px; border-radius:12px; background: rgba(255,255,255,0.9); box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+    .badge strong { font-weight: 800; }
+    @media (prefers-reduced-motion: reduce){
+      .reveal, .reveal.is-visible { opacity: 1; transform:none; transition:none; }
+    }
+  </style>
+
+  <!-- ✅ Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "ShopUp Ghana",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "Ghana's premier e-commerce platform for local businesses. Sell online with Mobile Money integration and smart tools.",
+    "url": "https://www.shopupgh.com/",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "GHS",
+      "category": "Free Trial"
+    }
+  }
+  </script>
 </head>
 
 <body>
-
-  <!-- ================= NAVBAR ================= -->
+  <!-- ✅ Navbar (these class names are what your CSS likely targets) -->
   <header class="navbar">
-    <div class="container navbar-content">
-      <a href="/" class="logo">ShopUp<span>Ghana</span></a>
+    <div class="nav-container">
+      <a class="logo" href="/">
+        <span class="logo-mark">ShopUp</span> <span class="logo-accent">Ghana</span>
+      </a>
 
-      <nav class="nav-links">
+      <nav class="nav-links" aria-label="Primary">
         <a href="#features">Features</a>
-        <a href="#how-it-works">How It Works</a>
+        <a href="#how">How It Works</a>
         <a href="#pricing">Pricing</a>
         <a href="#testimonials">Testimonials</a>
-        <a href="/seller-login.html" class="btn-outline">Seller Login</a>
-        <a href="/customer-register.html" class="btn-primary">Get Started</a>
+        <a href="customer/customer-login.html">Seller Login</a>
       </nav>
+
+      <div class="nav-actions">
+        <a class="btn btn-primary" href="customer/customer-register.html">Get Started</a>
+      </div>
     </div>
   </header>
 
-  <!-- ================= HERO ================= -->
-  <section class="hero">
-    <div class="container hero-grid">
-      <div class="hero-text">
-        <h1>Empower Your Business Online</h1>
-        <p>
-          Ghana’s premier e-commerce platform designed for local businesses.
-          Sell online with mobile money, smart tools, and 24/7 support.
+  <!-- ✅ Hero (blue premium look + Ghana-themed illustration) -->
+  <main>
+    <section class="hero" id="top">
+      <div class="hero-container">
+        <div class="hero-grid">
+          <!-- Left -->
+          <div class="hero-content reveal">
+            <h1 class="hero-title">
+              Empower Your Business Online <span class="hero-tag">GH</span>
+            </h1>
+
+            <p class="hero-subtitle">
+              Ghana’s premier e-commerce platform designed for local businesses.
+              Start selling online today with powerful tools, Mobile Money integration,
+              and 24/7 support.
+            </p>
+
+            <div class="hero-cta">
+              <a class="btn btn-primary" href="customer/customer-register.html">Start Free Trial</a>
+              <a class="btn btn-secondary" href="#how">Learn More</a>
+            </div>
+
+            <div class="badge-row">
+              <div class="badge">
+                <strong>GH Built for Ghana</strong>
+              </div>
+              <div class="badge">Mobile Money • Local Sellers • Fast Setup</div>
+            </div>
+          </div>
+
+          <!-- Right: Ghana-themed illustration card -->
+          <div class="hero-card reveal" aria-label="Ghana themed illustration">
+            <!-- Inline SVG so you don’t need an image file yet -->
+            <svg class="hero-illustration" viewBox="0 0 960 520" role="img" aria-label="Ghana themed illustration">
+              <defs>
+                <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#1d4ed8"/>
+                  <stop offset="55%" stop-color="#2563eb"/>
+                  <stop offset="100%" stop-color="#10b981"/>
+                </linearGradient>
+                <linearGradient id="flag" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#ce1126"/>
+                  <stop offset="33%" stop-color="#ce1126"/>
+                  <stop offset="33%" stop-color="#fcd116"/>
+                  <stop offset="66%" stop-color="#fcd116"/>
+                  <stop offset="66%" stop-color="#006b3f"/>
+                  <stop offset="100%" stop-color="#006b3f"/>
+                </linearGradient>
+                <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000" flood-opacity="0.20"/>
+                </filter>
+              </defs>
+
+              <rect x="0" y="0" width="960" height="520" rx="28" fill="url(#bg)" filter="url(#shadow)"/>
+              <rect x="48" y="48" width="864" height="120" rx="18" fill="rgba(255,255,255,0.16)"/>
+              <rect x="70" y="70" width="360" height="76" rx="14" fill="url(#flag)"/>
+              <text x="460" y="118" fill="#ffffff" font-size="34" font-family="Arial" font-weight="700">Built for Local Businesses</text>
+
+              <!-- simple “market + network” visual -->
+              <circle cx="160" cy="300" r="64" fill="rgba(255,255,255,0.20)"/>
+              <circle cx="320" cy="300" r="64" fill="rgba(255,255,255,0.20)"/>
+              <circle cx="240" cy="400" r="64" fill="rgba(255,255,255,0.20)"/>
+              <path d="M160 300 L320 300 L240 400 Z" fill="rgba(255,255,255,0.14)"/>
+
+              <rect x="440" y="225" width="430" height="230" rx="22" fill="rgba(255,255,255,0.16)"/>
+              <text x="470" y="270" fill="#ffffff" font-size="28" font-family="Arial" font-weight="800">Mobile Money Ready</text>
+              <text x="470" y="312" fill="rgba(255,255,255,0.92)" font-size="18" font-family="Arial">MTN MoMo • Vodafone Cash • AirtelTigo</text>
+              <text x="470" y="352" fill="rgba(255,255,255,0.92)" font-size="18" font-family="Arial">Cards • Secure Checkout • Fast Setup</text>
+
+              <!-- star -->
+              <path d="M740 120 L752 150 L784 150 L758 168 L768 198 L740 180 L712 198 L722 168 L696 150 L728 150 Z"
+                    fill="#111827" opacity="0.9"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ✅ Features -->
+    <section class="section" id="features">
+      <div class="container">
+        <h2 class="section-title reveal">Why Choose ShopUp?</h2>
+
+        <div class="cards-grid">
+          <div class="card reveal">
+            <h3>Mobile Money Ready</h3>
+            <p>Accept MTN MoMo, Vodafone Cash, AirtelTigo & cards.</p>
+          </div>
+
+          <div class="card reveal">
+            <h3>Seller Dashboard</h3>
+            <p>Manage products, orders, customers, and revenue.</p>
+          </div>
+
+          <div class="card reveal">
+            <h3>Fast Store Setup</h3>
+            <p>Launch your online shop in minutes — no coding needed.</p>
+          </div>
+
+          <div class="card reveal">
+            <h3>Secure & Reliable</h3>
+            <p>Built with enterprise-grade security and monitoring.</p>
+          </div>
+
+          <div class="card reveal">
+            <h3>Local Delivery Ready</h3>
+            <p>Support pickup/delivery workflows for Ghana operations.</p>
+          </div>
+
+          <div class="card reveal">
+            <h3>24/7 Support</h3>
+            <p>We help you launch, grow, and keep selling.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ✅ How it works -->
+    <section class="section alt" id="how">
+      <div class="container">
+        <h2 class="section-title reveal">How It Works</h2>
+
+        <div class="steps-grid">
+          <div class="step reveal">
+            <div class="step-number">1</div>
+            <h3>Create your account</h3>
+            <p>Sign up and verify your seller profile.</p>
+          </div>
+          <div class="step reveal">
+            <div class="step-number">2</div>
+            <h3>Add your products</h3>
+            <p>Upload photos, set pricing, and manage inventory.</p>
+          </div>
+          <div class="step reveal">
+            <div class="step-number">3</div>
+            <h3>Start selling</h3>
+            <p>Share your link and accept Mobile Money payments.</p>
+          </div>
+        </div>
+
+        <div class="center-cta reveal">
+          <a class="btn btn-primary" href="customer/customer-register.html">Get Started</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ✅ Pricing -->
+    <section class="section" id="pricing">
+      <div class="container">
+        <h2 class="section-title reveal">Pricing</h2>
+
+        <div class="pricing-grid">
+          <div class="pricing-card reveal">
+            <h3>Starter</h3>
+            <p class="price">Free</p>
+            <ul>
+              <li>Basic store setup</li>
+              <li>Mobile Money checkout</li>
+              <li>Product listings</li>
+            </ul>
+            <a class="btn btn-secondary" href="customer/customer-register.html">Start Free Trial</a>
+          </div>
+
+          <div class="pricing-card featured reveal">
+            <h3>Pro</h3>
+            <p class="price">GHS —</p>
+            <ul>
+              <li>Advanced analytics</li>
+              <li>More products & tools</li>
+              <li>Priority support</li>
+            </ul>
+            <a class="btn btn-primary" href="customer/customer-register.html">Choose Pro</a>
+          </div>
+
+          <div class="pricing-card reveal">
+            <h3>Business</h3>
+            <p class="price">GHS —</p>
+            <ul>
+              <li>Team & roles</li>
+              <li>Automation & integrations</li>
+              <li>Dedicated onboarding</li>
+            </ul>
+            <a class="btn btn-secondary" href="customer/customer-register.html">Contact Sales</a>
+          </div>
+        </div>
+
+        <p class="fineprint reveal">
+          Pricing can be updated any time — this layout is ready for your final numbers.
         </p>
+      </div>
+    </section>
 
-        <div class="hero-actions">
-          <a href="/customer-register.html" class="btn-primary">Start Free Trial</a>
-          <a href="#features" class="btn-secondary">Learn More</a>
+    <!-- ✅ Testimonials -->
+    <section class="section alt" id="testimonials">
+      <div class="container">
+        <h2 class="section-title reveal">Testimonials</h2>
+
+        <div class="testimonials-grid">
+          <div class="testimonial reveal">
+            <p>“ShopUp made it easy for me to start accepting MoMo and grow my online sales.”</p>
+            <strong>— Local Seller, Accra</strong>
+          </div>
+          <div class="testimonial reveal">
+            <p>“Simple dashboard, fast setup, and customers love the checkout experience.”</p>
+            <strong>— Small Business Owner</strong>
+          </div>
+          <div class="testimonial reveal">
+            <p>“It feels like a premium platform made for Ghana. Clean and powerful.”</p>
+            <strong>— Retail Brand</strong>
+          </div>
         </div>
       </div>
+    </section>
 
-      <div class="hero-visual">
-        <div class="hero-card">
-          <h3>🇬🇭 Built for Ghana</h3>
-          <p>Mobile Money • Local Sellers • Fast Setup</p>
+    <!-- ✅ Final CTA -->
+    <section class="section cta">
+      <div class="container reveal">
+        <h2>Ready to sell online in Ghana?</h2>
+        <p>Join ShopUp and launch your storefront with Mobile Money and smart tools.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="customer/customer-register.html">Get Started</a>
+          <a class="btn btn-secondary" href="customer/customer-login.html">Seller Login</a>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </main>
 
-  <!-- ================= FEATURES ================= -->
-  <section id="features" class="section">
-    <div class="container">
-      <h2 class="section-title">Why Choose ShopUp?</h2>
-
-      <div class="features-grid">
-        <div class="feature-card">
-          <h3>Mobile Money Ready</h3>
-          <p>Accept MTN MoMo, Vodafone Cash, AirtelTigo & cards.</p>
-        </div>
-
-        <div class="feature-card">
-          <h3>Seller Dashboard</h3>
-          <p>Manage products, orders, customers, and revenue.</p>
-        </div>
-
-        <div class="feature-card">
-          <h3>Fast Store Setup</h3>
-          <p>Launch your online shop in minutes — no coding needed.</p>
-        </div>
-
-        <div class="feature-card">
-          <h3>Secure & Reliable</h3>
-          <p>Built with enterprise-grade security and monitoring.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= HOW IT WORKS ================= -->
-  <section id="how-it-works" class="section alt-bg">
-    <div class="container">
-      <h2 class="section-title">How It Works</h2>
-
-      <div class="steps-grid">
-        <div class="step">
-          <span>1</span>
-          <h4>Create Account</h4>
-          <p>Register as a seller and set up your store.</p>
-        </div>
-
-        <div class="step">
-          <span>2</span>
-          <h4>Add Products</h4>
-          <p>Upload products, prices, and photos.</p>
-        </div>
-
-        <div class="step">
-          <span>3</span>
-          <h4>Start Selling</h4>
-          <p>Share your store and receive payments instantly.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= CTA ================= -->
-  <section class="cta">
-    <div class="container cta-box">
-      <h2>Ready to Grow Your Business?</h2>
-      <p>Join thousands of Ghanaian businesses going digital.</p>
-      <a href="/customer-register.html" class="btn-primary">Get Started Free</a>
-    </div>
-  </section>
-
-  <!-- ================= FOOTER ================= -->
+  <!-- ✅ Footer -->
   <footer class="footer">
     <div class="container footer-grid">
       <div>
-        <h3>ShopUp Ghana</h3>
-        <p>Empowering African businesses through technology.</p>
+        <div class="footer-brand">ShopUp Ghana</div>
+        <p>Built by The House of Aldens Holdings.</p>
       </div>
 
-      <div>
-        <h4>Company</h4>
-        <a href="#">About</a>
-        <a href="#">Contact</a>
-        <a href="#">Careers</a>
+      <div class="footer-links">
+        <a href="#features">Features</a>
+        <a href="#how">How It Works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#testimonials">Testimonials</a>
       </div>
 
-      <div>
-        <h4>Legal</h4>
-        <a href="/privacy-policy.html">Privacy Policy</a>
-        <a href="/terms-of-service.html">Terms of Service</a>
+      <div class="footer-links">
+        <a href="privacy-policy.html">Privacy</a>
+        <a href="terms-of-service.html">Terms</a>
+        <a href="refund-policy.html">Refund</a>
+        <a href="shipping-policy.html">Shipping</a>
       </div>
     </div>
 
-    <p class="footer-bottom">
-      © 2026 ShopUp Ghana. Built by Alden’s Innovations.
-    </p>
+    <div class="container footer-bottom">
+      <small>© <span id="year"></span> ShopUp Ghana. All rights reserved.</small>
+    </div>
   </footer>
 
+  <!-- ✅ Tiny JS: year + reveal animations -->
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // reveal-on-scroll
+    const items = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) e.target.classList.add('is-visible');
+      });
+    }, { threshold: 0.12 });
+    items.forEach(el => io.observe(el));
+  </script>
 </body>
 </html>
