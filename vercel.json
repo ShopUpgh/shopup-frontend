@@ -1,5 +1,11 @@
 {
   "rewrites": [
+    { "source": "/seller-login.html", "destination": "/seller/seller-login.html" },
+    { "source": "/customer-register.html", "destination": "/customer/customer-register.html" },
+    { "source": "/customer-login.html", "destination": "/customer/customer-login.html" },
+    { "source": "/seller-login", "destination": "/seller/seller-login.html" },
+    { "source": "/customer-register", "destination": "/customer/customer-register.html" },
+    { "source": "/customer-login", "destination": "/customer/customer-login.html" },
     { "source": "/(.*)", "destination": "/$1" }
   ],
   "headers": [
