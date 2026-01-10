@@ -1,800 +1,834 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Orders - SHOPUP</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: #f3f4f6;
-            min-height: 100vh;
-        }
-
-        /* Navigation */
-        .navbar {
-            background: white;
-            padding: 16px 20px;
-            border-bottom: 1px solid #e5e7eb;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .navbar-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .navbar-left {
-            display: flex;
-            align-items: center;
-            gap: 30px;
-        }
-
-        .navbar-nav {
-            display: flex;
-            gap: 5px;
-        }
-
-        .nav-link {
-            padding: 8px 16px;
-            color: #666;
-            text-decoration: none;
-            border-radius: 6px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .nav-link:hover {
-            background: #f0f0f0;
-            color: #10b981;
-        }
-
-        .nav-link.active {
-            background: #e8f5e9;
-            color: #10b981;
-            font-weight: 600;
-        }
-
-        .navbar h1 {
-            font-size: 20px;
-            background: linear-gradient(135deg, #10b981, #f59e0b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .back-link {
-            color: #10b981;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        /* Container */
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        /* Page Header */
-        .page-header {
-            margin-bottom: 30px;
-        }
-
-        .page-header h2 {
-            font-size: 28px;
-            color: #111827;
-            margin-bottom: 10px;
-        }
-
-        /* Tab Navigation */
-        .tabs {
-            display: flex;
-            gap: 0;
-            border-bottom: 2px solid #e5e7eb;
-            margin-bottom: 20px;
-            background: white;
-            border-radius: 12px 12px 0 0;
-            overflow: hidden;
-        }
-
-        .tab {
-            flex: 1;
-            padding: 16px;
-            border: none;
-            background: #f9fafb;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            color: #6b7280;
-            transition: all 200ms;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
-        }
-
-        .tab:hover {
-            background: #f3f4f6;
-        }
-
-        .tab.active {
-            background: white;
-            color: #10b981;
-            border-bottom-color: #10b981;
-        }
-
-        /* Filter Bar */
-        .filter-bar {
-            background: white;
-            border-radius: 0 0 12px 12px;
-            padding: 15px 20px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .filter-group label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #6b7280;
-        }
-
-        .filter-group select {
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        /* Orders Grid */
-        .orders-grid {
-            display: grid;
-            gap: 15px;
-        }
-
-        .order-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            transition: all 200ms;
-            cursor: pointer;
-        }
-
-        .order-card:hover {
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-        }
-
-        .order-header {
-            padding: 20px;
-            border-bottom: 1px solid #f3f4f6;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 15px;
-            align-items: start;
-        }
-
-        .order-number-section h3 {
-            font-size: 14px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 5px;
-            font-family: 'Courier New', monospace;
-        }
-
-        .order-date {
-            font-size: 12px;
-            color: #6b7280;
-        }
-
-        .order-total {
-            text-align: right;
-        }
-
-        .order-total-label {
-            font-size: 12px;
-            color: #6b7280;
-        }
-
-        .order-total-amount {
-            font-size: 20px;
-            font-weight: 700;
-            color: #10b981;
-        }
-
-        .order-status-section {
-            text-align: right;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            min-width: 100px;
-        }
-
-        .status-pending {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .status-confirmed {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .status-shipped {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .status-delivered {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status-cancelled {
-            background: #fee2e2;
-            color: #7f1d1d;
-        }
-
-        /* Order Progress */
-        .order-progress {
-            padding: 20px;
-        }
-
-        .progress-steps {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .progress-step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            flex: 1;
-            position: relative;
-        }
-
-        .step-circle {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            background: #f3f4f6;
-            color: #6b7280;
-            border: 2px solid #e5e7eb;
-            font-size: 18px;
-        }
-
-        .progress-step.active .step-circle {
-            background: #10b981;
-            color: white;
-            border-color: #10b981;
-        }
-
-        .progress-step.completed .step-circle {
-            background: #10b981;
-            color: white;
-            border-color: #10b981;
-        }
-
-        .step-label {
-            font-size: 12px;
-            color: #6b7280;
-            text-align: center;
-            min-width: 80px;
-        }
-
-        .progress-step.active .step-label,
-        .progress-step.completed .step-label {
-            color: #111827;
-            font-weight: 600;
-        }
-
-        .progress-line {
-            position: absolute;
-            height: 2px;
-            background: #e5e7eb;
-            top: 20px;
-            left: calc(50% + 20px);
-            width: calc(100% - 40px);
-        }
-
-        .progress-step.completed .progress-line {
-            background: #10b981;
-        }
-
-        .tracking-info {
-            background: #f0fdf4;
-            border-left: 4px solid #10b981;
-            padding: 12px 15px;
-            border-radius: 4px;
-            font-size: 13px;
-            color: #065f46;
-        }
-
-        /* Order Items */
-        .order-items {
-            padding: 20px;
-            background: #f9fafb;
-        }
-
-        .items-title {
-            font-size: 12px;
-            font-weight: 700;
-            color: #6b7280;
-            text-transform: uppercase;
-            margin-bottom: 12px;
-            letter-spacing: 0.5px;
-        }
-
-        .item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            font-size: 13px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .item:last-child {
-            border-bottom: none;
-        }
-
-        .item-name {
-            color: #111827;
-            font-weight: 600;
-        }
-
-        .item-qty {
-            color: #6b7280;
-        }
-
-        .item-price {
-            color: #111827;
-            font-weight: 600;
-        }
-
-        /* Order Actions */
-        .order-actions {
-            padding: 20px;
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            border-top: 1px solid #f3f4f6;
-        }
-
-        .btn {
-            padding: 10px 16px;
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 200ms;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn-primary {
-            background: #10b981;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #059669;
-        }
-
-        .btn-secondary {
-            background: #f3f4f6;
-            color: #111827;
-            border: 1px solid #d1d5db;
-        }
-
-        .btn-secondary:hover {
-            background: #e5e7eb;
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            background: white;
-            border-radius: 12px;
-        }
-
-        .empty-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-
-        .empty-state h3 {
-            font-size: 20px;
-            color: #111827;
-            margin-bottom: 10px;
-        }
-
-        .empty-state p {
-            color: #6b7280;
-            margin-bottom: 20px;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .order-header {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-
-            .order-total,
-            .order-status-section {
-                text-align: left;
-            }
-
-            .progress-steps {
-                flex-wrap: wrap;
-            }
-
-            .progress-line {
-                display: none;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Orders - ShopUp</title>
+
+  <link rel="icon" href="/favicon.ico" />
+
+  <!-- ✅ Sentry: Loader + Central Config ONLY -->
+  <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
+  <script src="/js/sentry-config.js"></script>
+
+  <!-- ✅ Supabase (Module init only) -->
+  <script type="module" src="/js/supabase-init.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: #f3f4f6;
+      min-height: 100vh;
+    }
+
+    /* Navigation */
+    .navbar {
+      background: white;
+      padding: 16px 20px;
+      border-bottom: 1px solid #e5e7eb;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .navbar-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .navbar-left {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+
+    .navbar-nav {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .nav-link {
+      padding: 8px 16px;
+      color: #666;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+      background: #f0f0f0;
+      color: #10b981;
+    }
+
+    .nav-link.active {
+      background: #e8f5e9;
+      color: #10b981;
+      font-weight: 600;
+    }
+
+    .navbar h1 {
+      font-size: 20px;
+      background: linear-gradient(135deg, #10b981, #f59e0b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      white-space: nowrap;
+    }
+
+    .back-link {
+      color: #10b981;
+      text-decoration: none;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Page Header */
+    .page-header { margin-bottom: 18px; }
+    .page-header h2 {
+      font-size: 28px;
+      color: #111827;
+      margin-bottom: 10px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid #e5e7eb;
+      margin-bottom: 20px;
+      background: white;
+      border-radius: 12px 12px 0 0;
+      overflow: hidden;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 16px;
+      border: none;
+      background: #f9fafb;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      color: #6b7280;
+      transition: all 200ms;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      user-select: none;
+    }
+
+    .tab:hover { background: #f3f4f6; }
+    .tab.active {
+      background: white;
+      color: #10b981;
+      border-bottom-color: #10b981;
+    }
+
+    /* Orders Grid */
+    .orders-grid { display: grid; gap: 15px; }
+
+    .order-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: all 200ms;
+    }
+
+    .order-card:hover {
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+
+    .order-header {
+      padding: 20px;
+      border-bottom: 1px solid #f3f4f6;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 15px;
+      align-items: start;
+    }
+
+    .order-number-section h3 {
+      font-size: 14px;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 5px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .order-date { font-size: 12px; color: #6b7280; }
+
+    .order-total { text-align: right; }
+    .order-total-label { font-size: 12px; color: #6b7280; }
+    .order-total-amount { font-size: 20px; font-weight: 800; color: #10b981; }
+
+    .order-status-section { text-align: right; }
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-confirmed { background: #dbeafe; color: #1e40af; }
+    .status-shipped { background: #d1fae5; color: #065f46; }
+    .status-delivered { background: #dcfce7; color: #166534; }
+    .status-cancelled { background: #fee2e2; color: #7f1d1d; }
+
+    /* Progress */
+    .order-progress { padding: 20px; }
+    .progress-steps {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      gap: 10px;
+    }
+
+    .progress-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      position: relative;
+      min-width: 70px;
+    }
+
+    .step-circle {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      background: #f3f4f6;
+      color: #6b7280;
+      border: 2px solid #e5e7eb;
+      font-size: 16px;
+    }
+
+    .progress-step.active .step-circle,
+    .progress-step.completed .step-circle {
+      background: #10b981;
+      color: white;
+      border-color: #10b981;
+    }
+
+    .step-label {
+      font-size: 12px;
+      color: #6b7280;
+      text-align: center;
+      min-width: 80px;
+    }
+
+    .progress-step.active .step-label,
+    .progress-step.completed .step-label {
+      color: #111827;
+      font-weight: 700;
+    }
+
+    .progress-line {
+      position: absolute;
+      height: 2px;
+      background: #e5e7eb;
+      top: 20px;
+      left: calc(50% + 20px);
+      width: calc(100% - 40px);
+      z-index: 0;
+    }
+
+    .progress-step.completed .progress-line { background: #10b981; }
+
+    .tracking-info {
+      background: #f0fdf4;
+      border-left: 4px solid #10b981;
+      padding: 12px 15px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #065f46;
+    }
+
+    /* Items */
+    .order-items { padding: 20px; background: #f9fafb; }
+    .items-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #6b7280;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 13px;
+      border-bottom: 1px solid #e5e7eb;
+      gap: 12px;
+    }
+    .item:last-child { border-bottom: none; }
+
+    .item-name { color: #111827; font-weight: 700; }
+    .item-qty { color: #6b7280; }
+    .item-price { color: #111827; font-weight: 700; white-space: nowrap; }
+
+    /* Actions */
+    .order-actions {
+      padding: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      border-top: 1px solid #f3f4f6;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 200ms;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary { background: #10b981; color: white; }
+    .btn-primary:hover { background: #059669; }
+
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #111827;
+      border: 1px solid #d1d5db;
+    }
+    .btn-secondary:hover { background: #e5e7eb; }
+
+    /* Empty / Loading */
+    .empty-state, .loading-state, .error-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: white;
+      border-radius: 12px;
+    }
+    .empty-icon, .loading-icon, .error-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    .empty-state h3, .loading-state h3, .error-state h3 {
+      font-size: 20px;
+      color: #111827;
+      margin-bottom: 10px;
+    }
+    .empty-state p, .loading-state p, .error-state p {
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .order-header { grid-template-columns: 1fr; gap: 10px; }
+      .order-total, .order-status-section { text-align: left; }
+      .progress-steps { flex-wrap: wrap; }
+      .progress-line { display: none; }
+    }
+  </style>
 </head>
+
 <body>
-    <!-- Navigation -->
-    <div class="navbar">
-        <div class="navbar-content">
-            <div class="navbar-left">
-                <h1>🛍️ SHOPUP</h1>
-                <nav class="navbar-nav">
-                    <a href="customer-dashboard.html" class="nav-link">Dashboard</a>
-                    <a href="customer-orders.html" class="nav-link active">Orders</a>
-                    <a href="customer-profile.html" class="nav-link">Profile</a>
-                    <a href="customer-addresses.html" class="nav-link">Addresses</a>
-                    <a href="../index.html" class="nav-link">Shop</a>
-                </nav>
-            </div>
-            <a href="customer-dashboard.html" class="back-link">← Dashboard</a>
-        </div>
+  <!-- Navigation -->
+  <div class="navbar">
+    <div class="navbar-content">
+      <div class="navbar-left">
+        <h1>🛍️ SHOPUP</h1>
+        <nav class="navbar-nav">
+          <a href="customer-dashboard.html" class="nav-link">Dashboard</a>
+          <a href="customer-orders.html" class="nav-link active">Orders</a>
+          <a href="../index.html" class="nav-link">Shop</a>
+          <a href="cart.html" class="nav-link">Cart</a>
+        </nav>
+      </div>
+      <a href="customer-dashboard.html" class="back-link">← Dashboard</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="page-header">
+      <h2>📦 My Orders</h2>
     </div>
 
-    <div class="container">
-        <!-- Page Header -->
-        <div class="page-header">
-            <h2>📦 My Orders</h2>
-        </div>
-
-        <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab active" onclick="filterByStatus('', this)">All Orders</button>
-            <button class="tab" onclick="filterByStatus('pending', this)">⏳ Pending</button>
-            <button class="tab" onclick="filterByStatus('shipped', this)">📦 Shipped</button>
-            <button class="tab" onclick="filterByStatus('delivered', this)">✅ Delivered</button>
-        </div>
-
-        <!-- Orders Container -->
-        <div class="orders-grid" id="ordersContainer">
-            <!-- Orders will be loaded here -->
-        </div>
-
-        <!-- Empty State -->
-        <div class="empty-state" id="emptyState" style="display: none;">
-            <div class="empty-icon">📭</div>
-            <h3>No orders yet</h3>
-            <p>You haven't placed any orders yet. Start shopping now!</p>
-            <a href="storefront-index.html" class="btn btn-primary">🛍️ Browse Products</a>
-        </div>
+    <!-- Tabs -->
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-status="">All Orders</button>
+      <button class="tab" data-status="pending">⏳ Pending</button>
+      <button class="tab" data-status="shipped">📦 Shipped</button>
+      <button class="tab" data-status="delivered">✅ Delivered</button>
     </div>
 
-    <!-- Scripts -->
-    <script src="supabase-config.js"></script>
-    <script src="order-management-script.js"></script>
+    <!-- Content -->
+    <div class="orders-grid" id="ordersContainer"></div>
 
-    <script>
-        /**
-         * CUSTOMER ORDER HISTORY & TRACKING PAGE
-         * Display customer's orders and track their status
-         * Integrates with order-management-script.js for Supabase backend
-         */
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="empty-icon">📭</div>
+      <h3>No orders yet</h3>
+      <p>You haven't placed any orders yet. Start shopping now!</p>
+      <a href="customer-dashboard.html" class="btn btn-primary">🛍️ Browse Products</a>
+    </div>
 
-        console.log('📦 Order History Page Loaded');
+    <div class="loading-state" id="loadingState">
+      <div class="loading-icon">⏳</div>
+      <h3>Loading your orders…</h3>
+      <p>Please wait a moment.</p>
+    </div>
 
-        let allOrders = [];
-        let filteredOrders = [];
-        let currentStatusFilter = '';
-        let currentUser = null;
+    <div class="error-state" id="errorState" style="display:none;">
+      <div class="error-icon">⚠️</div>
+      <h3>We couldn’t load your orders</h3>
+      <p>Please refresh the page or try again in a moment.</p>
+      <button class="btn btn-secondary" id="retryBtn" type="button">Retry</button>
+    </div>
+  </div>
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log('🔐 Checking authentication...');
-            await initializePage();
+  <script>
+    (function () {
+      "use strict";
+
+      const el = {
+        tabs: document.getElementById("tabs"),
+        container: document.getElementById("ordersContainer"),
+        empty: document.getElementById("emptyState"),
+        loading: document.getElementById("loadingState"),
+        error: document.getElementById("errorState"),
+        retry: document.getElementById("retryBtn"),
+      };
+
+      let sessionUser = null;
+      let allOrders = [];
+      let filteredOrders = [];
+      let currentStatus = "";
+
+      function money(n) {
+        const v = Number(n || 0);
+        return `GH₵ ${v.toFixed(2)}`;
+      }
+
+      function safeText(v) {
+        return String(v == null ? "" : v);
+      }
+
+      function setVisible(node, visible) {
+        if (!node) return;
+        node.style.display = visible ? "block" : "none";
+      }
+
+      function setLoading(isLoading) {
+        setVisible(el.loading, isLoading);
+        if (isLoading) {
+          setVisible(el.error, false);
+          setVisible(el.empty, false);
+        }
+      }
+
+      function setError(isError) {
+        setVisible(el.error, isError);
+        if (isError) {
+          setVisible(el.loading, false);
+          setVisible(el.empty, false);
+        }
+      }
+
+      async function ensureCustomerSession() {
+        await window.supabaseReady;
+        if (!window.supabase) throw new Error("Supabase not ready. Check /js/supabase-init.js");
+
+        const { data, error } = await window.supabase.auth.getSession();
+        if (error) throw error;
+
+        const session = data?.session;
+        if (!session?.user) {
+          window.location.href = "customer-login.html";
+          return null;
+        }
+
+        sessionUser = session.user;
+
+        // Sentry context
+        if (window.Sentry) {
+          window.Sentry.setUser({
+            id: String(sessionUser.id),
+            email: sessionUser.email || undefined,
+            role: "customer",
+          });
+          window.Sentry.addBreadcrumb({
+            category: "navigation",
+            message: "Customer orders viewed",
+            level: "info",
+          });
+        }
+
+        return session;
+      }
+
+      function normalizeStatus(s) {
+        const v = String(s || "").toLowerCase();
+        if (!v) return "pending";
+        // allow "processing" etc map to pending
+        if (v === "processing") return "pending";
+        return v;
+      }
+
+      function generateTimeline(status) {
+        const s = normalizeStatus(status);
+        const statuses = {
+          pending: [
+            { step: "Order Placed", completed: true },
+            { step: "Confirmed", completed: false },
+            { step: "Shipped", completed: false },
+            { step: "Delivered", completed: false },
+          ],
+          confirmed: [
+            { step: "Order Placed", completed: true },
+            { step: "Confirmed", completed: true },
+            { step: "Shipped", completed: false },
+            { step: "Delivered", completed: false },
+          ],
+          shipped: [
+            { step: "Order Placed", completed: true },
+            { step: "Confirmed", completed: true },
+            { step: "Shipped", completed: true },
+            { step: "Delivered", completed: false },
+          ],
+          delivered: [
+            { step: "Order Placed", completed: true },
+            { step: "Confirmed", completed: true },
+            { step: "Shipped", completed: true },
+            { step: "Delivered", completed: true },
+          ],
+          cancelled: [
+            { step: "Order Placed", completed: true },
+            { step: "Confirmed", completed: false },
+            { step: "Shipped", completed: false },
+            { step: "Delivered", completed: false },
+          ],
+        };
+        return statuses[s] || statuses.pending;
+      }
+
+      function clearContainer() {
+        while (el.container.firstChild) el.container.removeChild(el.container.firstChild);
+      }
+
+      function make(tag, className, text) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text != null) node.textContent = text;
+        return node;
+      }
+
+      function renderOrders() {
+        clearContainer();
+
+        if (!filteredOrders.length) {
+          setVisible(el.empty, true);
+          return;
+        }
+        setVisible(el.empty, false);
+
+        const frag = document.createDocumentFragment();
+
+        for (const order of filteredOrders) {
+          const status = normalizeStatus(order.order_status || order.status);
+          const orderNumber = safeText(order.order_number || order.order_no || order.id || "ORDER");
+          const createdAt = order.created_at ? new Date(order.created_at) : new Date();
+          const total = Number(order.total || order.amount_total || 0);
+
+          const card = make("div", "order-card");
+          card.setAttribute("data-order-number", orderNumber);
+
+          // Header
+          const header = make("div", "order-header");
+
+          const numberSection = make("div", "order-number-section");
+          const h3 = make("h3", "", orderNumber);
+          const date = make("div", "order-date", createdAt.toLocaleDateString());
+          numberSection.appendChild(h3);
+          numberSection.appendChild(date);
+
+          header.appendChild(numberSection);
+          header.appendChild(make("div")); // spacer
+
+          const totalSection = make("div", "order-total");
+          totalSection.appendChild(make("div", "order-total-label", "Total"));
+          totalSection.appendChild(make("div", "order-total-amount", money(total)));
+          header.appendChild(totalSection);
+
+          const statusSection = make("div", "order-status-section");
+          const badge = make("span", `status-badge status-${status}`, status);
+          statusSection.appendChild(badge);
+          header.appendChild(statusSection);
+
+          card.appendChild(header);
+
+          // Progress
+          const progress = make("div", "order-progress");
+          const stepsWrap = make("div", "progress-steps");
+
+          const timeline = generateTimeline(status);
+          timeline.forEach((t, i) => {
+            const step = make("div", "progress-step");
+            if (t.completed) step.classList.add("completed");
+            else if (i > 0 && timeline[i - 1].completed) step.classList.add("active");
+
+            const circle = make("div", "step-circle", t.completed ? "✓" : String(i + 1));
+            const label = make("div", "step-label", t.step);
+            const line = make("div", "progress-line");
+
+            step.appendChild(circle);
+            step.appendChild(label);
+            step.appendChild(line);
+
+            stepsWrap.appendChild(step);
+          });
+
+          progress.appendChild(stepsWrap);
+
+          if (order.tracking_number) {
+            const track = make("div", "tracking-info");
+            track.appendChild(document.createTextNode("📍 Tracking: "));
+            const strong = document.createElement("strong");
+            strong.textContent = safeText(order.tracking_number);
+            track.appendChild(strong);
+            progress.appendChild(track);
+          }
+
+          card.appendChild(progress);
+
+          // Items
+          const itemsBox = make("div", "order-items");
+          itemsBox.appendChild(make("div", "items-title", "Items"));
+
+          const items = Array.isArray(order.items) ? order.items : [];
+          if (items.length) {
+            for (const it of items) {
+              const row = make("div", "item");
+              const name = make("span", "item-name", safeText(it.product_name || it.name || "Item"));
+              const qty = make("span", "item-qty", `x${Number(it.quantity || 0)}`);
+              const price = make("span", "item-price", money((Number(it.unit_price || it.price || 0) * Number(it.quantity || 0))));
+              row.appendChild(name);
+              row.appendChild(qty);
+              row.appendChild(price);
+              itemsBox.appendChild(row);
+            }
+          } else {
+            const row = make("div", "item");
+            row.appendChild(make("span", "item-name", "Items unavailable"));
+            row.appendChild(make("span", "item-qty", ""));
+            row.appendChild(make("span", "item-price", ""));
+            itemsBox.appendChild(row);
+          }
+
+          card.appendChild(itemsBox);
+
+          // Actions
+          const actions = make("div", "order-actions");
+
+          const invoiceBtn = make("button", "btn btn-secondary", "📄 Invoice");
+          invoiceBtn.type = "button";
+          invoiceBtn.setAttribute("data-action", "invoice");
+          invoiceBtn.setAttribute("data-order", orderNumber);
+
+          const helpBtn = make("button", "btn btn-primary", "💬 Help");
+          helpBtn.type = "button";
+          helpBtn.setAttribute("data-action", "help");
+          helpBtn.setAttribute("data-order", orderNumber);
+
+          actions.appendChild(invoiceBtn);
+          actions.appendChild(helpBtn);
+
+          card.appendChild(actions);
+
+          frag.appendChild(card);
+        }
+
+        el.container.appendChild(frag);
+      }
+
+      function applyFilter(status) {
+        currentStatus = status || "";
+        filteredOrders = currentStatus
+          ? allOrders.filter(o => normalizeStatus(o.order_status || o.status) === normalizeStatus(currentStatus))
+          : [...allOrders];
+
+        renderOrders();
+      }
+
+      function activateTab(buttonEl) {
+        if (!buttonEl) return;
+        const tabs = el.tabs.querySelectorAll(".tab");
+        tabs.forEach(t => t.classList.remove("active"));
+        buttonEl.classList.add("active");
+      }
+
+      async function fetchOrders() {
+        if (!sessionUser) return [];
+
+        // NOTE: We try multiple common column patterns so your page works even if your schema differs.
+        // Best practice: orders.user_id should match auth.users.id and RLS should enforce it.
+        const userId = sessionUser.id;
+        const email = sessionUser.email || "";
+
+        // Try fetch orders:
+        // - user_id = userId OR customer_id = userId OR customer_email = email OR email = email
+        const { data: orders, error } = await window.supabase
+          .from("orders")
+          .select("*")
+          .or(
+            [
+              `user_id.eq.${userId}`,
+              `customer_id.eq.${userId}`,
+              email ? `customer_email.eq.${email}` : "",
+              email ? `email.eq.${email}` : "",
+            ].filter(Boolean).join(",")
+          )
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        const safeOrders = Array.isArray(orders) ? orders : [];
+        if (!safeOrders.length) return [];
+
+        // Fetch order items in one shot
+        const orderIds = safeOrders.map(o => o.id).filter(Boolean);
+        let itemsByOrder = new Map();
+
+        if (orderIds.length) {
+          const { data: items, error: itemsError } = await window.supabase
+            .from("order_items")
+            .select("*")
+            .in("order_id", orderIds);
+
+          if (itemsError) {
+            // Not fatal: still show orders even if items query fails
+            if (window.Sentry) window.Sentry.captureException(itemsError, { tags: { error_category: "orders_items" } });
+          } else {
+            (items || []).forEach(it => {
+              const key = it.order_id;
+              if (!itemsByOrder.has(key)) itemsByOrder.set(key, []);
+              itemsByOrder.get(key).push(it);
+            });
+          }
+        }
+
+        // Attach items + timeline
+        return safeOrders.map(o => ({
+          ...o,
+          items: itemsByOrder.get(o.id) || o.items || [],
+          timeline: generateTimeline(o.order_status || o.status),
+        }));
+      }
+
+      function handleActionClick(e) {
+        const btn = e.target.closest("[data-action]");
+        if (!btn) return;
+
+        const action = btn.getAttribute("data-action");
+        const orderNumber = btn.getAttribute("data-order") || "";
+
+        if (action === "invoice") {
+          alert(
+            `📄 Invoice for ${orderNumber}\n\nInvoice generation can be added when you decide your invoice format and storage.\nFor now, contact support if you need a manual invoice.`
+          );
+          return;
+        }
+
+        if (action === "help") {
+          alert(
+            `💬 Support for ${orderNumber}\n\nEmail: support@shopup.gh\nPhone: +233 XXX XXXX\n\nSupport Hours: 9 AM - 6 PM (Ghana Time)`
+          );
+          return;
+        }
+      }
+
+      async function loadAndRender() {
+        try {
+          setError(false);
+          setLoading(true);
+
+          await ensureCustomerSession();
+
+          if (window.logger) {
+            window.logger.pageView(document.title);
+            window.logger.info("Customer orders viewed", { ts: new Date().toISOString() });
+          }
+
+          allOrders = await fetchOrders();
+          filteredOrders = [...allOrders];
+
+          setLoading(false);
+          setVisible(el.error, false);
+
+          // Default filter: All
+          applyFilter(currentStatus);
+
+          if (window.Sentry) {
+            window.Sentry.addBreadcrumb({
+              category: "data",
+              message: `Orders loaded: ${allOrders.length}`,
+              level: "info",
+            });
+          }
+        } catch (err) {
+          setLoading(false);
+          setError(true);
+
+          if (window.Sentry) window.Sentry.captureException(err, { tags: { error_category: "orders_load" } });
+          if (window.logger) window.logger.error("Failed to load orders", err);
+        }
+      }
+
+      function wireEvents() {
+        // Tabs filter
+        el.tabs.addEventListener("click", (e) => {
+          const tab = e.target.closest(".tab");
+          if (!tab) return;
+          const status = tab.getAttribute("data-status") || "";
+          activateTab(tab);
+          applyFilter(status);
         });
 
-        /**
-         * Initialize page - check auth and load orders
-         */
-        async function initializePage() {
-            try {
-                // Get current user
-                const { data: { user }, error } = await supabase.auth.getUser();
+        // Actions
+        document.addEventListener("click", handleActionClick);
 
-                if (error || !user) {
-                    console.warn('⚠️ Not authenticated, showing demo data');
-                    loadSampleOrders();
-                    return;
-                }
+        // Retry
+        if (el.retry) el.retry.addEventListener("click", loadAndRender);
+      }
 
-                currentUser = user;
-                console.log('✅ Authenticated as:', user.email);
-
-                // Load real orders from Supabase
-                await loadOrdersFromSupabase();
-
-            } catch (error) {
-                console.error('❌ Initialization error:', error);
-                loadSampleOrders();
-            }
-        }
-
-        /**
-         * Load customer orders from Supabase database
-         */
-        async function loadOrdersFromSupabase() {
-            try {
-                console.log('📥 Loading orders from Supabase...');
-
-                const result = await getCustomerOrders(currentUser.email);
-
-                if (!result.success) {
-                    console.warn('⚠️ Could not load orders:', result.error);
-                    loadSampleOrders();
-                    return;
-                }
-
-                allOrders = (result.data || []).map(order => ({
-                    ...order,
-                    timeline: generateTimeline(order.order_status)
-                }));
-
-                console.log('✅ Loaded', allOrders.length, 'orders from Supabase');
-
-                filteredOrders = [...allOrders];
-                displayOrders();
-
-            } catch (error) {
-                console.error('❌ Error loading orders:', error);
-                loadSampleOrders();
-            }
-        }
-
-        /**
-         * Load sample/demo orders (fallback for demo mode)
-         */
-        function loadSampleOrders() {
-            console.log('📥 Loading sample orders (demo mode)...');
-
-            allOrders = [
-                {
-                    id: '1',
-                    order_number: 'ORD-2025-00001',
-                    created_at: new Date().toISOString(),
-                    total: 250.00,
-                    order_status: 'delivered',
-                    payment_status: 'completed',
-                    tracking_number: 'TRK123456789',
-                    items: [
-                        { product_name: 'Wireless Headphones', quantity: 1, unit_price: 150 },
-                        { product_name: 'Phone Charger', quantity: 1, unit_price: 100 }
-                    ],
-                    timeline: generateTimeline('delivered')
-                },
-                {
-                    id: '2',
-                    order_number: 'ORD-2025-00002',
-                    created_at: new Date(Date.now() - 172800000).toISOString(),
-                    total: 99.99,
-                    order_status: 'shipped',
-                    payment_status: 'completed',
-                    tracking_number: 'TRK987654321',
-                    items: [
-                        { product_name: 'Screen Protector', quantity: 1, unit_price: 99.99 }
-                    ],
-                    timeline: generateTimeline('shipped')
-                },
-                {
-                    id: '3',
-                    order_number: 'ORD-2025-00003',
-                    created_at: new Date(Date.now() - 86400000).toISOString(),
-                    total: 450.00,
-                    order_status: 'pending',
-                    payment_status: 'processing',
-                    items: [
-                        { product_name: 'Laptop Stand', quantity: 1, unit_price: 250 },
-                        { product_name: 'USB Hub', quantity: 1, unit_price: 200 }
-                    ],
-                    timeline: generateTimeline('pending')
-                }
-            ];
-
-            filteredOrders = [...allOrders];
-            displayOrders();
-            console.log('✅ Sample orders loaded');
-        }
-
-        /**
-         * Generate timeline based on order status
-         */
-        function generateTimeline(status) {
-            const statuses = {
-                pending: [
-                    { step: 'Order Placed', completed: true, icon: '📦' },
-                    { step: 'Confirmed', completed: false, icon: '✓' },
-                    { step: 'Shipped', completed: false, icon: '🚚' },
-                    { step: 'Delivered', completed: false, icon: '✅' }
-                ],
-                confirmed: [
-                    { step: 'Order Placed', completed: true, icon: '📦' },
-                    { step: 'Confirmed', completed: true, icon: '✓' },
-                    { step: 'Shipped', completed: false, icon: '🚚' },
-                    { step: 'Delivered', completed: false, icon: '✅' }
-                ],
-                shipped: [
-                    { step: 'Order Placed', completed: true, icon: '📦' },
-                    { step: 'Confirmed', completed: true, icon: '✓' },
-                    { step: 'Shipped', completed: true, icon: '🚚' },
-                    { step: 'Delivered', completed: false, icon: '✅' }
-                ],
-                delivered: [
-                    { step: 'Order Placed', completed: true, icon: '📦' },
-                    { step: 'Confirmed', completed: true, icon: '✓' },
-                    { step: 'Shipped', completed: true, icon: '🚚' },
-                    { step: 'Delivered', completed: true, icon: '✅' }
-                ]
-            };
-
-            return statuses[status] || statuses.pending;
-        }
-
-        /**
-         * Display orders in the grid
-         */
-        function displayOrders() {
-            const container = document.getElementById('ordersContainer');
-            const emptyState = document.getElementById('emptyState');
-
-            if (filteredOrders.length === 0) {
-                container.innerHTML = '';
-                emptyState.style.display = 'block';
-                return;
-            }
-
-            emptyState.style.display = 'none';
-
-            const ordersHtml = filteredOrders.map(order => {
-                const status = order.order_status || 'pending';
-
-                return `
-                    <div class="order-card">
-                        <!-- Header -->
-                        <div class="order-header">
-                            <div class="order-number-section">
-                                <h3>${order.order_number}</h3>
-                                <div class="order-date">${new Date(order.created_at).toLocaleDateString()}</div>
-                            </div>
-                            <div></div>
-                            <div class="order-total">
-                                <div class="order-total-label">Total</div>
-                                <div class="order-total-amount">GH₵ ${order.total.toFixed(2)}</div>
-                            </div>
-                            <div class="order-status-section">
-                                <span class="status-badge status-${status}">${status}</span>
-                            </div>
-                        </div>
-
-                        <!-- Progress -->
-                        <div class="order-progress">
-                            <div class="progress-steps">
-                                ${(order.timeline || []).map((t, i) => `
-                                    <div class="progress-step ${t.completed ? 'completed' : ''} ${!t.completed && i > 0 && order.timeline[i-1].completed ? 'active' : ''}">
-                                        <div class="step-circle">${t.completed ? '✓' : i + 1}</div>
-                                        <div class="step-label">${t.step}</div>
-                                        <div class="progress-line"></div>
-                                    </div>
-                                `).join('')}
-                            </div>
-
-                            ${order.tracking_number ? `
-                                <div class="tracking-info">
-                                    📍 Tracking: <strong>${order.tracking_number}</strong>
-                                </div>
-                            ` : ''}
-                        </div>
-
-                        <!-- Items -->
-                        <div class="order-items">
-                            <div class="items-title">Items</div>
-                            ${(order.items || []).map(item => `
-                                <div class="item">
-                                    <span class="item-name">${item.product_name}</span>
-                                    <span class="item-qty">x${item.quantity}</span>
-                                    <span class="item-price">GH₵ ${(item.unit_price * item.quantity).toFixed(2)}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="order-actions">
-                            <button class="btn btn-secondary" onclick="downloadInvoice('${order.order_number}')">📄 Invoice</button>
-                            <button class="btn btn-primary" onclick="contactSupport('${order.order_number}')">💬 Help</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            container.innerHTML = ordersHtml;
-            console.log('🎨 Displayed', filteredOrders.length, 'orders');
-        }
-
-        /**
-         * Filter orders by status
-         */
-        function filterByStatus(status, element) {
-            if (element) {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                element.classList.add('active');
-            }
-
-            currentStatusFilter = status;
-            filteredOrders = status ? allOrders.filter(o => o.order_status === status) : [...allOrders];
-            displayOrders();
-            console.log('🔍 Filtered by status:', status || 'all');
-        }
-
-        /**
-         * Download order invoice
-         */
-        function downloadInvoice(orderNumber) {
-            console.log('📄 Downloading invoice for:', orderNumber);
-            alert(`📄 Invoice for ${orderNumber}\n\nInvoice generation feature coming soon!\n\nFor now, you can request an invoice by contacting our support team.`);
-        }
-
-        /**
-         * Contact support for order
-         */
-        function contactSupport(orderNumber) {
-            console.log('💬 Contacting support for:', orderNumber);
-            alert(`💬 Contact Support for order ${orderNumber}\n\nEmail: support@shopup.gh\nPhone: +233 XXX XXXX\n\nOur support team is available 9 AM - 6 PM (Ghana Time)`);
-        }
-
-        console.log('✨ Customer Order History Ready');
-    </script>
+      // Boot
+      wireEvents();
+      loadAndRender();
+    })();
+  </script>
 </body>
 </html>
