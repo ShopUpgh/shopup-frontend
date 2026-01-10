@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Orders - SHOPUP</title>
+    <script type="module" src="/js/supabase-init.js"></script>
+    <script src="/js/core/session.guard.js"></script>
     <style>
         * {
             margin: 0;
@@ -515,7 +517,6 @@
     </div>
 
     <!-- Scripts -->
-    <script src="supabase-config.js"></script>
     <script src="order-management-script.js"></script>
 
     <script>
@@ -543,17 +544,11 @@
          */
         async function initializePage() {
             try {
-                // Get current user
-                const { data: { user }, error } = await supabase.auth.getUser();
+                const session = await window.ShopUpAuth.requireCustomerSession();
+                if (!session) return;
 
-                if (error || !user) {
-                    console.warn('⚠️ Not authenticated, showing demo data');
-                    loadSampleOrders();
-                    return;
-                }
-
-                currentUser = user;
-                console.log('✅ Authenticated as:', user.email);
+                currentUser = session.user;
+                console.log('✅ Authenticated as:', currentUser.email);
 
                 // Load real orders from Supabase
                 await loadOrdersFromSupabase();

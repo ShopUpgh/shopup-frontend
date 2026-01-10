@@ -13,6 +13,7 @@
 
   <!-- ✅ Supabase (ONE init path) -->
   <script type="module" src="/js/supabase-init.js"></script>
+  <script src="/js/core/session.guard.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -89,17 +90,8 @@
   <script>
     (async function () {
       try {
-        await window.supabaseReady;
-        if (!window.supabase) throw new Error("Supabase not ready");
-
-        const { data, error } = await window.supabase.auth.getSession();
-        if (error) throw error;
-
-        const session = data?.session;
-        if (!session?.user) {
-          window.location.href = "customer-login.html";
-          return;
-        }
+        const session = await window.ShopUpAuth.requireCustomerSession();
+        if (!session) return;
 
         const u = session.user;
 
