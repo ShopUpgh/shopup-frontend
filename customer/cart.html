@@ -241,13 +241,41 @@
 
   <div id="toast" class="toast"></div>
 
-  <!-- ✅ Logger -->
+  <!-- ===================================================== -->
+  <!-- ✅ Core + DI (ADDED) -->
+  <!-- ===================================================== -->
+  <script defer src="/js/core/container.js"></script>
+  <script defer src="/js/core/config.js"></script>
+  <script defer src="/js/core/dom.js"></script>
+
+  <!-- ===================================================== -->
+  <!-- ✅ Adapters (ADDED) -->
+  <!-- ===================================================== -->
+  <script defer src="/js/adapters/supabase.wait.js"></script>
+  <script defer src="/js/adapters/logger.adapter.js"></script>
+  <script defer src="/js/adapters/auth.supabase.js"></script>
+  <script defer src="/js/adapters/products.supabase.js"></script>
+  <script defer src="/js/adapters/cart.storage.js"></script>
+
+  <!-- ===================================================== -->
+  <!-- ✅ Services (ADDED) -->
+  <!-- ===================================================== -->
+  <script defer src="/js/services/auth.service.js"></script>
+  <script defer src="/js/services/products.service.js"></script>
+  <script defer src="/js/services/cart.service.js"></script>
+
+  <!-- ===================================================== -->
+  <!-- ✅ Page controller (ADDED) -->
+  <!-- ===================================================== -->
+  <script defer src="/js/pages/customer-cart.page.js"></script>
+
+  <!-- ✅ Logger (your existing) -->
   <script defer src="/js/logger.js"></script>
 
-  <!-- ✅ Cart logic (main) -->
+  <!-- ✅ Cart logic (main) (your existing - KEEP LAST among app scripts) -->
   <script defer src="/js/customer-cart-script.js"></script>
 
-  <!-- ✅ Inline: Supabase auth gate + Sentry identify + page breadcrumb -->
+  <!-- ✅ Inline: Supabase auth gate + Sentry identify + page breadcrumb (your existing) -->
   <script>
     function toast(msg) {
       const t = document.getElementById('toast');
