@@ -7,12 +7,6 @@
 
   <link rel="icon" href="/favicon.ico" />
 
-  <!-- ✅ Sentry: Loader + Central Config ONLY -->
-  <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
-  <script src="/js/sentry-config.js"></script>
-
-  <!-- ✅ Supabase (Module init only) -->
-  <script type="module" src="/js/supabase-init.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -459,38 +453,6 @@
         }
       }
 
-      async function ensureCustomerSession() {
-        await window.supabaseReady;
-        if (!window.supabase) throw new Error("Supabase not ready. Check /js/supabase-init.js");
-
-        const { data, error } = await window.supabase.auth.getSession();
-        if (error) throw error;
-
-        const session = data?.session;
-        if (!session?.user) {
-          window.location.href = "customer-login.html";
-          return null;
-        }
-
-        sessionUser = session.user;
-
-        // Sentry context
-        if (window.Sentry) {
-          window.Sentry.setUser({
-            id: String(sessionUser.id),
-            email: sessionUser.email || undefined,
-            role: "customer",
-          });
-          window.Sentry.addBreadcrumb({
-            category: "navigation",
-            message: "Customer orders viewed",
-            level: "info",
-          });
-        }
-
-        return session;
-      }
-
       function normalizeStatus(s) {
         const v = String(s || "").toLowerCase();
         if (!v) return "pending";
@@ -547,7 +509,7 @@
         return node;
       }
 
-      function renderOrders() {
+      function displayOrders() {
         clearContainer();
 
         if (!filteredOrders.length) {
@@ -562,7 +524,7 @@
           const status = normalizeStatus(order.order_status || order.status);
           const orderNumber = safeText(order.order_number || order.order_no || order.id || "ORDER");
           const createdAt = order.created_at ? new Date(order.created_at) : new Date();
-          const total = Number(order.total || order.amount_total || 0);
+          const totalAmount = Number(order.total_amount || 0);
 
           const card = make("div", "order-card");
           card.setAttribute("data-order-number", orderNumber);
@@ -581,7 +543,7 @@
 
           const totalSection = make("div", "order-total");
           totalSection.appendChild(make("div", "order-total-label", "Total"));
-          totalSection.appendChild(make("div", "order-total-amount", money(total)));
+          totalSection.appendChild(make("div", "order-total-amount", `GH₵ ${totalAmount.toFixed(2)}`));
           header.appendChild(totalSection);
 
           const statusSection = make("div", "order-status-section");
@@ -595,7 +557,7 @@
           const progress = make("div", "order-progress");
           const stepsWrap = make("div", "progress-steps");
 
-          const timeline = generateTimeline(status);
+          const timeline = order.timeline || generateTimeline(status);
           timeline.forEach((t, i) => {
             const step = make("div", "progress-step");
             if (t.completed) step.classList.add("completed");
@@ -635,7 +597,10 @@
               const row = make("div", "item");
               const name = make("span", "item-name", safeText(it.product_name || it.name || "Item"));
               const qty = make("span", "item-qty", `x${Number(it.quantity || 0)}`);
-              const price = make("span", "item-price", money((Number(it.unit_price || it.price || 0) * Number(it.quantity || 0))));
+              const priceValue = it.subtotal != null
+                ? Number(it.subtotal || 0)
+                : Number(it.unit_price || it.price || 0) * Number(it.quantity || 0);
+              const price = make("span", "item-price", money(priceValue));
               row.appendChild(name);
               row.appendChild(qty);
               row.appendChild(price);
@@ -681,7 +646,7 @@
           ? allOrders.filter(o => normalizeStatus(o.order_status || o.status) === normalizeStatus(currentStatus))
           : [...allOrders];
 
-        renderOrders();
+        displayOrders();
       }
 
       function activateTab(buttonEl) {
@@ -691,62 +656,57 @@
         buttonEl.classList.add("active");
       }
 
-      async function fetchOrders() {
-        if (!sessionUser) return [];
+      async function loadOrders() {
+        try {
+          setError(false);
+          setLoading(true);
 
-        // NOTE: We try multiple common column patterns so your page works even if your schema differs.
-        // Best practice: orders.user_id should match auth.users.id and RLS should enforce it.
-        const userId = sessionUser.id;
-        const email = sessionUser.email || "";
+          if (window.supabaseReady) await window.supabaseReady;
 
-        // Try fetch orders:
-        // - user_id = userId OR customer_id = userId OR customer_email = email OR email = email
-        const { data: orders, error } = await window.supabase
-          .from("orders")
-          .select("*")
-          .or(
-            [
-              `user_id.eq.${userId}`,
-              `customer_id.eq.${userId}`,
-              email ? `customer_email.eq.${email}` : "",
-              email ? `email.eq.${email}` : "",
-            ].filter(Boolean).join(",")
-          )
-          .order("created_at", { ascending: false });
+          const { data, error } = await window.supabase.auth.getUser();
+          if (error) throw error;
+          if (!data?.user) {
+            window.location.href = "customer-login.html";
+            return;
+          }
 
-        if (error) throw error;
+          sessionUser = data.user;
 
-        const safeOrders = Array.isArray(orders) ? orders : [];
-        if (!safeOrders.length) return [];
-
-        // Fetch order items in one shot
-        const orderIds = safeOrders.map(o => o.id).filter(Boolean);
-        let itemsByOrder = new Map();
-
-        if (orderIds.length) {
-          const { data: items, error: itemsError } = await window.supabase
-            .from("order_items")
-            .select("*")
-            .in("order_id", orderIds);
-
-          if (itemsError) {
-            // Not fatal: still show orders even if items query fails
-            if (window.Sentry) window.Sentry.captureException(itemsError, { tags: { error_category: "orders_items" } });
-          } else {
-            (items || []).forEach(it => {
-              const key = it.order_id;
-              if (!itemsByOrder.has(key)) itemsByOrder.set(key, []);
-              itemsByOrder.get(key).push(it);
+          if (window.Sentry) {
+            window.Sentry.setUser({
+              id: String(sessionUser.id),
+              email: sessionUser.email || undefined,
+              role: "customer",
+            });
+            window.Sentry.addBreadcrumb({
+              category: "navigation",
+              message: "Customer orders viewed",
+              level: "info",
             });
           }
-        }
 
-        // Attach items + timeline
-        return safeOrders.map(o => ({
-          ...o,
-          items: itemsByOrder.get(o.id) || o.items || [],
-          timeline: generateTimeline(o.order_status || o.status),
-        }));
+          const res = await window.orderAPI.getMyOrders();
+          if (!res.success) throw new Error(res.error);
+
+          allOrders = await Promise.all((res.data || []).map(async (o) => {
+            const details = await window.orderAPI.getOrderDetails(o.id);
+            return {
+              ...o,
+              items: details.success ? (details.data.items || []) : [],
+              timeline: generateTimeline(o.order_status || "pending")
+            };
+          }));
+
+          filteredOrders = [...allOrders];
+          setLoading(false);
+          setVisible(el.error, false);
+
+          displayOrders();
+        } catch (e) {
+          setLoading(false);
+          console.error(e);
+          window.location.href = "customer-login.html";
+        }
       }
 
       function handleActionClick(e) {
@@ -771,43 +731,6 @@
         }
       }
 
-      async function loadAndRender() {
-        try {
-          setError(false);
-          setLoading(true);
-
-          await ensureCustomerSession();
-
-          if (window.logger) {
-            window.logger.pageView(document.title);
-            window.logger.info("Customer orders viewed", { ts: new Date().toISOString() });
-          }
-
-          allOrders = await fetchOrders();
-          filteredOrders = [...allOrders];
-
-          setLoading(false);
-          setVisible(el.error, false);
-
-          // Default filter: All
-          applyFilter(currentStatus);
-
-          if (window.Sentry) {
-            window.Sentry.addBreadcrumb({
-              category: "data",
-              message: `Orders loaded: ${allOrders.length}`,
-              level: "info",
-            });
-          }
-        } catch (err) {
-          setLoading(false);
-          setError(true);
-
-          if (window.Sentry) window.Sentry.captureException(err, { tags: { error_category: "orders_load" } });
-          if (window.logger) window.logger.error("Failed to load orders", err);
-        }
-      }
-
       function wireEvents() {
         // Tabs filter
         el.tabs.addEventListener("click", (e) => {
@@ -822,13 +745,25 @@
         document.addEventListener("click", handleActionClick);
 
         // Retry
-        if (el.retry) el.retry.addEventListener("click", loadAndRender);
+        if (el.retry) el.retry.addEventListener("click", loadOrders);
       }
 
       // Boot
-      wireEvents();
-      loadAndRender();
+      document.addEventListener("DOMContentLoaded", async () => {
+        wireEvents();
+        await loadOrders();
+      });
     })();
   </script>
+
+  <!-- ✅ Sentry -->
+  <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
+  <script src="/js/sentry-config.js"></script>
+
+  <!-- ✅ Supabase (ONE source of truth) -->
+  <script type="module" src="/js/supabase-init.js"></script>
+
+  <!-- ✅ Order API (PROD schema) -->
+  <script defer src="/js/order-management-script.js"></script>
 </body>
 </html>
