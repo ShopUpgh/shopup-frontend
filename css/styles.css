@@ -2,20 +2,54 @@
    Global Styles & Variables
    =========================== */
 :root {
-    --primary-color: #2d7a3e;
-    --primary-dark: #1f5429;
-    --primary-light: #3d9a4e;
-    --secondary-color: #fbbf24;
-    --accent-color: #ef4444;
-    --text-dark: #1f2937;
-    --text-light: #6b7280;
-    --bg-light: #f9fafb;
+    /* Brand (BLUE) */
+    --primary-color: #2563eb;
+    --primary-dark: #1d4ed8;
+    --primary-light: #3b82f6;
+
+    /* Optional accents */
+    --secondary-color: #10b981;
+    --accent-color: #fbbf24;
+
+    /* Text + backgrounds */
+    --text-dark: #0f172a;
+    --text-light: #475569;
+    --bg-light: #f8fafc;
     --bg-white: #ffffff;
-    --border-color: #e5e7eb;
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+    /* Borders + shadows */
+    --border-color: #e2e8f0;
+    --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.06);
+    --shadow-md: 0 6px 14px -6px rgba(15, 23, 42, 0.18);
+    --shadow-lg: 0 18px 38px -18px rgba(15, 23, 42, 0.30);
+    --shadow-xl: 0 26px 60px -26px rgba(15, 23, 42, 0.35);
+
+    /* Compatibility aliases (so checkout.css works) */
+    --primary: var(--primary-color);
+    --primary-dark: #1d4ed8;
+    --primary-light: #3b82f6;
+    --secondary: var(--secondary-color);
+
+    --white: #ffffff;
+
+    --gray-50: #f8fafc;
+    --gray-200: #e2e8f0;
+    --gray-700: #334155;
+    --gray-800: #1f2937;
+    --gray-900: #0f172a;
+
+    --spacing-md: 20px;
+    --spacing-lg: 28px;
+
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-full: 999px;
+
+    --font-size-xl: 1.25rem;
+    --font-size-lg: 1.125rem;
+    --font-size-3xl: 2rem;
+
+    --transition-fast: 0.2s ease;
 }
 
 * {
@@ -140,7 +174,7 @@ button {
    Hero Section
    =========================== */
 .hero {
-    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 45%, #10b981 100%);
     padding: 5rem 0;
     position: relative;
     overflow: hidden;
@@ -153,7 +187,7 @@ button {
     right: 0;
     width: 50%;
     height: 100%;
-    background: radial-gradient(circle at top right, rgba(45, 122, 62, 0.1), transparent);
+    background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.18), transparent);
     pointer-events: none;
 }
 
@@ -169,7 +203,7 @@ button {
 .hero-content h1 {
     font-size: 3rem;
     margin-bottom: 1.5rem;
-    color: var(--text-dark);
+    color: #fff;
 }
 
 .hero-content .highlight {
@@ -178,7 +212,7 @@ button {
 
 .hero-content p {
     font-size: 1.25rem;
-    color: var(--text-light);
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 2rem;
     line-height: 1.8;
 }
