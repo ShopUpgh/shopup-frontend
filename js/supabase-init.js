@@ -9,36 +9,34 @@ const SUPABASE_ANON_KEY =
 // Optional: quiet logs in production
 const DEBUG = false;
 
-// A ready promise any script can await: await window.supabaseReady;
-window.supabaseReady = (async () => {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    console.warn("⚠️ Supabase not initialized: missing SUPABASE_URL / SUPABASE_ANON_KEY");
-    return null;
-  }
+// ✅ Prevent double init if imported multiple times
+if (!window.supabaseReady) {
+  window.supabaseReady = (async () => {
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      console.warn("⚠️ Supabase not initialized: missing SUPABASE_URL / SUPABASE_ANON_KEY");
+      return null;
+    }
 
-  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
-    global: {
-      headers: {
-        "x-application-name": "shopup-frontend",
+    const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
       },
-    },
-  });
+      global: {
+        headers: { "x-application-name": "shopup-frontend" },
+      },
+    });
 
-  // Attach to window for non-module scripts
-  window.supabase = client;
+    window.supabase = client;
 
-  if (DEBUG) {
-    console.log("✅ Supabase initialized (ShopUp Ghana)");
-    console.log("📍 Project URL:", SUPABASE_URL);
-    console.log("🔧 functions.invoke:", typeof window.supabase?.functions?.invoke);
-  }
+    if (DEBUG) {
+      console.log("✅ Supabase initialized (ShopUp Ghana)");
+      console.log("📍 Project URL:", SUPABASE_URL);
+    }
 
-  return client;
-})();
+    return client;
+  })();
+}
 
 export {}; // keep this file as a module
