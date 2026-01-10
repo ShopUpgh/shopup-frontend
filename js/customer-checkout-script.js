@@ -1,4 +1,4 @@
-// /js/customer-checkout-script.js
+// /js/customer-checkout-script.js  (PROD schema + RLS + one-seller cart)
 (function () {
   "use strict";
 
@@ -7,15 +7,14 @@
   // --------------------------
   const CART_KEY_PRIMARY = "shopup_cart";
   const CART_KEY_FALLBACK = "cart";
-  const CURRENT_USER_KEY = "currentUser";
-  const ORDER_PENDING_KEY = "order_pending";
 
   // Money / rules
-  const SHIPPING_FLAT = 20; // change if needed
+  const SHIPPING_FLAT = 20; // adjust anytime
   const VERIFY_FUNCTION = "verify-payment"; // Supabase Edge Function
 
   let cartData = [];
-  let products = []; // optional, only used if cart items use {productId}
+  let products = []; // loaded if cart items only have productId
+  let currentUser = null;
 
   const el = {
     fullName: document.getElementById("fullName"),
@@ -61,15 +60,6 @@
     try { return JSON.parse(v); } catch { return fallback; }
   }
 
-  function escapeHtml(str) {
-    return String(str ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
   function showAlert(msg) {
     if (!el.alertBox) return;
     el.alertBox.style.display = "block";
@@ -87,12 +77,20 @@
     if (el.placeOrderBtn) el.placeOrderBtn.disabled = isBusy;
   }
 
-  async function waitForSupabase(maxMs = 8000) {
-    const start = Date.now();
-    while (!window.supabase && Date.now() - start < maxMs) {
-      await new Promise((r) => setTimeout(r, 50));
-    }
+  async function waitForSupabase() {
+    if (window.supabaseReady) await window.supabaseReady;
     if (!window.supabase) throw new Error("Supabase not ready (check /js/supabase-init.js)");
+  }
+
+  async function requireAuth() {
+    await waitForSupabase();
+    const { data, error } = await window.supabase.auth.getUser();
+    if (error) throw error;
+    if (!data?.user) {
+      window.location.href = "customer-login.html";
+      return null;
+    }
+    return data.user;
   }
 
   // --------------------------
@@ -108,39 +106,38 @@
     return [];
   }
 
-  function writeCart(cart) {
-    localStorage.setItem(CART_KEY_PRIMARY, JSON.stringify(cart || []));
-  }
-
   // --------------------------
-  // Product support (only needed for {productId} carts)
+  // Cart normalization
   // --------------------------
   function cartUsesProductIdShape() {
     return cartData.some((i) => i && (i.productId !== undefined || i.product_id !== undefined));
   }
 
   function normalizeCartItem(item) {
-    // A) { id, name, price, quantity }
-    // B) { productId, quantity } or { product_id, quantity }
     if (!item) return null;
 
     const quantity = Number(item.quantity || 0);
 
-    // Direct-price cart
+    // A) direct-price cart: { id, name, price, quantity, seller_id? }
     if (item.price != null && item.name) {
       return {
         id: item.id ?? item.productId ?? item.product_id ?? null,
-        name: String(item.name),
-        price: Number(item.price || 0),
+        product_id: item.id ?? item.productId ?? item.product_id ?? null,
+        product_name: String(item.name),
+        unit_price: Number(item.price || 0),
         quantity,
-        sku: item.sku || "",
-        category: item.category || "",
+        product_sku: item.sku || null,
+        seller_id: item.seller_id || null, // may be present
       };
     }
 
-    // productId cart
+    // B) productId cart: { productId/product_id, quantity }
     const pid = item.productId ?? item.product_id ?? item.id ?? null;
-    return { id: pid, productId: pid, quantity };
+    return {
+      id: pid,
+      product_id: pid,
+      quantity,
+    };
   }
 
   function getProductById(id) {
@@ -163,9 +160,10 @@
 
     if (!ids.length) return;
 
+    // IMPORTANT: include seller_id for one-seller enforcement
     const { data, error } = await window.supabase
       .from("products")
-      .select("id,name,price,sku,category,image_url,status,is_active")
+      .select("id,name,price,sku,category,image_url,status,is_active,seller_id")
       .in("id", ids);
 
     if (error) throw error;
@@ -181,12 +179,12 @@
       if (!item) return sum;
 
       // Direct-price cart
-      if (item.price != null && item.name) {
-        return sum + Number(item.price || 0) * Number(item.quantity || 0);
+      if (item.unit_price != null && item.product_name) {
+        return sum + Number(item.unit_price || 0) * Number(item.quantity || 0);
       }
 
       // productId cart
-      const p = getProductById(item.productId);
+      const p = getProductById(item.product_id);
       const price = Number(p?.price || 0);
       return sum + price * Number(item.quantity || 0);
     }, 0);
@@ -198,27 +196,60 @@
 
   function calcTotals() {
     const subtotal = calcSubtotal();
-    const shipping = calcShipping(subtotal);
-    const total = subtotal + shipping;
-    return { subtotal, shipping, total };
+    const shipping_fee = calcShipping(subtotal);
+    const total_amount = subtotal + shipping_fee;
+    return { subtotal, shipping_fee, total_amount };
+  }
+
+  // --------------------------
+  // Enforce one order = one seller
+  // --------------------------
+  function resolveSellerIdOrThrow() {
+    const sellerIds = new Set();
+
+    cartData.forEach((raw) => {
+      const item = normalizeCartItem(raw);
+      if (!item) return;
+
+      // If cart contains seller_id directly
+      if (item.seller_id) sellerIds.add(String(item.seller_id));
+
+      // If cart is productId-based, use products lookup
+      if (!item.seller_id && item.product_id) {
+        const p = getProductById(item.product_id);
+        if (p?.seller_id) sellerIds.add(String(p.seller_id));
+      }
+    });
+
+    sellerIds.delete("null");
+    sellerIds.delete("undefined");
+
+    if (sellerIds.size === 0) {
+      // If products table doesn't have seller_id, you MUST add it.
+      throw new Error("Cannot determine seller_id for this cart. Ensure products.seller_id exists and is loaded.");
+    }
+
+    if (sellerIds.size > 1) {
+      throw new Error("Your cart has items from multiple sellers. One order must contain items from only ONE seller.");
+    }
+
+    return Array.from(sellerIds)[0];
   }
 
   // --------------------------
   // Render
   // --------------------------
   function renderSummary() {
-    const { subtotal, shipping, total } = calcTotals();
+    const { subtotal, shipping_fee, total_amount } = calcTotals();
 
     if (el.subtotal) el.subtotal.textContent = formatMoney(subtotal);
-    if (el.shipping) el.shipping.textContent = formatMoney(shipping);
-    if (el.total) el.total.textContent = formatMoney(total);
+    if (el.shipping) el.shipping.textContent = formatMoney(shipping_fee);
+    if (el.total) el.total.textContent = formatMoney(total_amount);
 
     const itemCount = cartData.reduce((n, i) => n + Number(i?.quantity || 0), 0);
     if (el.itemCountPill) el.itemCountPill.textContent = `${itemCount} item${itemCount === 1 ? "" : "s"}`;
 
     if (!el.itemsList) return;
-
-    // Clear existing
     el.itemsList.textContent = "";
 
     if (!cartData.length) {
@@ -229,7 +260,6 @@
       return;
     }
 
-    // Render items
     cartData.forEach((raw) => {
       const item = normalizeCartItem(raw);
       if (!item) return;
@@ -237,13 +267,12 @@
       let name = "Product";
       let price = 0;
 
-      // Direct-price cart
-      if (item.price != null && item.name) {
-        name = item.name;
-        price = item.price;
+      // direct cart
+      if (item.unit_price != null && item.product_name) {
+        name = item.product_name;
+        price = item.unit_price;
       } else {
-        // productId cart
-        const p = getProductById(item.productId) || {};
+        const p = getProductById(item.product_id) || {};
         name = p.name || "Product";
         price = Number(p.price || 0);
       }
@@ -257,7 +286,6 @@
 
       const title = document.createElement("div");
       title.className = "item-name";
-      // escapeHtml not needed since using textContent
       title.textContent = String(name);
 
       const meta = document.createElement("div");
@@ -278,13 +306,14 @@
     });
   }
 
-  function hydrateFromUser() {
-    const user = safeJsonParse(localStorage.getItem(CURRENT_USER_KEY) || "{}", {});
-    if (!user) return;
+  function hydrateFromAuthUser() {
+    if (!currentUser) return;
+    if (el.email && !el.email.value && currentUser.email) el.email.value = currentUser.email;
 
-    if (el.email && !el.email.value && user.email) el.email.value = user.email;
-    if (el.fullName && !el.fullName.value && user.name) el.fullName.value = user.name;
-    if (el.phone && !el.phone.value && user.phone) el.phone.value = user.phone;
+    // Optional: if you store name/phone in user_metadata
+    const md = currentUser.user_metadata || {};
+    if (el.fullName && !el.fullName.value && md.full_name) el.fullName.value = md.full_name;
+    if (el.phone && !el.phone.value && md.phone) el.phone.value = md.phone;
   }
 
   function validateForm() {
@@ -305,91 +334,36 @@
   }
 
   // --------------------------
-  // Orders (Supabase)
+  // Build items for order_items table
   // --------------------------
-  function buildOrderPayload(status, payment) {
-    const user = safeJsonParse(localStorage.getItem(CURRENT_USER_KEY) || "{}", {});
-    const { subtotal, shipping, total } = calcTotals();
-
-    const items = cartData
+  function buildOrderItemsForDB() {
+    return cartData
       .map((raw) => {
         const item = normalizeCartItem(raw);
         if (!item) return null;
 
-        // Direct-price cart
-        if (item.price != null && item.name) {
+        // direct cart
+        if (item.unit_price != null && item.product_name) {
           return {
-            product_id: item.id || null,
-            name: item.name || "Product",
-            price: Number(item.price || 0),
+            product_id: item.product_id || null,
+            product_name: item.product_name || "Product",
+            product_sku: item.product_sku || null,
             quantity: Number(item.quantity || 0),
+            unit_price: Number(item.unit_price || 0),
           };
         }
 
         // productId cart
-        const p = getProductById(item.productId) || {};
+        const p = getProductById(item.product_id) || {};
         return {
-          product_id: item.productId,
-          name: p.name || "Product",
-          price: Number(p.price || 0),
+          product_id: item.product_id,
+          product_name: p.name || "Product",
+          product_sku: p.sku || null,
           quantity: Number(item.quantity || 0),
+          unit_price: Number(p.price || 0),
         };
       })
       .filter(Boolean);
-
-    return {
-      user_id: user?.id || null,
-      customer_email: (el.email?.value || "").trim(),
-      customer_name: (el.fullName?.value || "").trim(),
-      customer_phone: (el.phone?.value || "").trim(),
-
-      city: (el.city?.value || "").trim(),
-      address: (el.addressLine?.value || "").trim(),
-      notes: (el.notes?.value || "").trim(),
-
-      currency: "GHS",
-      subtotal,
-      shipping,
-      total,
-
-      items,
-      status, // "pending_payment" | "paid" | "pending_fulfillment"
-      payment_method: payment.method, // "paystack" | "cod"
-      payment_reference: payment.reference || null,
-    };
-  }
-
-  async function createOrderInSupabase(orderPayload) {
-    await waitForSupabase();
-    const { data, error } = await window.supabase
-      .from("orders")
-      .insert([orderPayload])
-      .select("*")
-      .single();
-
-    if (error) throw error;
-    return data;
-  }
-
-  async function updateOrderInSupabase(orderId, updates) {
-    await waitForSupabase();
-    const { data, error } = await window.supabase
-      .from("orders")
-      .update(updates)
-      .eq("id", orderId)
-      .select("*")
-      .single();
-
-    if (error) throw error;
-    return data;
-  }
-
-  function clearCartAfterSuccess() {
-    writeCart([]);
-  }
-
-  function goToConfirmation(orderId) {
-    window.location.href = `customer-order-confirmation.html?order_id=${encodeURIComponent(orderId)}`;
   }
 
   // --------------------------
@@ -423,10 +397,6 @@
   async function verifyPaymentServerSide(reference, expectedTotalGHS) {
     await waitForSupabase();
 
-    if (!window.supabase?.functions?.invoke) {
-      throw new Error("Supabase functions not available (need supabase-js v2 and functions enabled).");
-    }
-
     const { data, error } = await window.supabase.functions.invoke(VERIFY_FUNCTION, {
       body: {
         reference,
@@ -445,8 +415,37 @@
   }
 
   // --------------------------
-  // Flows
+  // Flows (COD / Paystack)
   // --------------------------
+  function syncPaymentButtons() {
+    const method = el.paymentMethod?.value || "paystack";
+    const isPaystack = method === "paystack";
+
+    if (el.payNowBtn) el.payNowBtn.style.display = isPaystack ? "block" : "none";
+    if (el.placeOrderBtn) el.placeOrderBtn.style.display = isPaystack ? "none" : "block";
+  }
+
+  function buildNotesBlob(paymentRefOrNull) {
+    const fullName = (el.fullName?.value || "").trim();
+    const phone = (el.phone?.value || "").trim();
+    const email = (el.email?.value || "").trim();
+    const city = (el.city?.value || "").trim();
+    const addressLine = (el.addressLine?.value || "").trim();
+    const notes = (el.notes?.value || "").trim();
+
+    const parts = [
+      `Customer: ${fullName}`,
+      `Phone: ${phone}`,
+      `Email: ${email}`,
+      `City: ${city}`,
+      `Address: ${addressLine}`,
+      notes ? `Notes: ${notes}` : null,
+      paymentRefOrNull ? `PaymentRef: ${paymentRefOrNull}` : null,
+    ].filter(Boolean);
+
+    return parts.join(" | ");
+  }
+
   async function handleCOD() {
     clearAlert();
     const v = validateForm();
@@ -455,19 +454,46 @@
     setBusy(true);
 
     try {
-      const payload = buildOrderPayload("pending_fulfillment", { method: "cod" });
-      localStorage.setItem(ORDER_PENDING_KEY, JSON.stringify(payload));
+      await waitForSupabase();
 
-      const order = await createOrderInSupabase(payload);
+      // Enforce one seller per order
+      const seller_id = resolveSellerIdOrThrow();
+
+      const { subtotal, shipping_fee, total_amount } = calcTotals();
+
+      // 1) create order (RLS uses auth.uid())
+      const orderRes = await window.orderAPI.createOrder({
+        seller_id,
+        delivery_address_id: null, // We store the address text in notes for now
+        subtotal,
+        shipping_fee,
+        tax: 0,
+        discount: 0,
+        total_amount,
+        payment_method: "cod",
+        payment_status: "unpaid",
+        order_status: "pending",
+        notes: buildNotesBlob(null),
+      });
+
+      if (!orderRes.success) throw new Error(orderRes.error);
+      const order = orderRes.data;
+
+      // 2) add items
+      const items = buildOrderItemsForDB();
+      const addRes = await window.orderAPI.addOrderItems(order.id, items);
+      if (!addRes.success) throw new Error(addRes.error);
 
       logInfo("COD order created", { order_id: order.id });
-      clearCartAfterSuccess();
-      localStorage.removeItem(ORDER_PENDING_KEY);
 
-      goToConfirmation(order.id);
+      // Clear cart
+      localStorage.setItem(CART_KEY_PRIMARY, "[]");
+
+      // Go confirmation
+      window.location.href = `customer-order-confirmation.html?order_id=${encodeURIComponent(order.id)}`;
     } catch (err) {
       logError("COD order error", err);
-      showAlert("We couldn't place your order right now. Please try again.");
+      showAlert(err?.message || "We couldn't place your order right now. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -478,26 +504,43 @@
     const v = validateForm();
     if (!v.ok) return showAlert(v.msg);
 
-    const { total } = calcTotals();
-    if (total <= 0) return showAlert("Cart total is invalid.");
+    const { total_amount, subtotal, shipping_fee } = calcTotals();
+    if (total_amount <= 0) return showAlert("Cart total is invalid.");
 
     const pk = getPaystackPublicKey();
-    if (!pk) return showAlert("Paystack public key is missing. Set window.PAYSTACK_PUBLIC_KEY (recommended).");
+    if (!pk) return showAlert("Paystack public key is missing. Set window.PAYSTACK_PUBLIC_KEY.");
 
     setBusy(true);
 
     try {
+      await waitForSupabase();
       await loadPaystackScriptIfMissing();
 
-      // 1) create pending order
-      const pendingPayload = buildOrderPayload("pending_payment", { method: "paystack" });
-      localStorage.setItem(ORDER_PENDING_KEY, JSON.stringify(pendingPayload));
+      // Enforce one seller per order
+      const seller_id = resolveSellerIdOrThrow();
 
-      const order = await createOrderInSupabase(pendingPayload);
+      // 1) create pending order
+      const createRes = await window.orderAPI.createOrder({
+        seller_id,
+        delivery_address_id: null,
+        subtotal,
+        shipping_fee,
+        tax: 0,
+        discount: 0,
+        total_amount,
+        payment_method: "paystack",
+        payment_status: "pending",
+        order_status: "pending",
+        notes: buildNotesBlob(null),
+      });
+
+      if (!createRes.success) throw new Error(createRes.error);
+      const order = createRes.data;
+
       logInfo("Paystack pending order created", { order_id: order.id });
 
       // 2) paystack popup
-      const amountPesewas = Math.round(Number(total) * 100);
+      const amountPesewas = Math.round(Number(total_amount) * 100);
       const reference = `shopup_${order.id}_${Date.now()}`;
 
       const handler = window.PaystackPop.setup({
@@ -507,42 +550,46 @@
         currency: "GHS",
         ref: reference,
         metadata: {
-          custom_fields: [
-            { display_name: "Customer", variable_name: "customer_name", value: (el.fullName?.value || "").trim() },
-            { display_name: "Phone", variable_name: "customer_phone", value: (el.phone?.value || "").trim() },
-            { display_name: "City", variable_name: "city", value: (el.city?.value || "").trim() },
-          ],
           order_id: order.id,
+          customer_id: currentUser?.id,
         },
         callback: async function (response) {
           try {
-            logInfo("Paystack callback received", { ref: response?.reference });
+            logInfo("Paystack callback received", { ref: response?.reference, order_id: order.id });
 
-            // 3) server-side verify
-            const verified = await verifyPaymentServerSide(response.reference, total);
+            // 3) verify server-side
+            const verified = await verifyPaymentServerSide(response.reference, total_amount);
             if (!verified) {
               showAlert("Payment could not be verified. If you were charged, contact support with your reference.");
-              await updateOrderInSupabase(order.id, {
-                status: "pending_payment",
+              // store reference if you added column
+              await window.supabase.from("orders").update({
                 payment_reference: response.reference,
-              });
+                payment_status: "pending",
+                notes: buildNotesBlob(response.reference),
+              }).eq("id", order.id);
               return;
             }
 
-            // 4) update order -> PAID
-            const updated = await updateOrderInSupabase(order.id, {
-              status: "paid",
-              payment_reference: response.reference,
-            });
+            // 4) mark as paid (and confirm order)
+            await window.supabase.from("orders").update({
+              payment_reference: response.reference,   // requires the optional column
+              payment_status: "paid",
+              order_status: "confirmed",
+              notes: buildNotesBlob(response.reference),
+            }).eq("id", order.id);
 
-            logInfo("Payment verified & order marked paid", { order_id: updated.id });
+            // 5) add items only AFTER payment verified (recommended)
+            const items = buildOrderItemsForDB();
+            const addRes = await window.orderAPI.addOrderItems(order.id, items);
+            if (!addRes.success) throw new Error(addRes.error);
 
-            clearCartAfterSuccess();
-            localStorage.removeItem(ORDER_PENDING_KEY);
-            goToConfirmation(updated.id);
+            // Clear cart + redirect
+            localStorage.setItem(CART_KEY_PRIMARY, "[]");
+
+            window.location.href = `customer-order-confirmation.html?order_id=${encodeURIComponent(order.id)}`;
           } catch (err) {
             logError("Paystack post-payment error", err);
-            showAlert("Payment completed, but we couldn't confirm your order yet. Please refresh or contact support.");
+            showAlert("Payment completed, but we couldn't finalize your order yet. Please contact support.");
           } finally {
             setBusy(false);
           }
@@ -557,20 +604,9 @@
       handler.openIframe();
     } catch (err) {
       logError("Paystack flow error", err);
-      showAlert("We couldn't start payment right now. Please try again.");
+      showAlert(err?.message || "We couldn't start payment right now. Please try again.");
       setBusy(false);
     }
-  }
-
-  // --------------------------
-  // Payment method toggle
-  // --------------------------
-  function syncPaymentButtons() {
-    const method = el.paymentMethod?.value || "paystack";
-    const isPaystack = method === "paystack";
-
-    if (el.payNowBtn) el.payNowBtn.style.display = isPaystack ? "block" : "none";
-    if (el.placeOrderBtn) el.placeOrderBtn.style.display = isPaystack ? "none" : "block";
   }
 
   // --------------------------
@@ -578,11 +614,28 @@
   // --------------------------
   async function init() {
     try {
+      // Auth
+      currentUser = await requireAuth();
+      if (!currentUser) return;
+
+      // Hydrate email/name/phone from auth profile
+      hydrateFromAuthUser();
+
+      // Cart
       cartData = readCart();
-      hydrateFromUser();
 
       if (cartData.length && cartUsesProductIdShape()) {
         await loadProductsForCartIfNeeded();
+      }
+
+      // Enforce one-seller cart early (so user knows before paying)
+      try {
+        resolveSellerIdOrThrow();
+      } catch (e) {
+        showAlert(e.message);
+        // Optionally send them back to cart to fix it
+        // window.location.href = "cart.html";
+        return;
       }
 
       renderSummary();
@@ -592,10 +645,7 @@
       el.payNowBtn?.addEventListener("click", handlePaystack);
       el.placeOrderBtn?.addEventListener("click", handleCOD);
 
-      logInfo("Checkout initialized", {
-        cart_items: cartData.length,
-        cart_key: cartData.length ? CART_KEY_PRIMARY : CART_KEY_FALLBACK,
-      });
+      logInfo("Checkout initialized", { cart_items: cartData.length });
     } catch (err) {
       logError("Checkout init error", err);
       showAlert("Checkout could not load properly. Please refresh or try again.");
