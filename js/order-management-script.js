@@ -1,3 +1,4 @@
+// /js/order-management-script.js
 /**
  * ShopUp Order Management (PROD schema + RLS)
  * Works with /js/supabase-init.js (window.supabaseReady + window.supabase)
@@ -17,10 +18,12 @@
 
   console.log("📦 Order Management (PROD) loaded");
 
+  // ---------------------------
+  // Supabase access
+  // ---------------------------
   async function sb() {
-    // Always wait for supabase-init.js
     if (window.supabaseReady) await window.supabaseReady;
-    if (!window.supabase) throw new Error("Supabase client not found on window.supabase");
+    if (!window.supabase) throw new Error("Supabase client not found. Ensure /js/supabase-init.js is loaded.");
     return window.supabase;
   }
 
@@ -34,44 +37,61 @@
   // ---------------------------
   // Helpers
   // ---------------------------
-  function calcLineSubtotal(qty, unitPrice) {
-    const q = Number(qty || 0);
-    const p = Number(unitPrice || 0);
-    return q * p;
+  function num(v) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
   }
 
-  // Option A: Use your RPC if it exists
+  function calcLineSubtotal(qty, unitPrice) {
+    return num(qty) * num(unitPrice);
+  }
+
+  function cleanStr(v) {
+    const s = String(v ?? "").trim();
+    return s.length ? s : null;
+  }
+
+  // Prefer DB RPC if exists; fallback to client-side
   async function tryGenerateOrderNumber() {
     try {
       const supabase = await sb();
       const { data, error } = await supabase.rpc("generate_order_number");
       if (error) throw error;
-      return data;
-    } catch (e) {
-      // fallback client-side (still unique enough for MVP)
+      if (typeof data === "string" && data.trim()) return data.trim();
+      throw new Error("RPC returned empty order number");
+    } catch {
       const ts = Date.now().toString().slice(-6);
       const year = new Date().getFullYear();
       return `ORD-${year}-${ts}`;
     }
   }
 
+  function ensureItems(items) {
+    if (!Array.isArray(items) || items.length === 0) throw new Error("No items provided");
+
+    const cleaned = items
+      .map((it) => {
+        const product_id = cleanStr(it.product_id);
+        const product_name = cleanStr(it.product_name) || "Product";
+        const product_sku = cleanStr(it.product_sku);
+        const quantity = num(it.quantity);
+        const unit_price = num(it.unit_price);
+
+        if (!product_id) throw new Error("Item missing product_id");
+        if (quantity <= 0) throw new Error("Item quantity must be > 0");
+        if (unit_price < 0) throw new Error("Item unit_price must be >= 0");
+
+        return { product_id, product_name, product_sku, quantity, unit_price };
+      })
+      .filter(Boolean);
+
+    if (!cleaned.length) throw new Error("No valid items provided");
+    return cleaned;
+  }
+
   // ---------------------------
   // 1) Create Order (header)
   // ---------------------------
-  /**
-   * Create a new order row (no items yet)
-   *
-   * @param {Object} input
-   * @param {string} input.seller_id (required)
-   * @param {string|null} input.delivery_address_id
-   * @param {number} input.subtotal
-   * @param {number} input.shipping_fee
-   * @param {number} input.tax
-   * @param {number} input.discount
-   * @param {number} input.total_amount
-   * @param {string} input.payment_method
-   * @param {string} input.notes
-   */
   async function createOrder(input) {
     try {
       const supabase = await sb();
@@ -88,80 +108,68 @@
         seller_id: input.seller_id,
         delivery_address_id: input.delivery_address_id || null,
 
-        subtotal: Number(input.subtotal || 0),
-        shipping_fee: Number(input.shipping_fee || 0),
-        tax: Number(input.tax || 0),
-        discount: Number(input.discount || 0),
-        total_amount: Number(input.total_amount || 0),
+        subtotal: num(input.subtotal),
+        shipping_fee: num(input.shipping_fee),
+        tax: num(input.tax),
+        discount: num(input.discount),
+        total_amount: num(input.total_amount),
 
         payment_method: input.payment_method || "cod",
         payment_status: input.payment_status || "unpaid",
         order_status: input.order_status || "pending",
 
-        notes: input.notes || null,
+        notes: cleanStr(input.notes),
       };
 
-      const { data, error } = await supabase
-        .from("orders")
-        .insert(order)
-        .select("*")
-        .single();
-
+      const { data, error } = await supabase.from("orders").insert(order).select("*").maybeSingle();
       if (error) throw error;
+      if (!data?.id) throw new Error("Order insert failed (no row returned). Check RLS insert policy.");
 
       console.log("✅ Order created:", data.order_number, data.id);
       return { success: true, data };
     } catch (error) {
-      console.error("❌ createOrder error:", error.message);
-      return { success: false, error: error.message };
+      console.error("❌ createOrder error:", error.message || error);
+      return { success: false, error: error.message || String(error) };
     }
   }
 
   // ---------------------------
   // 2) Add items to order
   // ---------------------------
-  /**
-   * @param {string} orderId
-   * @param {Array<{product_id:string, product_name:string, product_sku?:string, quantity:number, unit_price:number}>} items
-   */
   async function addOrderItems(orderId, items) {
     try {
       const supabase = await sb();
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
 
-      if (!orderId) throw new Error("Missing orderId");
-      if (!Array.isArray(items) || items.length === 0) throw new Error("No items provided");
+      const oid = cleanStr(orderId);
+      if (!oid) throw new Error("Missing orderId");
 
-      const rows = items.map((it) => {
-        const quantity = Number(it.quantity || 0);
-        const unit_price = Number(it.unit_price || 0);
-        const subtotal = calcLineSubtotal(quantity, unit_price);
+      const cleanedItems = ensureItems(items);
 
-        return {
-          order_id: orderId,
-          product_id: it.product_id,
-          product_name: it.product_name,
-          product_sku: it.product_sku || null,
-          quantity,
-          unit_price,
-          subtotal,
-        };
-      });
+      const rows = cleanedItems.map((it) => ({
+        order_id: oid,
+        product_id: it.product_id,
+        product_name: it.product_name,
+        product_sku: it.product_sku,
+        quantity: it.quantity,
+        unit_price: it.unit_price,
+        subtotal: calcLineSubtotal(it.quantity, it.unit_price),
+      }));
 
       const { data, error } = await supabase.from("order_items").insert(rows).select("*");
       if (error) throw error;
 
-      console.log("✅ Items added:", data.length);
-      return { success: true, data };
+      console.log("✅ Items added:", Array.isArray(data) ? data.length : 0);
+      return { success: true, data: data || [] };
     } catch (error) {
-      console.error("❌ addOrderItems error:", error.message);
-      return { success: false, error: error.message };
+      console.error("❌ addOrderItems error:", error.message || error);
+      return { success: false, error: error.message || String(error) };
     }
   }
 
   // ---------------------------
-  // 3) Customer orders (RLS filters automatically)
+  // 3) Customer orders
   // ---------------------------
   async function getMyOrders() {
     try {
@@ -169,7 +177,6 @@
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
 
-      // RLS ensures only your rows return, but we can still filter by customer_id for clarity
       const { data, error } = await supabase
         .from("orders")
         .select("*")
@@ -179,13 +186,13 @@
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error("❌ getMyOrders error:", error.message);
-      return { success: false, error: error.message };
+      console.error("❌ getMyOrders error:", error.message || error);
+      return { success: false, error: error.message || String(error) };
     }
   }
 
   // ---------------------------
-  // 4) Seller orders (if you ever use this in seller UI)
+  // 4) Seller orders
   // ---------------------------
   async function getSellerOrders(sellerId, status = null) {
     try {
@@ -193,10 +200,13 @@
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
 
+      const sid = cleanStr(sellerId);
+      if (!sid) throw new Error("Missing sellerId");
+
       let query = supabase
         .from("orders")
         .select("*")
-        .eq("seller_id", sellerId)
+        .eq("seller_id", sid)
         .order("created_at", { ascending: false });
 
       if (status) query = query.eq("order_status", status);
@@ -206,8 +216,8 @@
 
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error("❌ getSellerOrders error:", error.message);
-      return { success: false, error: error.message };
+      console.error("❌ getSellerOrders error:", error.message || error);
+      return { success: false, error: error.message || String(error) };
     }
   }
 
@@ -220,31 +230,35 @@
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
 
+      const oid = cleanStr(orderId);
+      if (!oid) throw new Error("Missing orderId");
+
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .select("*")
-        .eq("id", orderId)
-        .single();
+        .eq("id", oid)
+        .maybeSingle();
 
       if (orderError) throw orderError;
+      if (!order?.id) throw new Error("Order not found or access denied (RLS).");
 
       const { data: items, error: itemsError } = await supabase
         .from("order_items")
         .select("*")
-        .eq("order_id", orderId)
+        .eq("order_id", oid)
         .order("created_at", { ascending: true });
 
       if (itemsError) throw itemsError;
 
       return { success: true, data: { ...order, items: items || [] } };
     } catch (error) {
-      console.error("❌ getOrderDetails error:", error.message);
-      return { success: false, error: error.message };
+      console.error("❌ getOrderDetails error:", error.message || error);
+      return { success: false, error: error.message || String(error) };
     }
   }
 
   // ---------------------------
-  // 6) Customer cancel order (pending only; DB trigger enforces)
+  // 6) Cancel order (best-effort)
   // ---------------------------
   async function cancelMyOrder(orderId, reason = "") {
     try {
@@ -252,27 +266,43 @@
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
 
-      const { data, error } = await supabase
-        .from("orders")
-        .update({
-          order_status: "cancelled",
-          cancellation_reason: reason || null,
-          cancelled_at: new Date().toISOString(),
-        })
-        .eq("id", orderId)
-        .select("*")
-        .single();
+      const oid = cleanStr(orderId);
+      if (!oid) throw new Error("Missing orderId");
 
-      if (error) throw error;
+      // NOTE:
+      // Some schemas don't have cancellation_reason/cancelled_at yet.
+      // We'll try full payload first; if it errors, fallback to only order_status.
+      const payloadFull = {
+        order_status: "cancelled",
+        cancellation_reason: cleanStr(reason),
+        cancelled_at: new Date().toISOString(),
+      };
 
-      return { success: true, data };
+      let res = await supabase.from("orders").update(payloadFull).eq("id", oid).select("*").maybeSingle();
+
+      if (res.error) {
+        // fallback payload
+        res = await supabase
+          .from("orders")
+          .update({ order_status: "cancelled" })
+          .eq("id", oid)
+          .select("*")
+          .maybeSingle();
+      }
+
+      if (res.error) throw res.error;
+      if (!res.data?.id) throw new Error("Cancel failed (no row returned). Check RLS update policy.");
+
+      return { success: true, data: res.data };
     } catch (error) {
-      console.error("❌ cancelMyOrder error:", error.message);
-      return { success: false, error: error.message };
+      console.error("❌ cancelMyOrder error:", error.message || error);
+      return { success: false, error: error.message || String(error) };
     }
   }
 
-  // Expose globally (so your HTML can call them)
+  // ---------------------------
+  // Expose globally
+  // ---------------------------
   window.orderAPI = {
     createOrder,
     addOrderItems,
