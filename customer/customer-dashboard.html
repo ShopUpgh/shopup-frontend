@@ -198,7 +198,7 @@
 
         <div class="user-section">
           <span id="userName">Customer</span>
-          <button class="btn-logout" id="logoutBtn">Logout</button>
+          <button class="btn-logout" id="logoutBtn" type="button">Logout</button>
         </div>
       </div>
     </header>
@@ -218,34 +218,139 @@
     </main>
   </div>
 
-  <!-- ===================================================== -->
-  <!-- ✅ Core + DI -->
-  <!-- ===================================================== -->
-  <script defer src="../js/core/container.js"></script>
-  <script defer src="../js/core/config.js"></script>
-  <script defer src="../js/core/dom.js"></script>
+  <!-- ✅ Logger -->
+  <script defer src="/js/logger.js"></script>
 
-  <!-- ===================================================== -->
-  <!-- ✅ Adapters -->
-  <!-- ===================================================== -->
-  <script defer src="../js/adapters/supabase.wait.js"></script>
-  <script defer src="../js/adapters/logger.adapter.js"></script>
-  <script defer src="../js/adapters/auth.supabase.js"></script>
-  <script defer src="../js/adapters/products.supabase.js"></script>
-  <script defer src="../js/adapters/cart.storage.js"></script>
+  <!-- ✅ One page script only (inline here) -->
+  <script>
+    (async function () {
+      // Wait for supabase-init.js to attach window.supabase
+      let tries = 0;
+      while (!window.supabase && tries < 80) {
+        await new Promise(r => setTimeout(r, 80));
+        tries++;
+      }
 
-  <!-- ===================================================== -->
-  <!-- ✅ Services -->
-  <!-- ===================================================== -->
-  <script defer src="../js/services/auth.service.js"></script>
-  <script defer src="../js/services/products.service.js"></script>
-  <script defer src="../js/services/cart.service.js"></script>
+      if (!window.supabase) {
+        console.error("Supabase client not found. Check /js/supabase-init.js");
+        window.location.href = "customer-login.html";
+        return;
+      }
 
-  <!-- ===================================================== -->
-  <!-- ✅ Page controller + entry -->
-  <!-- ===================================================== -->
-  <script defer src="../js/pages/customer-dashboard.page.js"></script>
-  <script defer src="../js/customer-dashboard.js"></script>
+      // Auth gate using Supabase session (authoritative)
+      const { data, error } = await window.supabase.auth.getSession();
+      if (error || !data?.session?.user) {
+        if (window.Sentry) window.Sentry.captureException(error || new Error("No session"), { tags: { error_category: "authentication" }});
+        window.location.href = "customer-login.html";
+        return;
+      }
 
+      const u = data.session.user;
+
+      // Sentry identify
+      if (window.Sentry) {
+        window.Sentry.setUser({ id: String(u.id), email: u.email || undefined, role: "customer" });
+        window.Sentry.addBreadcrumb({ category: "navigation", message: "Customer dashboard viewed", level: "info" });
+      }
+
+      // UI name
+      const nameEl = document.getElementById("userName");
+      if (nameEl && u.email) nameEl.textContent = u.email.split("@")[0];
+
+      // Products load
+      async function loadProducts() {
+        try {
+          const { data: products, error } = await window.supabase
+            .from("products")
+            .select("*")
+            .eq("status", "active")
+            .limit(12);
+
+          if (error) throw error;
+          displayProducts(products || []);
+        } catch (err) {
+          console.error("Error loading products:", err);
+          if (window.Sentry) window.Sentry.captureException(err, { tags: { error_category: "products" }});
+          const grid = document.getElementById("productsGrid");
+          if (grid) grid.innerHTML = '<p class="error-message">Failed to load products. Please refresh the page.</p>';
+        }
+      }
+
+      function displayProducts(products) {
+        const grid = document.getElementById("productsGrid");
+        if (!grid) return;
+
+        if (!products.length) {
+          grid.innerHTML = "<p>No products available at the moment.</p>";
+          return;
+        }
+
+        grid.innerHTML = products.map(p => `
+          <div class="product-card">
+            <img src="${p.image_url || '../images/placeholder.png'}" alt="${p.name || 'Product'}">
+            <h3>${p.name || "Product"}</h3>
+            <p class="price">GHS ${Number(p.price || 0)}</p>
+            <button class="btn-add-cart" data-add="${p.id}">Add to Cart</button>
+          </div>
+        `).join("");
+      }
+
+      // Cart count
+      function updateCartCount() {
+        try {
+          const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+          const count = cart.reduce((t, i) => t + Number(i.quantity || 0), 0);
+          const el = document.getElementById("cartCount");
+          if (el) el.textContent = String(count);
+        } catch (err) {
+          if (window.Sentry) window.Sentry.captureException(err, { tags: { error_category: "cart" }});
+        }
+      }
+
+      // Add to cart (local storage)
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-add]");
+        if (!btn) return;
+        const productId = btn.getAttribute("data-add");
+
+        try {
+          const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+          const existing = cart.find(i => String(i.productId) === String(productId));
+          if (existing) existing.quantity += 1;
+          else cart.push({ productId, quantity: 1 });
+
+          localStorage.setItem("cart", JSON.stringify(cart));
+          updateCartCount();
+          alert("Product added to cart!");
+        } catch (err) {
+          if (window.Sentry) window.Sentry.captureException(err, { tags: { error_category: "cart" }});
+          alert("Failed to add to cart. Please try again.");
+        }
+      });
+
+      // Logout
+      document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+        try {
+          await window.supabase.auth.signOut();
+        } catch (err) {
+          if (window.Sentry) window.Sentry.captureException(err, { tags: { error_category: "authentication" }});
+        } finally {
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("currentUser");
+          localStorage.removeItem("sessionExpiry");
+          window.location.href = "customer-login.html";
+        }
+      });
+
+      // Run
+      updateCartCount();
+      loadProducts();
+
+      if (window.logger) {
+        window.logger.pageView(document.title);
+        window.logger.info("Dashboard viewed", { ts: new Date().toISOString() });
+      }
+    })();
+  </script>
 </body>
 </html>
