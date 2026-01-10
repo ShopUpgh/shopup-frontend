@@ -99,21 +99,21 @@ echo ""
 echo "Step 3: Updating configuration files..."
 echo ""
 
-# Update supabase-config.js
-if [ -f "supabase-config.js" ]; then
+# Update js/supabase-init.js (single source of truth)
+if [ -f "js/supabase-init.js" ]; then
     # Create backup
-    cp supabase-config.js supabase-config.js.backup
+    cp js/supabase-init.js js/supabase-init.js.backup
     
     # Update values
-    sed -i.tmp "s|const SUPABASE_URL = '.*';|const SUPABASE_URL = '$SUPABASE_URL';|g" supabase-config.js
-    sed -i.tmp "s|const SUPABASE_ANON_KEY = '.*';|const SUPABASE_ANON_KEY = '$SUPABASE_KEY';|g" supabase-config.js
+    sed -i.tmp "s|const SUPABASE_URL = \".*\";|const SUPABASE_URL = \"$SUPABASE_URL\";|g" js/supabase-init.js
+    sed -i.tmp "s|const SUPABASE_ANON_KEY = \".*\";|const SUPABASE_ANON_KEY = \"$SUPABASE_KEY\";|g" js/supabase-init.js
     
     # Remove temp file
-    rm -f supabase-config.js.tmp
+    rm -f js/supabase-init.js.tmp
     
-    print_success "Updated supabase-config.js"
+    print_success "Updated js/supabase-init.js"
 else
-    print_error "supabase-config.js not found!"
+    print_error "js/supabase-init.js not found!"
 fi
 
 # Update paystack-config.js
