@@ -1,0 +1,33 @@
+/* Landing page ONLY overrides (loaded after styles.css + storefront-styles.css) */
+
+:root{
+  --primary-color: #2563eb;   /* blue */
+  --primary-dark: #1d4ed8;
+  --primary-light: #3b82f6;
+  --secondary-color: #10b981; /* green accent */
+  --accent-color: #fbbf24;    /* gold */
+}
+
+/* Force hero to premium blue gradient */
+.hero{
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 45%, #10b981 100%) !important;
+}
+
+.hero-content h1,
+.hero-content p{
+  color: #fff !important;
+}
+
+.hero::before{
+  background: radial-gradient(circle at top right, rgba(255,255,255,0.18), transparent) !important;
+}
+
+/* Buttons inside hero */
+.hero .btn-primary{
+  background: #10b981 !important;
+}
+.hero .btn-secondary{
+  background: rgba(255,255,255,0.95) !important;
+  color: #1d4ed8 !important;
+  border-color: rgba(255,255,255,0.65) !important;
+}
