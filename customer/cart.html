@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Shopping Cart - ShopUp</title>
 
+  <link rel="icon" href="/favicon.ico" />
+
   <!-- ✅ Sentry: Loader + Central Config ONLY -->
   <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
   <script src="/js/sentry-config.js"></script>
@@ -32,6 +34,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
     }
 
     .logo {
@@ -78,6 +82,7 @@
       height: 100px;
       object-fit: cover;
       border-radius: 8px;
+      background: #eef2f7;
     }
 
     .item-details { flex: 1; }
@@ -159,6 +164,24 @@
       margin-bottom: 20px;
     }
 
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      background: #111827;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+      display: none;
+      z-index: 9999;
+      font-weight: 700;
+      font-size: 14px;
+      max-width: 92vw;
+      text-align: center;
+    }
+
     @media (max-width: 768px) {
       .cart-grid { grid-template-columns: 1fr; }
       .cart-item { flex-direction: column; }
@@ -184,7 +207,7 @@
 
     <div class="cart-grid">
       <div class="cart-items" id="cartItems">
-        <div class="empty-cart">
+        <div class="empty-cart" id="emptyCart">
           <div class="empty-cart-icon">🛒</div>
           <h2>Your cart is empty</h2>
           <p>Add some products to get started!</p>
@@ -209,12 +232,14 @@
           <span>Total:</span>
           <span id="total">GHS 0.00</span>
         </div>
-        <button class="btn-checkout" id="checkoutBtn">
+        <button class="btn-checkout" id="checkoutBtn" type="button">
           Proceed to Checkout
         </button>
       </div>
     </div>
   </div>
+
+  <div id="toast" class="toast"></div>
 
   <!-- ✅ Logger -->
   <script defer src="/js/logger.js"></script>
@@ -222,40 +247,68 @@
   <!-- ✅ Cart logic (main) -->
   <script defer src="/js/customer-cart-script.js"></script>
 
-  <!-- ✅ Small inline: auth gate + Sentry identify + page breadcrumb -->
+  <!-- ✅ Inline: Supabase auth gate + Sentry identify + page breadcrumb -->
   <script>
-    (function () {
-      const authToken = localStorage.getItem("authToken");
-      const currentUser = localStorage.getItem("currentUser");
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => (t.style.display = 'none'), 2200);
+    }
 
-      if (!authToken) {
-        window.location.href = "customer-login.html";
-        return;
-      }
-
-      // Identify user (optional)
+    async function ensureCustomerSession() {
       try {
-        const user = JSON.parse(currentUser || "{}");
-        if (window.Sentry && user && user.id) {
+        // supabase-init.js should put a client on window.supabase
+        let tries = 0;
+        while (!window.supabase && tries < 50) {
+          await new Promise(r => setTimeout(r, 80));
+          tries++;
+        }
+        if (!window.supabase) throw new Error("Supabase client not found. Check /js/supabase-init.js");
+
+        const { data, error } = await window.supabase.auth.getSession();
+        if (error) throw error;
+
+        const session = data?.session;
+        if (!session?.user) {
+          window.location.href = "customer-login.html";
+          return null;
+        }
+
+        const u = session.user;
+
+        if (window.Sentry) {
           window.Sentry.setUser({
-            id: String(user.id),
-            email: user.email || undefined,
+            id: String(u.id),
+            email: u.email || undefined,
             role: "customer",
           });
-        }
-      } catch {}
 
-      // Breadcrumb / page view
-      if (window.logger) {
-        window.logger.pageView(document.title);
-        window.logger.info("Cart page viewed", { ts: new Date().toISOString() });
-      } else if (window.Sentry) {
-        window.Sentry.addBreadcrumb({
-          category: "navigation",
-          message: "Cart page viewed",
-          level: "info",
-        });
+          window.Sentry.addBreadcrumb({
+            category: "navigation",
+            message: "Cart page viewed",
+            level: "info",
+          });
+        }
+
+        if (window.logger) {
+          window.logger.pageView(document.title);
+          window.logger.info("Cart page viewed", { ts: new Date().toISOString() });
+        }
+
+        return session;
+      } catch (e) {
+        if (window.Sentry) window.Sentry.captureException(e, { tags: { error_category: "authentication" } });
+        toast("Please log in again.");
+        window.location.href = "customer-login.html";
+        return null;
       }
+    }
+
+    (async function boot() {
+      await ensureCustomerSession();
+      // customer-cart-script.js will render cart after this
     })();
   </script>
 </body>
