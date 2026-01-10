@@ -11,7 +11,7 @@
   <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
   <script src="/js/sentry-config.js"></script>
 
-  <!-- ✅ Supabase (Module init only) -->
+  <!-- ✅ Supabase (ONE init path) -->
   <script type="module" src="/js/supabase-init.js"></script>
 
   <style>
@@ -40,7 +40,6 @@
       <label>Password</label>
       <input id="password" type="password" required autocomplete="current-password"/>
 
-      <!-- ✅ FIX: add id="btn" to match customer-login.js -->
       <button id="btn" type="submit">Login</button>
 
       <div class="meta">
@@ -50,10 +49,22 @@
     </form>
   </div>
 
-  <!-- ✅ Logger -->
   <script defer src="/js/logger.js"></script>
-
-  <!-- ✅ Your existing login logic -->
   <script defer src="/js/customer-login.js"></script>
+
+  <!-- ✅ Optional: if user is already logged in, skip login page -->
+  <script>
+    (async function () {
+      try {
+        await window.supabaseReady;
+        if (!window.supabase) return;
+
+        const { data } = await window.supabase.auth.getSession();
+        if (data?.session?.user) {
+          window.location.href = "customer-dashboard.html";
+        }
+      } catch {}
+    })();
+  </script>
 </body>
 </html>
