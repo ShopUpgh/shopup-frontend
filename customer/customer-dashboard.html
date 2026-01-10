@@ -5,22 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Customer Dashboard - ShopUp</title>
 
-  <link rel="icon" href="../favicon.ico" />
+  <link rel="icon" href="/favicon.ico" />
 
-  <!-- ✅ Styles (use the file that exists in your tree) -->
-  <link rel="stylesheet" href="../css/styles.css" />
-  <link rel="stylesheet" href="../css/dashboard-styles.css" />
-
-  <!-- ✅ Sentry (consistent with your other pages) -->
+  <!-- ✅ Sentry: Loader + Central Config ONLY -->
   <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
-  <script src="../js/sentry-config.js"></script>
-  <script src="../js/sentry-error-tracking.js"></script>
+  <script src="/js/sentry-config.js"></script>
 
-  <!-- ✅ Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="../js/supabase-config.js"></script>
+  <!-- ✅ Supabase (Module init only) -->
+  <script type="module" src="/js/supabase-init.js"></script>
 
-  <!-- Keeping your existing inline styles so nothing breaks visually -->
+  <!-- Optional: if you have shared global styles -->
+  <!-- <link rel="stylesheet" href="/css/styles.css" /> -->
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -42,7 +38,6 @@
       justify-content: space-between;
       align-items: center;
       gap: 16px;
-      flex-wrap: wrap;
     }
 
     .logo {
@@ -52,18 +47,26 @@
       font-size: 1.5em;
       font-weight: bold;
       color: #2d8a3e;
+      white-space: nowrap;
     }
 
-    .main-nav { display: flex; gap: 30px; flex-wrap: wrap; }
+    .main-nav {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
 
     .nav-link {
       text-decoration: none;
       color: #333;
       font-weight: 500;
-      transition: color 0.3s;
+      transition: color 0.2s;
     }
 
-    .nav-link:hover, .nav-link.active { color: #2d8a3e; }
+    .nav-link:hover, .nav-link.active {
+      color: #2d8a3e;
+    }
 
     .cart-badge {
       background: #e74c3c;
@@ -74,7 +77,12 @@
       margin-left: 5px;
     }
 
-    .user-section { display: flex; align-items: center; gap: 15px; }
+    .user-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      white-space: nowrap;
+    }
 
     .btn-logout {
       padding: 8px 16px;
@@ -94,7 +102,11 @@
       padding: 0 20px;
     }
 
-    .welcome-section { text-align: center; margin-bottom: 40px; }
+    .welcome-section {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
     .welcome-section h1 { color: #333; margin-bottom: 10px; }
 
     .products-section h2 { color: #333; margin-bottom: 30px; }
@@ -110,20 +122,29 @@
       border-radius: 10px;
       overflow: hidden;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      transition: transform 0.3s;
+      transition: transform 0.2s;
     }
 
-    .product-card:hover { transform: translateY(-5px); }
+    .product-card:hover { transform: translateY(-4px); }
 
     .product-card img {
       width: 100%;
       height: 200px;
       object-fit: cover;
-      background: #eef2f7;
+      background: #f3f4f6;
     }
 
-    .product-card h3 { padding: 15px; font-size: 1.1em; }
-    .product-card .price { padding: 0 15px; color: #2d8a3e; font-weight: bold; font-size: 1.2em; }
+    .product-card h3 {
+      padding: 15px;
+      font-size: 1.1em;
+    }
+
+    .product-card .price {
+      padding: 0 15px;
+      color: #2d8a3e;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
 
     .btn-add-cart {
       width: 100%;
@@ -144,26 +165,10 @@
       color: #666;
     }
 
-    .toast {
-      position: fixed;
-      left: 50%;
-      bottom: 22px;
-      transform: translateX(-50%);
-      background: #111827;
-      color: #fff;
-      padding: 10px 14px;
-      border-radius: 12px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
-      display: none;
-      z-index: 9999;
-      font-weight: 700;
-      font-size: 14px;
-      max-width: 92vw;
-      text-align: center;
-    }
-
-    @media (max-width: 520px) {
-      .main-nav { gap: 16px; }
+    @media (max-width: 720px) {
+      .header-content { flex-direction: column; align-items: stretch; }
+      .user-section { justify-content: space-between; width: 100%; }
+      .main-nav { justify-content: space-between; width: 100%; }
     }
   </style>
 </head>
@@ -187,7 +192,7 @@
 
         <div class="user-section">
           <span class="user-name" id="userName">Customer</span>
-          <button class="btn-logout" id="logoutBtn" type="button">Logout</button>
+          <button class="btn-logout" id="logoutBtn">Logout</button>
         </div>
       </div>
     </header>
@@ -207,207 +212,10 @@
     </main>
   </div>
 
-  <div id="toast" class="toast"></div>
+  <!-- ✅ Logger -->
+  <script defer src="/js/logger.js"></script>
 
-  <script>
-    // ✅ Small toast instead of alert()
-    function toast(msg) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.style.display = 'block';
-      clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(() => (t.style.display = 'none'), 2200);
-    }
-
-    // Track page view
-    if (typeof Sentry !== 'undefined') {
-      Sentry.addBreadcrumb({ category: 'navigation', message: 'Customer dashboard viewed', level: 'info' });
-    }
-
-    function safeText(value) {
-      return (value === null || value === undefined) ? '' : String(value);
-    }
-
-    function moneyGHS(value) {
-      const n = Number(value);
-      if (!Number.isFinite(n)) return 'GHS —';
-      return `GHS ${n.toFixed(2)}`;
-    }
-
-    function updateCartCount() {
-      try {
-        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        const count = cart.reduce((total, item) => total + (Number(item.quantity) || 0), 0);
-        document.getElementById('cartCount').textContent = String(count);
-      } catch (error) {
-        if (typeof Sentry !== 'undefined') Sentry.captureException(error, { tags: { error_category: 'cart' } });
-      }
-    }
-
-    async function ensureCustomerSession() {
-      // ✅ Use Supabase session (more reliable than localStorage authToken)
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-
-        const session = data?.session;
-        if (!session?.user) {
-          window.location.href = 'customer-login.html';
-          return null;
-        }
-
-        const u = session.user;
-
-        if (typeof Sentry !== 'undefined') {
-          Sentry.setUser({ id: u.id, email: u.email || undefined });
-        }
-
-        // Prefer metadata name if present
-        const fullName =
-          u.user_metadata?.full_name ||
-          [u.user_metadata?.first_name, u.user_metadata?.last_name].filter(Boolean).join(' ') ||
-          (u.email ? u.email.split('@')[0] : 'Customer');
-
-        document.getElementById('userName').textContent = fullName;
-
-        return session;
-      } catch (err) {
-        if (typeof Sentry !== 'undefined') Sentry.captureException(err, { tags: { error_category: 'authentication' } });
-        window.location.href = 'customer-login.html';
-        return null;
-      }
-    }
-
-    async function loadProducts() {
-      const grid = document.getElementById('productsGrid');
-      grid.innerHTML = '<div class="loading">Loading products...</div>';
-
-      try {
-        const { data: products, error } = await supabase
-          .from('products')
-          .select('id,name,price,image_url,status')
-          .eq('status', 'active')
-          .limit(12);
-
-        if (error) throw error;
-
-        renderProducts(products || []);
-      } catch (error) {
-        console.error('Error loading products:', error);
-        if (typeof Sentry !== 'undefined') Sentry.captureException(error, { tags: { error_category: 'products' } });
-
-        // ✅ No innerHTML from DB data; just show a static message
-        grid.innerHTML = '';
-        const p = document.createElement('p');
-        p.className = 'error-message';
-        p.textContent = 'Failed to load products. Please refresh the page.';
-        grid.appendChild(p);
-      }
-    }
-
-    function renderProducts(products) {
-      const grid = document.getElementById('productsGrid');
-      grid.innerHTML = '';
-
-      if (!products.length) {
-        const p = document.createElement('p');
-        p.className = 'error-message';
-        p.textContent = 'No products available at the moment.';
-        grid.appendChild(p);
-        return;
-      }
-
-      for (const product of products) {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-
-        const img = document.createElement('img');
-        img.alt = safeText(product.name);
-        img.src = product.image_url || '../favicon.svg';
-        img.loading = 'lazy';
-
-        const h3 = document.createElement('h3');
-        h3.textContent = safeText(product.name);
-
-        const price = document.createElement('p');
-        price.className = 'price';
-        price.textContent = moneyGHS(product.price);
-
-        const btn = document.createElement('button');
-        btn.className = 'btn-add-cart';
-        btn.type = 'button';
-        btn.textContent = 'Add to Cart';
-        btn.addEventListener('click', () => addToCart(product.id));
-
-        card.appendChild(img);
-        card.appendChild(h3);
-        card.appendChild(price);
-        card.appendChild(btn);
-
-        grid.appendChild(card);
-      }
-    }
-
-    async function addToCart(productId) {
-      try {
-        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        const existingItem = cart.find(item => item.productId === productId);
-
-        if (existingItem) {
-          existingItem.quantity = (Number(existingItem.quantity) || 0) + 1;
-        } else {
-          cart.push({ productId, quantity: 1 });
-        }
-
-        localStorage.setItem('cart', JSON.stringify(cart));
-        updateCartCount();
-
-        if (typeof Sentry !== 'undefined') {
-          Sentry.addBreadcrumb({
-            category: 'cart',
-            message: 'Added product to cart',
-            level: 'info',
-            data: { product_id: productId }
-          });
-        }
-
-        toast('Added to cart ✅');
-      } catch (error) {
-        console.error('Error adding to cart:', error);
-        if (typeof Sentry !== 'undefined') Sentry.captureException(error, { tags: { error_category: 'cart' } });
-        toast('Failed to add to cart ❌');
-      }
-    }
-
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      try {
-        if (typeof Sentry !== 'undefined') {
-          Sentry.addBreadcrumb({ category: 'auth', message: 'User logout initiated', level: 'info' });
-        }
-
-        await supabase.auth.signOut();
-
-        // Keep cart, but remove auth leftovers if any
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('currentUser');
-        localStorage.removeItem('sessionExpiry');
-
-        if (typeof Sentry !== 'undefined') Sentry.setUser(null);
-
-        window.location.href = 'customer-login.html';
-      } catch (error) {
-        if (typeof Sentry !== 'undefined') Sentry.captureException(error, { tags: { error_category: 'authentication' } });
-        toast('Logout failed ❌');
-      }
-    });
-
-    // ✅ Boot
-    (async function init() {
-      updateCartCount();
-      const session = await ensureCustomerSession();
-      if (!session) return;
-      await loadProducts();
-    })();
-  </script>
+  <!-- ✅ Dashboard logic -->
+  <script defer src="/js/customer-dashboard.js"></script>
 </body>
 </html>
