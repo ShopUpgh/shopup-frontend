@@ -10,9 +10,8 @@
     <script src="../js/sentry-config.js"></script>
     <script src="../js/sentry-error-tracking.js"></script>
 
-    <!-- ✅ Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../js/supabase-config.js"></script>
+    <!-- ✅ Supabase (shared initializer) -->
+    <script type="module" src="/js/supabase-init.js"></script>
 
     <style>
         * {
@@ -345,8 +344,11 @@
             loading.classList.add('show');
             
             try {
-                const email = document.getElementById('email').value;
+                const email = document.getElementById('email').value.trim();
                 const password = document.getElementById('password').value;
+
+                const client = await window.supabaseReady;
+                if (!client) throw new Error("Supabase not initialized. Check /js/supabase-init.js");
                 
                 if (typeof Sentry !== 'undefined' && typeof SentryTracking !== 'undefined') {
                     await SentryTracking.trackAuth(async () => {
@@ -357,7 +359,7 @@
                             data: { email, role: 'seller' }
                         });
                         
-                        const { data, error } = await supabase.auth.signInWithPassword({
+                        const { data, error } = await client.auth.signInWithPassword({
                             email,
                             password
                         });
@@ -368,6 +370,7 @@
                         localStorage.setItem('authToken', data.session.access_token);
                         localStorage.setItem('currentUser', JSON.stringify(data.user));
                         localStorage.setItem('sessionExpiry', new Date(data.session.expires_at * 1000).toISOString());
+                        localStorage.setItem('role', 'seller');
                         
                         // Identify user in Sentry
                         Sentry.setUser({
@@ -386,13 +389,13 @@
                         
                         setTimeout(() => {
                             window.location.href = 'seller-dashboard-enhanced.html';
-                        }, 1000);
+                        }, 800);
                         
                         return { user: data.user };
                     }, 'email');
                 } else {
                     // Fallback if Sentry not loaded
-                    const { data, error } = await supabase.auth.signInWithPassword({
+                    const { data, error } = await client.auth.signInWithPassword({
                         email,
                         password
                     });
@@ -402,12 +405,21 @@
                     localStorage.setItem('authToken', data.session.access_token);
                     localStorage.setItem('currentUser', JSON.stringify(data.user));
                     localStorage.setItem('sessionExpiry', new Date(data.session.expires_at * 1000).toISOString());
+                    localStorage.setItem('role', 'seller');
+
+                    if (window.Sentry) {
+                        window.Sentry.setUser({
+                            id: data.user.id,
+                            email: data.user.email,
+                            role: 'seller'
+                        });
+                    }
                     
                     showSuccess('Login successful! Redirecting to dashboard...');
                     
                     setTimeout(() => {
                         window.location.href = 'seller-dashboard-enhanced.html';
-                    }, 1000);
+                    }, 800);
                 }
                 
             } catch (error) {

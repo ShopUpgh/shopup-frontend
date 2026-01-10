@@ -33,12 +33,21 @@
 
   /* ================================
      🚀 Initialize Sentry (PROD ONLY)
-  ================================= */
+   ================================= */
+  const integrations = [];
+  const tracingAvailable =
+    window.Sentry && typeof window.Sentry.browserTracingIntegration === "function";
+
+  if (tracingAvailable) {
+    integrations.push(window.Sentry.browserTracingIntegration());
+  }
+
   window.Sentry.init({
     dsn: SENTRY_DSN,
     environment: "production",
-    tracesSampleRate: 0.2, // keep costs low
     release: "shopup@1.0.0",
+    integrations,
+    tracesSampleRate: tracingAvailable ? 0.2 : 0.0, // disable if tracing bundle missing
 
     beforeSend(event, hint) {
       try {
