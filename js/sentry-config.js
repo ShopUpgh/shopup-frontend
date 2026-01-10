@@ -34,11 +34,14 @@
   /* ================================
      🚀 Initialize Sentry (PROD ONLY)
   ================================= */
+  // Tracing disabled: bundle without BrowserTracing integration.
   window.Sentry.init({
     dsn: SENTRY_DSN,
     environment: "production",
-    tracesSampleRate: 0.2, // keep costs low
     release: "shopup@1.0.0",
+    integrations(integrations) {
+      return integrations.filter((integration) => integration.name !== "BrowserTracing");
+    },
 
     beforeSend(event, hint) {
       try {
