@@ -1,16 +1,22 @@
 // /js/order-management-script.js
 /**
- * ShopUp Order Management (PROD schema + RLS)
- * Works with /js/supabase-init.js (window.supabaseReady + window.supabase)
+ * ShopUp Order Management (PROD schema + RLS) — MATCHES YOUR DB
  *
  * Tables:
  *  - public.orders
  *  - public.order_items
  *
+ * Your orders columns include:
+ *  id, order_number, customer_id, seller_id, delivery_address_id,
+ *  subtotal, shipping_fee, tax, discount, total_amount,
+ *  payment_method, payment_status, order_status, notes,
+ *  tracking_number, shipped_at, delivered_at, cancelled_at, cancellation_reason,
+ *  payment_reference, created_at, updated_at
+ *
  * Assumptions:
  *  - one order = one seller
  *  - customer_id = auth.uid()
- *  - RLS policies enforce access (customer sees own; seller sees assigned)
+ *  - RLS policies enforce who can see/update which rows
  */
 
 (function () {
@@ -42,16 +48,36 @@
     return Number.isFinite(n) ? n : 0;
   }
 
-  function calcLineSubtotal(qty, unitPrice) {
-    return num(qty) * num(unitPrice);
-  }
-
   function cleanStr(v) {
     const s = String(v ?? "").trim();
     return s.length ? s : null;
   }
 
-  // Prefer DB RPC if exists; fallback to client-side
+  function calcLineSubtotal(qty, unitPrice) {
+    return num(qty) * num(unitPrice);
+  }
+
+  function ensureItems(items) {
+    if (!Array.isArray(items) || items.length === 0) throw new Error("No items provided");
+
+    const cleaned = items.map((it) => {
+      const product_id = cleanStr(it.product_id);
+      const product_name = cleanStr(it.product_name) || "Product";
+      const product_sku = cleanStr(it.product_sku);
+      const quantity = Math.trunc(num(it.quantity));
+      const unit_price = num(it.unit_price);
+
+      if (!product_id) throw new Error("Item missing product_id");
+      if (!Number.isInteger(quantity) || quantity <= 0) throw new Error("Item quantity must be an integer > 0");
+      if (unit_price < 0) throw new Error("Item unit_price must be >= 0");
+
+      return { product_id, product_name, product_sku, quantity, unit_price };
+    });
+
+    return cleaned;
+  }
+
+  // Prefer DB RPC if it exists; fallback if not
   async function tryGenerateOrderNumber() {
     try {
       const supabase = await sb();
@@ -66,59 +92,60 @@
     }
   }
 
-  function ensureItems(items) {
-    if (!Array.isArray(items) || items.length === 0) throw new Error("No items provided");
-
-    const cleaned = items
-      .map((it) => {
-        const product_id = cleanStr(it.product_id);
-        const product_name = cleanStr(it.product_name) || "Product";
-        const product_sku = cleanStr(it.product_sku);
-        const quantity = num(it.quantity);
-        const unit_price = num(it.unit_price);
-
-        if (!product_id) throw new Error("Item missing product_id");
-        if (quantity <= 0) throw new Error("Item quantity must be > 0");
-        if (unit_price < 0) throw new Error("Item unit_price must be >= 0");
-
-        return { product_id, product_name, product_sku, quantity, unit_price };
-      })
-      .filter(Boolean);
-
-    if (!cleaned.length) throw new Error("No valid items provided");
-    return cleaned;
-  }
-
   // ---------------------------
   // 1) Create Order (header)
   // ---------------------------
+  /**
+   * Create a new order row (no items yet)
+   *
+   * @param {Object} input
+   * Required:
+   *  - seller_id
+   *  - subtotal, shipping_fee, tax, discount, total_amount
+   *  - payment_method, payment_status, order_status
+   *
+   * Optional:
+   *  - delivery_address_id, notes, tracking_number
+   *  - shipped_at, delivered_at
+   *  - payment_reference
+   */
   async function createOrder(input) {
     try {
       const supabase = await sb();
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
 
-      if (!input?.seller_id) throw new Error("Missing seller_id");
+      const seller_id = cleanStr(input?.seller_id);
+      if (!seller_id) throw new Error("Missing seller_id");
 
       const order_number = await tryGenerateOrderNumber();
 
       const order = {
         order_number,
         customer_id: user.id,
-        seller_id: input.seller_id,
-        delivery_address_id: input.delivery_address_id || null,
+        seller_id,
+        delivery_address_id: input?.delivery_address_id || null,
 
-        subtotal: num(input.subtotal),
-        shipping_fee: num(input.shipping_fee),
-        tax: num(input.tax),
-        discount: num(input.discount),
-        total_amount: num(input.total_amount),
+        subtotal: num(input?.subtotal),
+        shipping_fee: num(input?.shipping_fee),
+        tax: num(input?.tax),
+        discount: num(input?.discount),
+        total_amount: num(input?.total_amount),
 
-        payment_method: input.payment_method || "cod",
-        payment_status: input.payment_status || "unpaid",
-        order_status: input.order_status || "pending",
+        payment_method: cleanStr(input?.payment_method) || "cod",
+        payment_status: cleanStr(input?.payment_status) || "unpaid",
+        order_status: cleanStr(input?.order_status) || "pending",
 
-        notes: cleanStr(input.notes),
+        notes: cleanStr(input?.notes),
+
+        tracking_number: cleanStr(input?.tracking_number),
+        shipped_at: input?.shipped_at || null,
+        delivered_at: input?.delivered_at || null,
+
+        cancelled_at: input?.cancelled_at || null,
+        cancellation_reason: cleanStr(input?.cancellation_reason),
+
+        payment_reference: cleanStr(input?.payment_reference),
       };
 
       const { data, error } = await supabase.from("orders").insert(order).select("*").maybeSingle();
@@ -136,6 +163,10 @@
   // ---------------------------
   // 2) Add items to order
   // ---------------------------
+  /**
+   * @param {string} orderId
+   * @param {Array<{product_id:string, product_name:string, product_sku?:string, quantity:number, unit_price:number}>} items
+   */
   async function addOrderItems(orderId, items) {
     try {
       const supabase = await sb();
@@ -145,9 +176,9 @@
       const oid = cleanStr(orderId);
       if (!oid) throw new Error("Missing orderId");
 
-      const cleanedItems = ensureItems(items);
+      const cleaned = ensureItems(items);
 
-      const rows = cleanedItems.map((it) => ({
+      const rows = cleaned.map((it) => ({
         order_id: oid,
         product_id: it.product_id,
         product_name: it.product_name,
@@ -258,7 +289,7 @@
   }
 
   // ---------------------------
-  // 6) Cancel order (best-effort)
+  // 6) Customer cancel order
   // ---------------------------
   async function cancelMyOrder(orderId, reason = "") {
     try {
@@ -269,33 +300,51 @@
       const oid = cleanStr(orderId);
       if (!oid) throw new Error("Missing orderId");
 
-      // NOTE:
-      // Some schemas don't have cancellation_reason/cancelled_at yet.
-      // We'll try full payload first; if it errors, fallback to only order_status.
-      const payloadFull = {
+      const payload = {
         order_status: "cancelled",
         cancellation_reason: cleanStr(reason),
         cancelled_at: new Date().toISOString(),
       };
 
-      let res = await supabase.from("orders").update(payloadFull).eq("id", oid).select("*").maybeSingle();
+      const { data, error } = await supabase.from("orders").update(payload).eq("id", oid).select("*").maybeSingle();
+      if (error) throw error;
+      if (!data?.id) throw new Error("Cancel failed (no row returned). Check RLS update policy.");
 
-      if (res.error) {
-        // fallback payload
-        res = await supabase
-          .from("orders")
-          .update({ order_status: "cancelled" })
-          .eq("id", oid)
-          .select("*")
-          .maybeSingle();
-      }
-
-      if (res.error) throw res.error;
-      if (!res.data?.id) throw new Error("Cancel failed (no row returned). Check RLS update policy.");
-
-      return { success: true, data: res.data };
+      return { success: true, data };
     } catch (error) {
       console.error("❌ cancelMyOrder error:", error.message || error);
+      return { success: false, error: error.message || String(error) };
+    }
+  }
+
+  // ---------------------------
+  // 7) Mark payment (optional helper)
+  // ---------------------------
+  async function markOrderPaid(orderId, payment_reference) {
+    try {
+      const supabase = await sb();
+      const user = await getCurrentUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const oid = cleanStr(orderId);
+      if (!oid) throw new Error("Missing orderId");
+
+      const ref = cleanStr(payment_reference);
+      if (!ref) throw new Error("Missing payment_reference");
+
+      const payload = {
+        payment_status: "paid",
+        order_status: "confirmed",
+        payment_reference: ref,
+      };
+
+      const { data, error } = await supabase.from("orders").update(payload).eq("id", oid).select("*").maybeSingle();
+      if (error) throw error;
+      if (!data?.id) throw new Error("Payment update failed (no row returned).");
+
+      return { success: true, data };
+    } catch (error) {
+      console.error("❌ markOrderPaid error:", error.message || error);
       return { success: false, error: error.message || String(error) };
     }
   }
@@ -310,6 +359,7 @@
     getSellerOrders,
     getOrderDetails,
     cancelMyOrder,
+    markOrderPaid,
   };
 
   console.log("✅ orderAPI ready: window.orderAPI");
