@@ -562,7 +562,7 @@
             if (!verified) {
               showAlert("Payment could not be verified. If you were charged, contact support with your reference.");
               // store reference if you added column
-              await window.supabase
+              const { error: pendingUpdateError } = await window.supabase
                 .from("orders")
                 .update({
                   payment_reference: response.reference,
@@ -572,12 +572,15 @@
                 .eq("id", order.id)
                 .eq("customer_id", currentUser.id)
                 .eq("order_status", "pending")
-                .eq("payment_status", "pending");
+                .eq("payment_status", "pending")
+                .select("id")
+                .maybeSingle();
+              if (pendingUpdateError) throw pendingUpdateError;
               return;
             }
 
             // 4) mark as paid (and confirm order)
-            await window.supabase
+            const { error: payUpdateError } = await window.supabase
               .from("orders")
               .update({
                 payment_reference: response.reference,   // requires the optional column
@@ -588,7 +591,10 @@
               .eq("id", order.id)
               .eq("customer_id", currentUser.id)
               .eq("order_status", "pending")
-              .eq("payment_status", "pending");
+              .eq("payment_status", "pending")
+              .select("id")
+              .maybeSingle();
+            if (payUpdateError) throw payUpdateError;
 
             // 5) add items only AFTER payment verified (recommended)
             const items = buildOrderItemsForDB();
