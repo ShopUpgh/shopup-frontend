@@ -338,7 +338,15 @@
         payment_reference: ref,
       };
 
-      const { data, error } = await supabase.from("orders").update(payload).eq("id", oid).select("*").maybeSingle();
+      const { data, error } = await supabase
+        .from("orders")
+        .update(payload)
+        .eq("id", oid)
+        .eq("customer_id", user.id)
+        .eq("order_status", "pending")
+        .eq("payment_status", "pending")
+        .select("*")
+        .maybeSingle();
       if (error) throw error;
       if (!data?.id) throw new Error("Payment update failed (no row returned).");
 
