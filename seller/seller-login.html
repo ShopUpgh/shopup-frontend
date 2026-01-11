@@ -294,6 +294,8 @@
 
           showSuccess("Login successful! Redirecting to dashboard...");
 
+          loading.classList.remove("show");
+
           setTimeout(() => {
             window.location.href = "seller-dashboard-enhanced.html";
           }, 900);
