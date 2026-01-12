@@ -126,35 +126,10 @@
   <!-- ✅ Logger -->
   <script defer src="/js/logger.js"></script>
 
+  <!-- ✅ Order API (PROD schema) -->
+  <script defer src="/js/order-management-script.js"></script>
+
   <!-- ✅ Checkout logic -->
   <script defer src="/js/customer-checkout-script.js"></script>
-
-  <!-- ✅ Auth + Sentry identity -->
-  <script>
-    (function () {
-      const authToken = localStorage.getItem("authToken");
-      const currentUser = localStorage.getItem("currentUser");
-
-      if (!authToken) {
-        window.location.href = "customer-login.html";
-        return;
-      }
-
-      try {
-        const user = JSON.parse(currentUser || "{}");
-        if (window.Sentry && user && user.id) {
-          window.Sentry.setUser({
-            id: String(user.id),
-            email: user.email || undefined,
-            role: "customer",
-          });
-        }
-      } catch {}
-
-      if (window.logger) {
-        window.logger.pageView(document.title);
-      }
-    })();
-  </script>
 </body>
 </html>
