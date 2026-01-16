@@ -511,7 +511,7 @@ Found a bug? Please report:
 
 ## 👥 Team & Contributors
 
-**Founder:** ALDENS TECH & INNOVATIONS  
+**Founded by:** ALDENS TECH & INNOVATIONS  
 **TIN:** P0060837543  
 **Development:** Claude AI + Al  
 **Design:** In-house  
