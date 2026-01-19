@@ -14,7 +14,7 @@ function fmtMoney(n) {
 }
 
 async function getClient() {
-  if (!window.supabaseReady) throw new Error("supabaseReady missing. Check /js/supabase-init.js");
+  if (!window.supabaseReady) throw new Error("supabaseReady missing. Check that /js/supabase-init.js is loaded.");
   const client = await window.supabaseReady;
   if (!client) throw new Error("Supabase not initialized.");
   return client;
@@ -153,34 +153,36 @@ async function boot() {
   }
 }
 
-const logoutBtn = el("logoutBtn");
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", async () => {
-    try {
-      const client = await getClient();
-      if (typeof Sentry !== "undefined") {
-        Sentry.addBreadcrumb({ category: "auth", message: "Seller logout initiated", level: "info" });
+document.addEventListener("DOMContentLoaded", () => {
+  const logoutBtn = el("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        const client = await getClient();
+        if (typeof Sentry !== "undefined") {
+          Sentry.addBreadcrumb({ category: "auth", message: "Seller logout initiated", level: "info" });
+        }
+
+        await client.auth.signOut();
+
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("sessionExpiry");
+        localStorage.removeItem("role");
+
+        if (typeof Sentry !== "undefined") Sentry.setUser(null);
+
+        window.location.href = "seller-login.html";
+      } catch (err) {
+        console.error("Logout error:", err);
+        if (typeof Sentry !== "undefined") {
+          Sentry.captureException(err, { tags: { error_category: "logout" } });
+        }
       }
+    });
+  }
 
-      await client.auth.signOut();
-
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("currentUser");
-      localStorage.removeItem("sessionExpiry");
-      localStorage.removeItem("role");
-
-      if (typeof Sentry !== "undefined") Sentry.setUser(null);
-
-      window.location.href = "seller-login.html";
-    } catch (err) {
-      console.error("Logout error:", err);
-      if (typeof Sentry !== "undefined") {
-        Sentry.captureException(err, { tags: { error_category: "logout" } });
-      }
-    }
-  });
-}
-
-boot();
+  boot();
+});
 
 export {};
