@@ -1,164 +1,306 @@
-// /js/supabase-config.js
+// /js/order-management-script.js
 (function () {
   "use strict";
 
-  // ✅ Must match /js/supabase-init.js (same project)
-  const SUPABASE_URL = "https://brbewkxpvihnsrbrlpzq.supabase.co";
-  const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmV3a3hwdmlobnNyYnJscHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMTI4OTAsImV4cCI6MjA3ODY4ODg5MH0.SfZMbpxsNHTgoXIvn9HZnXSZAQnCSjKNpAnH4vLVVj4";
+  console.log("📦 Order Management loaded");
 
-  const DEBUG = false;
+  // ---------------------------
+  // Supabase access
+  // ---------------------------
+  async function sb() {
+    if (window.supabaseReady && typeof window.supabaseReady.then === "function") {
+      await window.supabaseReady;
+    }
+    if (!window.supabase) throw new Error("Supabase client not found on window.supabase");
+    return window.supabase;
+  }
 
-  // -------------------------------------------------------
+  async function getCurrentUser() {
+    const supabase = await sb();
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    return data?.user || null;
+  }
+
+  // ---------------------------
   // Helpers
-  // -------------------------------------------------------
-  function log(...args) {
-    if (DEBUG) console.log(...args);
+  // ---------------------------
+  function n(x) {
+    const v = Number(x);
+    return Number.isFinite(v) ? v : 0;
   }
 
-  function warn(...args) {
-    if (DEBUG) console.warn(...args);
+  function calcLineSubtotal(qty, unitPrice) {
+    return n(qty) * n(unitPrice);
   }
 
-  function isPromise(p) {
-    return !!p && typeof p.then === "function";
-  }
-
-  function isClient(obj) {
-    return !!obj && !!obj.auth && typeof obj.auth.getSession === "function";
-  }
-
-  function isUmdNamespace(obj) {
-    return !!obj && typeof obj.createClient === "function";
-  }
-
-  function getProjectRefFromUrl(url) {
-    // https://<ref>.supabase.co
+  async function tryGenerateOrderNumber() {
     try {
-      const u = new URL(url);
-      return (u.hostname || "").split(".")[0] || "";
+      const supabase = await sb();
+      const { data, error } = await supabase.rpc("generate_order_number");
+      if (error) throw error;
+      return data;
     } catch {
-      return "";
+      const ts = Date.now().toString().slice(-6);
+      const year = new Date().getFullYear();
+      return `ORD-${year}-${ts}`;
     }
   }
 
-  function getIssuerFromJwt(jwt) {
+  function nowIso() {
+    return new Date().toISOString();
+  }
+
+  // ---------------------------
+  // 1) Create Order (header)
+  // ---------------------------
+  async function createOrder(input) {
     try {
-      const parts = String(jwt || "").split(".");
-      if (parts.length < 2) return "";
-      const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
-      return String(payload.iss || "");
-    } catch {
-      return "";
+      const supabase = await sb();
+      const user = await getCurrentUser();
+      if (!user) throw new Error("Not authenticated");
+
+      if (!input?.seller_id) throw new Error("Missing seller_id");
+
+      const order_number = await tryGenerateOrderNumber();
+
+      const order = {
+        order_number,
+        customer_id: user.id,
+        seller_id: input.seller_id,
+        delivery_address_id: input.delivery_address_id || null,
+
+        subtotal: n(input.subtotal),
+        shipping_fee: n(input.shipping_fee),
+        tax: n(input.tax),
+        discount: n(input.discount),
+        total_amount: n(input.total_amount),
+
+        payment_method: input.payment_method || "cod",
+        payment_status: input.payment_status || "unpaid",
+        order_status: input.order_status || "pending",
+
+        notes: input.notes || null,
+
+        // optional fields from your schema
+        payment_reference: input.payment_reference || null,
+        tracking_number: input.tracking_number || null,
+        shipped_at: input.shipped_at || null,
+        delivered_at: input.delivered_at || null,
+        cancelled_at: input.cancelled_at || null,
+        cancellation_reason: input.cancellation_reason || null,
+
+        // keep updated_at in sync if you use it
+        updated_at: nowIso(),
+      };
+
+      const { data, error } = await supabase
+        .from("orders")
+        .insert(order)
+        .select("*")
+        .single();
+
+      if (error) throw error;
+
+      return { success: true, data };
+    } catch (error) {
+      console.error("❌ createOrder error:", error);
+      return { success: false, error: error.message || String(error) };
     }
   }
 
-  function validateKeyMatchesUrl(url, anonKey) {
-    const refFromUrl = getProjectRefFromUrl(url);
-    const iss = getIssuerFromJwt(anonKey);
-    const refFromIss = iss ? iss.replace("supabase-", "") : "";
+  // ---------------------------
+  // 2) Add items to order
+  // ---------------------------
+  async function addOrderItems(orderId, items) {
+    try {
+      const supabase = await sb();
+      const user = await getCurrentUser();
+      if (!user) throw new Error("Not authenticated");
 
-    if (!refFromUrl || !refFromIss) return true;
+      if (!orderId) throw new Error("Missing orderId");
+      if (!Array.isArray(items) || items.length === 0) throw new Error("No items provided");
 
-    const ok = refFromUrl === refFromIss;
-    if (!ok) {
-      console.error(
-        "❌ Supabase ANON key does NOT match SUPABASE_URL project.\n" +
-          `URL project ref: ${refFromUrl}\n` +
-          `Key issuer ref:  ${refFromIss}\n` +
-          "Fix: ensure ALL pages load the SAME /js/supabase-config.js or /js/supabase-init.js values."
-      );
+      const rows = items.map((it) => {
+        const quantity = n(it.quantity);
+        const unit_price = n(it.unit_price);
+        const subtotal = calcLineSubtotal(quantity, unit_price);
+
+        return {
+          order_id: orderId,
+          product_id: it.product_id,
+          product_name: it.product_name,
+          product_sku: it.product_sku || null,
+          quantity,
+          unit_price,
+          subtotal,
+        };
+      });
+
+      const { data, error } = await supabase
+        .from("order_items")
+        .insert(rows)
+        .select("*");
+
+      if (error) throw error;
+
+      return { success: true, data: data || [] };
+    } catch (error) {
+      console.error("❌ addOrderItems error:", error);
+      return { success: false, error: error.message || String(error) };
     }
-    return ok;
   }
 
-  // -------------------------------------------------------
-  // 1) If module init already created window.supabaseReady, reuse it.
-  // -------------------------------------------------------
-  if (isPromise(window.supabaseReady)) {
-    window.supabaseReady = window.supabaseReady.then((client) => {
-      if (client && !isClient(window.supabase)) window.supabase = client;
-      return client;
-    });
+  // ---------------------------
+  // 3) Customer orders
+  // ---------------------------
+  async function getMyOrders() {
+    try {
+      const supabase = await sb();
+      const user = await getCurrentUser();
+      if (!user) throw new Error("Not authenticated");
 
-    window.ShopUpSupabaseWait = async function () {
-      const client = await window.supabaseReady;
-      if (!client) throw new Error("Supabase not initialized (supabaseReady returned null).");
-      return client;
-    };
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("customer_id", user.id)
+        .order("created_at", { ascending: false });
 
-    log("✅ supabase-config.js: using existing window.supabaseReady (module init detected)");
-    return;
+      if (error) throw error;
+      return { success: true, data: data || [] };
+    } catch (error) {
+      console.error("❌ getMyOrders error:", error);
+      return { success: false, error: error.message || String(error) };
+    }
   }
 
-  // -------------------------------------------------------
-  // 2) If a client already exists, wrap it.
-  // -------------------------------------------------------
-  if (isClient(window.supabase)) {
-    window.supabaseReady = Promise.resolve(window.supabase);
+  // ---------------------------
+  // 4) Seller orders
+  // ---------------------------
+  async function getSellerOrders(sellerId, status = null) {
+    try {
+      const supabase = await sb();
+      const user = await getCurrentUser();
+      if (!user) throw new Error("Not authenticated");
 
-    window.ShopUpSupabaseWait = async function () {
-      return window.supabase;
-    };
+      const sid = sellerId || user.id;
 
-    log("✅ supabase-config.js: wrapped existing window.supabase client");
-    return;
+      let query = supabase
+        .from("orders")
+        .select("*")
+        .eq("seller_id", sid)
+        .order("created_at", { ascending: false });
+
+      if (status) query = query.eq("order_status", status);
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      return { success: true, data: data || [] };
+    } catch (error) {
+      console.error("❌ getSellerOrders error:", error);
+      return { success: false, error: error.message || String(error) };
+    }
   }
 
-  // -------------------------------------------------------
-  // 3) Validate config basics
-  // -------------------------------------------------------
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    console.error("❌ Supabase not initialized: missing SUPABASE_URL / SUPABASE_ANON_KEY");
-    window.supabaseReady = Promise.resolve(null);
-    return;
+  // ---------------------------
+  // 5) Order details (header + items)
+  // ---------------------------
+  async function getOrderDetails(orderId) {
+    try {
+      const supabase = await sb();
+      const user = await getCurrentUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("id", orderId)
+        .single();
+
+      if (orderError) throw orderError;
+
+      const { data: items, error: itemsError } = await supabase
+        .from("order_items")
+        .select("*")
+        .eq("order_id", orderId)
+        .order("created_at", { ascending: true });
+
+      if (itemsError) throw itemsError;
+
+      return { success: true, data: { ...order, items: items || [] } };
+    } catch (error) {
+      console.error("❌ getOrderDetails error:", error);
+      return { success: false, error: error.message || String(error) };
+    }
   }
 
-  // Catch the most common “Invalid API key” cause immediately
-  validateKeyMatchesUrl(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // ---------------------------
+  // 6) Customer cancel order
+  // ---------------------------
+  async function cancelMyOrder(orderId, reason = "") {
+    try {
+      const supabase = await sb();
+      const user = await getCurrentUser();
+      if (!user) throw new Error("Not authenticated");
 
-  // -------------------------------------------------------
-  // 4) Create client from UMD namespace (window.supabase.createClient)
-  // -------------------------------------------------------
-  // If the UMD script is loaded, window.supabase is the namespace.
-  // We will preserve it in window.__supabaseLib BEFORE replacing window.supabase with the client.
-  const maybeLib = window.supabase;
+      const { data, error } = await supabase
+        .from("orders")
+        .update({
+          order_status: "cancelled",
+          cancellation_reason: reason || null,
+          cancelled_at: nowIso(),
+          updated_at: nowIso(),
+        })
+        .eq("id", orderId)
+        .select("*")
+        .single();
 
-  if (!isUmdNamespace(maybeLib)) {
-    // If it’s not a namespace, you likely did not load the UMD script on this page.
-    console.error(
-      "❌ Supabase UMD namespace not found.\n" +
-        "Fix (UMD pages): include <script src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'></script>\n" +
-        "Fix (module pages): include <script type='module' src='/js/supabase-init.js'></script> and remove supabase-config.js."
-    );
-    window.supabaseReady = Promise.resolve(null);
-    return;
+      if (error) throw error;
+      return { success: true, data };
+    } catch (error) {
+      console.error("❌ cancelMyOrder error:", error);
+      return { success: false, error: error.message || String(error) };
+    }
   }
 
-  // Preserve the UMD namespace so other scripts can still access it if needed
-  window.__supabaseLib = maybeLib;
+  // ---------------------------
+  // 7) Seller update status
+  // ---------------------------
+  async function updateOrderStatusAsSeller(orderId, newStatus) {
+    try {
+      const supabase = await sb();
+      const user = await getCurrentUser();
+      if (!user) throw new Error("Not authenticated");
 
-  window.supabaseReady = (async () => {
-    const client = window.__supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
-      global: {
-        headers: { "x-application-name": "shopup-frontend" },
-      },
-    });
+      const { data, error } = await supabase
+        .from("orders")
+        .update({
+          order_status: String(newStatus || "pending").toLowerCase(),
+          updated_at: nowIso(),
+        })
+        .eq("id", orderId)
+        .select("*")
+        .single();
 
-    // ✅ Make the client the global "supabase" reference expected by your app
-    window.supabase = client;
+      if (error) throw error;
+      return { success: true, data };
+    } catch (error) {
+      console.error("❌ updateOrderStatusAsSeller error:", error);
+      return { success: false, error: error.message || String(error) };
+    }
+  }
 
-    // ✅ Backwards-compatible DI helper
-    window.ShopUpSupabaseWait = async function () {
-      return client;
-    };
+  // Expose globally
+  window.orderAPI = {
+    createOrder,
+    addOrderItems,
+    getMyOrders,
+    getSellerOrders,
+    getOrderDetails,
+    cancelMyOrder,
+    updateOrderStatusAsSeller,
+  };
 
-    warn("✅ Supabase client initialized via /js/supabase-config.js (UMD)");
-    return client;
-  })();
+  console.log("✅ orderAPI ready: window.orderAPI");
 })();
