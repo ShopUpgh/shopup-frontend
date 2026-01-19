@@ -1,62 +1,76 @@
-// /js/order-management-script.js
+/**
+ * /js/order-management-script.js
+ * Works with BOTH:
+ *  - module pages using /js/supabase-init.js (window.supabaseReady + window.supabase)
+ *  - UMD pages using /js/supabase-config.js (window.supabaseReady + window.supabase)
+ *
+ * Tables:
+ *  - public.orders
+ *  - public.order_items
+ *
+ * Assumptions:
+ *  - one order = one seller
+ *  - customer_id = auth.uid()
+ *  - RLS policies enforce access (customer sees own; seller sees assigned)
+ */
+
 (function () {
   "use strict";
 
-  console.log("📦 Order Management loaded");
-  
-  // ---------------------------
-  // Supabase access
-  // ---------------------------
-  async function sb() {
+  console.log("📦 Order Management (PROD) loaded");
+
+  async function getClient() {
+    // 1) Preferred: window.supabaseReady promise
     if (window.supabaseReady && typeof window.supabaseReady.then === "function") {
-      await window.supabaseReady;
+      const client = await window.supabaseReady;
+      if (!client) throw new Error("Supabase not initialized (supabaseReady returned null).");
+      return client;
     }
-    if (!window.supabase) throw new Error("Supabase client not found on window.supabase");
-    return window.supabase;
+
+    // 2) Fallback: direct global client (should be rare)
+    if (window.supabase && window.supabase.auth) return window.supabase;
+
+    throw new Error("Supabase client not found. Include /js/supabase-init.js (module) OR UMD + /js/supabase-config.js.");
   }
 
   async function getCurrentUser() {
-    const supabase = await sb();
+    const supabase = await getClient();
     const { data, error } = await supabase.auth.getUser();
     if (error) throw error;
     return data?.user || null;
   }
 
-  // ---------------------------
-  // Helpers
-  // ---------------------------
-  function n(x) {
-    const v = Number(x);
-    return Number.isFinite(v) ? v : 0;
+  function n(v) {
+    const x = Number(v);
+    return Number.isFinite(x) ? x : 0;
   }
 
   function calcLineSubtotal(qty, unitPrice) {
     return n(qty) * n(unitPrice);
   }
 
+  // Optional RPC if you add it later. Falls back safely.
   async function tryGenerateOrderNumber() {
     try {
-      const supabase = await sb();
+      const supabase = await getClient();
       const { data, error } = await supabase.rpc("generate_order_number");
       if (error) throw error;
+      if (!data) throw new Error("RPC returned no order number");
       return data;
-    } catch {
+    } catch (_e) {
       const ts = Date.now().toString().slice(-6);
       const year = new Date().getFullYear();
       return `ORD-${year}-${ts}`;
     }
   }
 
-  function nowIso() {
-    return new Date().toISOString();
-  }
-
-  // ---------------------------
-  // 1) Create Order (header)
-  // ---------------------------
+  /**
+   * Create an order row (header)
+   * @param {Object} input
+   */
   async function createOrder(input) {
     try {
-      const supabase = await sb();
+      const supabase = await getClient();
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -81,27 +95,13 @@
         order_status: input.order_status || "pending",
 
         notes: input.notes || null,
-
-        // optional fields from your schema
         payment_reference: input.payment_reference || null,
-        tracking_number: input.tracking_number || null,
-        shipped_at: input.shipped_at || null,
-        delivered_at: input.delivered_at || null,
-        cancelled_at: input.cancelled_at || null,
-        cancellation_reason: input.cancellation_reason || null,
-
-        // keep updated_at in sync if you use it
-        updated_at: nowIso(),
       };
 
-      const { data, error } = await supabase
-        .from("orders")
-        .insert(order)
-        .select("*")
-        .single();
-
+      const { data, error } = await supabase.from("orders").insert(order).select("*").single();
       if (error) throw error;
 
+      console.log("✅ Order created:", data.order_number, data.id);
       return { success: true, data };
     } catch (error) {
       console.error("❌ createOrder error:", error);
@@ -109,12 +109,14 @@
     }
   }
 
-  // ---------------------------
-  // 2) Add items to order
-  // ---------------------------
+  /**
+   * Add items to an order
+   * @param {string} orderId
+   * @param {Array} items
+   */
   async function addOrderItems(orderId, items) {
     try {
-      const supabase = await sb();
+      const supabase = await getClient();
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -124,8 +126,6 @@
       const rows = items.map((it) => {
         const quantity = n(it.quantity);
         const unit_price = n(it.unit_price);
-        const subtotal = calcLineSubtotal(quantity, unit_price);
-
         return {
           order_id: orderId,
           product_id: it.product_id,
@@ -133,30 +133,24 @@
           product_sku: it.product_sku || null,
           quantity,
           unit_price,
-          subtotal,
+          subtotal: calcLineSubtotal(quantity, unit_price),
         };
       });
 
-      const { data, error } = await supabase
-        .from("order_items")
-        .insert(rows)
-        .select("*");
-
+      const { data, error } = await supabase.from("order_items").insert(rows).select("*");
       if (error) throw error;
 
-      return { success: true, data: data || [] };
+      console.log("✅ Items added:", data.length);
+      return { success: true, data };
     } catch (error) {
       console.error("❌ addOrderItems error:", error);
       return { success: false, error: error.message || String(error) };
     }
   }
 
-  // ---------------------------
-  // 3) Customer orders
-  // ---------------------------
   async function getMyOrders() {
     try {
-      const supabase = await sb();
+      const supabase = await getClient();
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -174,26 +168,18 @@
     }
   }
 
-  // ---------------------------
-  // 4) Seller orders
-  // ---------------------------
   async function getSellerOrders(sellerId, status = null) {
     try {
-      const supabase = await sb();
+      const supabase = await getClient();
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
+      if (!sellerId) throw new Error("Missing sellerId");
 
-      const sid = sellerId || user.id;
+      let q = supabase.from("orders").select("*").eq("seller_id", sellerId);
 
-      let query = supabase
-        .from("orders")
-        .select("*")
-        .eq("seller_id", sid)
-        .order("created_at", { ascending: false });
+      if (status) q = q.eq("order_status", status);
 
-      if (status) query = query.eq("order_status", status);
-
-      const { data, error } = await query;
+      const { data, error } = await q.order("created_at", { ascending: false });
       if (error) throw error;
 
       return { success: true, data: data || [] };
@@ -203,30 +189,23 @@
     }
   }
 
-  // ---------------------------
-  // 5) Order details (header + items)
-  // ---------------------------
   async function getOrderDetails(orderId) {
     try {
-      const supabase = await sb();
+      const supabase = await getClient();
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
+      if (!orderId) throw new Error("Missing orderId");
 
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("id", orderId)
-        .single();
+      const { data: order, error: e1 } = await supabase.from("orders").select("*").eq("id", orderId).single();
+      if (e1) throw e1;
 
-      if (orderError) throw orderError;
-
-      const { data: items, error: itemsError } = await supabase
+      const { data: items, error: e2 } = await supabase
         .from("order_items")
         .select("*")
         .eq("order_id", orderId)
         .order("created_at", { ascending: true });
 
-      if (itemsError) throw itemsError;
+      if (e2) throw e2;
 
       return { success: true, data: { ...order, items: items || [] } };
     } catch (error) {
@@ -235,22 +214,19 @@
     }
   }
 
-  // ---------------------------
-  // 6) Customer cancel order
-  // ---------------------------
   async function cancelMyOrder(orderId, reason = "") {
     try {
-      const supabase = await sb();
+      const supabase = await getClient();
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
+      if (!orderId) throw new Error("Missing orderId");
 
       const { data, error } = await supabase
         .from("orders")
         .update({
           order_status: "cancelled",
           cancellation_reason: reason || null,
-          cancelled_at: nowIso(),
-          updated_at: nowIso(),
+          cancelled_at: new Date().toISOString(),
         })
         .eq("id", orderId)
         .select("*")
@@ -264,34 +240,7 @@
     }
   }
 
-  // ---------------------------
-  // 7) Seller update status
-  // ---------------------------
-  async function updateOrderStatusAsSeller(orderId, newStatus) {
-    try {
-      const supabase = await sb();
-      const user = await getCurrentUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const { data, error } = await supabase
-        .from("orders")
-        .update({
-          order_status: String(newStatus || "pending").toLowerCase(),
-          updated_at: nowIso(),
-        })
-        .eq("id", orderId)
-        .select("*")
-        .single();
-
-      if (error) throw error;
-      return { success: true, data };
-    } catch (error) {
-      console.error("❌ updateOrderStatusAsSeller error:", error);
-      return { success: false, error: error.message || String(error) };
-    }
-  }
-
-  // Expose globally
+  // expose globally (so HTML can call it)
   window.orderAPI = {
     createOrder,
     addOrderItems,
@@ -299,7 +248,6 @@
     getSellerOrders,
     getOrderDetails,
     cancelMyOrder,
-    updateOrderStatusAsSeller,
   };
 
   console.log("✅ orderAPI ready: window.orderAPI");
