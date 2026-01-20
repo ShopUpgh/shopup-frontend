@@ -87,10 +87,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 console.log('Attempting to create account...');
                 
                 // Sign up user
-                const client =
-                    (typeof window.ShopUpSupabaseWait === 'function')
-                        ? await window.ShopUpSupabaseWait()
-                        : await window.supabaseReady;
+                const client = await getSupabaseClient();
 
                 const { data, error } = await client.auth.signUp({
                     email: formData.email,
@@ -144,14 +141,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
+async function getSupabaseClient() {
+    return (typeof window.ShopUpSupabaseWait === 'function')
+        ? await window.ShopUpSupabaseWait()
+        : await window.supabaseReady;
+}
+
 // Create customer profile in database
 async function createProfile(userId, formData) {
     console.log('Creating customer profile...');
     
-    const client =
-        (typeof window.ShopUpSupabaseWait === 'function')
-            ? await window.ShopUpSupabaseWait()
-            : await window.supabaseReady;
+    const client = await getSupabaseClient();
 
     const { error: profileError } = await client
         .from('customer_profiles')
