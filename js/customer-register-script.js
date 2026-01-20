@@ -5,14 +5,21 @@ console.log('Customer registration script loaded');
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('Registration page loaded');
     
-    // Wait for Supabase to load
-    let attempts = 0;
-    while (!window.supabase && attempts < 50) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        attempts++;
+    // Wait for Supabase client using helper/promise
+    let supabaseClient = null;
+    try {
+        if (window.ShopUpSupabaseWait && typeof window.ShopUpSupabaseWait.waitForSupabase === 'function') {
+            supabaseClient = await window.ShopUpSupabaseWait.waitForSupabase();
+        } else if (typeof window.ShopUpSupabaseWait === 'function') {
+            supabaseClient = await window.ShopUpSupabaseWait();
+        } else if (window.supabaseReady) {
+            supabaseClient = await window.supabaseReady;
+        }
+    } catch (err) {
+        console.error('❌ Supabase initialization failed:', err);
     }
-    
-    if (!window.supabase) {
+
+    if (!supabaseClient) {
         console.error('❌ Supabase not loaded!');
         showAlert('System error. Please refresh the page.', 'error');
         return;
@@ -87,7 +94,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 console.log('Attempting to create account...');
                 
                 // Sign up user
-                const { data, error } = await supabase.auth.signUp({
+                const { data, error } = await supabaseClient.auth.signUp({
                     email: formData.email,
                     password: formData.password,
                     options: {
@@ -108,7 +115,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 console.log('✅ User created:', data.user.id);
                 
                 // Create customer profile
-                await createProfile(data.user.id, formData);
+                await createProfile(supabaseClient, data.user.id, formData);
                 
                 // Check if email confirmation is required
                 if (data.user && !data.session) {
@@ -140,10 +147,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 // Create customer profile in database
-async function createProfile(userId, formData) {
+async function createProfile(supabaseClient, userId, formData) {
     console.log('Creating customer profile...');
     
-    const { error: profileError } = await supabase
+    const { error: profileError } = await supabaseClient
         .from('customer_profiles')
         .insert({
             user_id: userId,
