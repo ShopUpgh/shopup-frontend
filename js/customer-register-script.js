@@ -8,7 +8,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Wait for Supabase client using helper/promise
     let supabaseClient = null;
     try {
-        // Support both helper shapes: adapter exposes { waitForSupabase } while supabase-config sets a direct function
+        // Support both helper shapes and legacy promise:
+        // - /js/adapters/supabase.wait.js exposes { waitForSupabase }
+        // - /js/supabase-config.js sets ShopUpSupabaseWait as an async function
+        // - window.supabaseReady remains for pages that only expose the promise
         if (window.ShopUpSupabaseWait && typeof window.ShopUpSupabaseWait.waitForSupabase === 'function') {
             supabaseClient = await window.ShopUpSupabaseWait.waitForSupabase();
         } else if (typeof window.ShopUpSupabaseWait === 'function') {
