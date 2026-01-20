@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Wait for Supabase client using helper/promise
     let supabaseClient = null;
     try {
+        // Support both helper shapes: adapter exposes { waitForSupabase } while supabase-config sets a direct function
         if (window.ShopUpSupabaseWait && typeof window.ShopUpSupabaseWait.waitForSupabase === 'function') {
             supabaseClient = await window.ShopUpSupabaseWait.waitForSupabase();
         } else if (typeof window.ShopUpSupabaseWait === 'function') {
