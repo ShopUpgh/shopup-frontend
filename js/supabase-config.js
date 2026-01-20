@@ -1,88 +1,62 @@
 // /js/supabase-config.js
-// Compatibility shim for BOTH:
-//  A) Old pages using UMD script: <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-//  B) New module pages using: <script type="module" src="/js/supabase-init.js"></script>
-//
-// Goal: single source of truth everywhere:
-//   - window.supabaseReady (Promise<client>)
-//   - window.supabase (client instance, NOT the library)
-//   - window.ShopUpSupabaseWait() helper for legacy scripts
-
 (function () {
   "use strict";
 
-  // ✅ Must match /js/supabase-init.js
+  // ✅ MUST match your Supabase project (URL + ANON PUBLIC KEY)
   const SUPABASE_URL = "https://brbewkxpvihnsrbrlpzq.supabase.co";
-  const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmV3a3hwdmlobnNyYnscHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMTI4OTAsImV4cCI6MjA3ODY4ODg5MH0.SfZMbpxsNHTgoXIvn9HZnXSZAQnCSjKNpAnH4vLVVj4";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyYmV3a3hwdmlobnNyYnJscHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMTI4OTAsImV4cCI6MjA3ODY4ODg5MH0.SfZMbpxsNHTgoXIvn9HZnXSZAQnCSjKNpAnH4vLVVj4E";
 
   const DEBUG = false;
 
-  const log = (...a) => DEBUG && console.log(...a);
-  const warn = (...a) => DEBUG && console.warn(...a);
+  function log(...args) {
+    if (DEBUG) console.log(...args);
+  }
 
-  function setWaitHelper() {
+  // ---------------------------------------
+  // 1) If module init already exists, reuse it
+  // ---------------------------------------
+  if (window.supabaseReady && typeof window.supabaseReady.then === "function") {
     window.ShopUpSupabaseWait = async function () {
       const client = await window.supabaseReady;
       if (!client) throw new Error("Supabase not initialized (supabaseReady returned null).");
+      window.supabase = window.supabase || client;
       return client;
     };
-  }
 
-  // ---------------------------------------------
-  // 1) If module init already exists, reuse it
-  // ---------------------------------------------
-  if (window.supabaseReady && typeof window.supabaseReady.then === "function") {
-    window.supabaseReady = window.supabaseReady.then((client) => {
-      if (client && (!window.supabase || typeof window.supabase.createClient === "function")) {
-        // If window.supabase is currently the LIB, replace with client
-        window.supabase = client;
-      }
-      return client;
-    });
-
-    setWaitHelper();
-    log("✅ supabase-config.js: reusing existing window.supabaseReady (module mode)");
+    log("✅ supabase-config: using existing window.supabaseReady (module init)");
     return;
   }
 
-  // ---------------------------------------------
+  // ---------------------------------------
   // 2) If a client already exists, wrap it
-  // ---------------------------------------------
-  if (
-    window.supabase &&
-    window.supabase.auth &&
-    typeof window.supabase.auth.getSession === "function" &&
-    typeof window.supabase.from === "function"
-  ) {
+  // ---------------------------------------
+  if (window.supabase && window.supabase.auth && typeof window.supabase.auth.getSession === "function") {
     window.supabaseReady = Promise.resolve(window.supabase);
-    setWaitHelper();
-    log("✅ supabase-config.js: wrapped existing window.supabase (already client)");
+    window.ShopUpSupabaseWait = async () => window.supabase;
+    log("✅ supabase-config: existing supabase client detected");
     return;
   }
 
-  // ---------------------------------------------
-  // 3) Otherwise we must create client via UMD LIB
-  // ---------------------------------------------
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    console.error("❌ Supabase not initialized: missing SUPABASE_URL / SUPABASE_ANON_KEY");
+  // ---------------------------------------
+  // 3) Otherwise, create client from UMD library
+  // ---------------------------------------
+  const lib = window.supabase; // UMD library exposes createClient()
+
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes("PASTE_YOUR_CURRENT")) {
+    console.error("❌ Supabase not initialized: missing/placeholder SUPABASE_URL or SUPABASE_ANON_KEY");
     window.supabaseReady = Promise.resolve(null);
-    setWaitHelper();
     return;
   }
-
-  const lib = window.supabase; // In UMD mode, this is the LIB with createClient()
 
   if (!lib || typeof lib.createClient !== "function") {
     console.error(
-      "❌ Supabase library not found.\n" +
-        "Old pages must include:\n" +
-        "  <script src=\"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2\"></script>\n" +
-        "New pages must include:\n" +
-        "  <script type=\"module\" src=\"/js/supabase-init.js\"></script>"
+      "❌ Supabase UMD library not found.\n" +
+        "For non-module pages include:\n" +
+        "  <script src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'></script>\n" +
+        "For module pages include:\n" +
+        "  <script type='module' src='/js/supabase-init.js'></script>"
     );
     window.supabaseReady = Promise.resolve(null);
-    setWaitHelper();
     return;
   }
 
@@ -93,17 +67,15 @@
         autoRefreshToken: true,
         detectSessionInUrl: true,
       },
-      global: {
-        headers: { "x-application-name": "shopup-frontend" },
-      },
+      global: { headers: { "x-application-name": "shopup-frontend" } },
     });
 
-    // Replace LIB reference with CLIENT instance
+    // ✅ Make sure global window.supabase is the CLIENT (not the library)
     window.supabase = client;
 
-    warn("✅ Supabase client initialized (UMD) via /js/supabase-config.js");
+    window.ShopUpSupabaseWait = async () => client;
+
+    log("✅ Supabase client initialized via supabase-config.js (UMD mode)");
     return client;
   })();
-
-  setWaitHelper();
 })();
