@@ -1,8 +1,9 @@
+// /js/order-management-script.js
 /**
- * /js/order-management-script.js
- * Works with BOTH:
- *  - module pages using /js/supabase-init.js (window.supabaseReady + window.supabase)
- *  - UMD pages using /js/supabase-config.js (window.supabaseReady + window.supabase)
+ * ShopUp Order Management (PROD schema + RLS)
+ * Requires ONE of:
+ *  - /js/supabase-init.js (module)  OR
+ *  - Supabase CDN + /js/supabase-config.js (UMD shim)
  *
  * Tables:
  *  - public.orders
@@ -11,7 +12,8 @@
  * Assumptions:
  *  - one order = one seller
  *  - customer_id = auth.uid()
- *  - RLS policies enforce access (customer sees own; seller sees assigned)
+ *  - seller_id = auth.uid() for seller views
+ *  - RLS policies enforce access
  */
 
 (function () {
@@ -19,45 +21,49 @@
 
   console.log("📦 Order Management (PROD) loaded");
 
-  async function getClient() {
-    // 1) Preferred: window.supabaseReady promise
+  async function sb() {
+    // Preferred: module init
     if (window.supabaseReady && typeof window.supabaseReady.then === "function") {
       const client = await window.supabaseReady;
-      if (!client) throw new Error("Supabase not initialized (supabaseReady returned null).");
+      if (!client) throw new Error("Supabase not initialized (supabaseReady is null).");
       return client;
     }
 
-    // 2) Fallback: direct global client (should be rare)
-    if (window.supabase && window.supabase.auth) return window.supabase;
+    // Fallback: shim helper
+    if (typeof window.ShopUpSupabaseWait === "function") {
+      return await window.ShopUpSupabaseWait();
+    }
 
-    throw new Error("Supabase client not found. Include /js/supabase-init.js (module) OR UMD + /js/supabase-config.js.");
+    // Last resort: global client
+    if (window.supabase && typeof window.supabase.from === "function") return window.supabase;
+
+    throw new Error("Supabase client not found. Load /js/supabase-init.js or /js/supabase-config.js.");
   }
 
   async function getCurrentUser() {
-    const supabase = await getClient();
+    const supabase = await sb();
     const { data, error } = await supabase.auth.getUser();
     if (error) throw error;
     return data?.user || null;
   }
 
-  function n(v) {
-    const x = Number(v);
-    return Number.isFinite(x) ? x : 0;
+  function num(x) {
+    const n = Number(x);
+    return Number.isFinite(n) ? n : 0;
   }
 
   function calcLineSubtotal(qty, unitPrice) {
-    return n(qty) * n(unitPrice);
+    return num(qty) * num(unitPrice);
   }
 
-  // Optional RPC if you add it later. Falls back safely.
   async function tryGenerateOrderNumber() {
     try {
-      const supabase = await getClient();
+      const supabase = await sb();
       const { data, error } = await supabase.rpc("generate_order_number");
       if (error) throw error;
-      if (!data) throw new Error("RPC returned no order number");
-      return data;
-    } catch (_e) {
+      if (typeof data === "string" && data.trim()) return data.trim();
+      throw new Error("generate_order_number returned empty");
+    } catch (e) {
       const ts = Date.now().toString().slice(-6);
       const year = new Date().getFullYear();
       return `ORD-${year}-${ts}`;
@@ -65,12 +71,11 @@
   }
 
   /**
-   * Create an order row (header)
-   * @param {Object} input
+   * Create a new order (header) row
    */
   async function createOrder(input) {
     try {
-      const supabase = await getClient();
+      const supabase = await sb();
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -84,18 +89,18 @@
         seller_id: input.seller_id,
         delivery_address_id: input.delivery_address_id || null,
 
-        subtotal: n(input.subtotal),
-        shipping_fee: n(input.shipping_fee),
-        tax: n(input.tax),
-        discount: n(input.discount),
-        total_amount: n(input.total_amount),
+        subtotal: num(input.subtotal),
+        shipping_fee: num(input.shipping_fee),
+        tax: num(input.tax),
+        discount: num(input.discount),
+        total_amount: num(input.total_amount),
 
         payment_method: input.payment_method || "cod",
         payment_status: input.payment_status || "unpaid",
         order_status: input.order_status || "pending",
 
-        notes: input.notes || null,
         payment_reference: input.payment_reference || null,
+        notes: input.notes || null,
       };
 
       const { data, error } = await supabase.from("orders").insert(order).select("*").single();
@@ -111,12 +116,10 @@
 
   /**
    * Add items to an order
-   * @param {string} orderId
-   * @param {Array} items
    */
   async function addOrderItems(orderId, items) {
     try {
-      const supabase = await getClient();
+      const supabase = await sb();
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -124,8 +127,8 @@
       if (!Array.isArray(items) || items.length === 0) throw new Error("No items provided");
 
       const rows = items.map((it) => {
-        const quantity = n(it.quantity);
-        const unit_price = n(it.unit_price);
+        const quantity = num(it.quantity);
+        const unit_price = num(it.unit_price);
         return {
           order_id: orderId,
           product_id: it.product_id,
@@ -148,9 +151,12 @@
     }
   }
 
+  /**
+   * Customer: list my orders
+   */
   async function getMyOrders() {
     try {
-      const supabase = await getClient();
+      const supabase = await sb();
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -168,18 +174,25 @@
     }
   }
 
-  async function getSellerOrders(sellerId, status = null) {
+  /**
+   * Seller: list my assigned orders (seller_id = auth.uid())
+   * NOTE: sellerId param is optional; kept for compatibility with your UI.
+   */
+  async function getSellerOrders(sellerId = null, status = null) {
     try {
-      const supabase = await getClient();
+      const supabase = await sb();
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
-      if (!sellerId) throw new Error("Missing sellerId");
 
-      let q = supabase.from("orders").select("*").eq("seller_id", sellerId);
+      const sid = sellerId || user.id;
+
+      let q = supabase.from("orders").select("*").eq("seller_id", sid);
 
       if (status) q = q.eq("order_status", status);
 
-      const { data, error } = await q.order("created_at", { ascending: false });
+      q = q.order("created_at", { ascending: false });
+
+      const { data, error } = await q;
       if (error) throw error;
 
       return { success: true, data: data || [] };
@@ -189,23 +202,30 @@
     }
   }
 
+  /**
+   * Order details (header + items)
+   */
   async function getOrderDetails(orderId) {
     try {
-      const supabase = await getClient();
+      const supabase = await sb();
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
-      if (!orderId) throw new Error("Missing orderId");
 
-      const { data: order, error: e1 } = await supabase.from("orders").select("*").eq("id", orderId).single();
-      if (e1) throw e1;
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("id", orderId)
+        .single();
 
-      const { data: items, error: e2 } = await supabase
+      if (orderError) throw orderError;
+
+      const { data: items, error: itemsError } = await supabase
         .from("order_items")
         .select("*")
         .eq("order_id", orderId)
         .order("created_at", { ascending: true });
 
-      if (e2) throw e2;
+      if (itemsError) throw itemsError;
 
       return { success: true, data: { ...order, items: items || [] } };
     } catch (error) {
@@ -214,12 +234,14 @@
     }
   }
 
+  /**
+   * Customer: cancel my order (RLS/policies should restrict to pending)
+   */
   async function cancelMyOrder(orderId, reason = "") {
     try {
-      const supabase = await getClient();
+      const supabase = await sb();
       const user = await getCurrentUser();
       if (!user) throw new Error("Not authenticated");
-      if (!orderId) throw new Error("Missing orderId");
 
       const { data, error } = await supabase
         .from("orders")
@@ -240,7 +262,40 @@
     }
   }
 
-  // expose globally (so HTML can call it)
+  /**
+   * Seller: update order status (RLS allows seller_id = auth.uid())
+   */
+  async function sellerUpdateOrderStatus(orderId, nextStatus, trackingNumber = null) {
+    try {
+      const supabase = await sb();
+      const user = await getCurrentUser();
+      if (!user) throw new Error("Not authenticated");
+
+      if (!orderId) throw new Error("Missing orderId");
+      if (!nextStatus) throw new Error("Missing nextStatus");
+
+      const patch = {
+        order_status: nextStatus,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (trackingNumber) patch.tracking_number = trackingNumber;
+
+      // Optional timestamps
+      if (nextStatus === "shipped") patch.shipped_at = new Date().toISOString();
+      if (nextStatus === "delivered") patch.delivered_at = new Date().toISOString();
+
+      const { data, error } = await supabase.from("orders").update(patch).eq("id", orderId).select("*").single();
+      if (error) throw error;
+
+      return { success: true, data };
+    } catch (error) {
+      console.error("❌ sellerUpdateOrderStatus error:", error);
+      return { success: false, error: error.message || String(error) };
+    }
+  }
+
+  // Expose globally
   window.orderAPI = {
     createOrder,
     addOrderItems,
@@ -248,6 +303,7 @@
     getSellerOrders,
     getOrderDetails,
     cancelMyOrder,
+    sellerUpdateOrderStatus,
   };
 
   console.log("✅ orderAPI ready: window.orderAPI");
