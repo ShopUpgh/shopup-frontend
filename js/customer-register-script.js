@@ -99,9 +99,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                             first_name: formData.firstName,
                             last_name: formData.lastName,
                             phone: formData.phone,
-                            full_name: `${formData.firstName} ${formData.lastName}`,
-                        },
-                    },
+                            full_name: `${formData.firstName} ${formData.lastName}`
+                        }
+                    }
                 });
                 
                 if (error) {

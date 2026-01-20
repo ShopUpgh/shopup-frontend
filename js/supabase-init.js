@@ -28,6 +28,7 @@ if (!window.supabaseReady) {
     });
 
     window.supabase = client;
+    window.ShopUpSupabaseWait = async () => client;
 
     if (DEBUG) {
       console.log("✅ Supabase initialized (ShopUp Ghana)");
