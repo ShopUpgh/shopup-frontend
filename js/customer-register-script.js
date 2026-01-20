@@ -142,9 +142,19 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 async function getSupabaseClient() {
-    return (typeof window.ShopUpSupabaseWait === 'function')
-        ? await window.ShopUpSupabaseWait()
-        : await window.supabaseReady;
+    try {
+        if (typeof window.ShopUpSupabaseWait === 'function') {
+            return await window.ShopUpSupabaseWait();
+        }
+        if (window.supabaseReady) {
+            return await window.supabaseReady;
+        }
+        throw new Error('Supabase client not available');
+    } catch (err) {
+        console.error('Failed to get Supabase client', err);
+        if (err instanceof Error) throw err;
+        throw new Error('Failed to get Supabase client');
+    }
 }
 
 // Create customer profile in database
