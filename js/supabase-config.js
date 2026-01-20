@@ -1,306 +1,109 @@
-// /js/order-management-script.js
+// /js/supabase-config.js
+// Compatibility shim for BOTH:
+//  A) Old pages using UMD script: <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+//  B) New module pages using: <script type="module" src="/js/supabase-init.js"></script>
+//
+// Goal: single source of truth everywhere:
+//   - window.supabaseReady (Promise<client>)
+//   - window.supabase (client instance, NOT the library)
+//   - window.ShopUpSupabaseWait() helper for legacy scripts
+
 (function () {
   "use strict";
 
-  console.log("📦 Order Management loaded");
+  // ✅ Must match /js/supabase-init.js
+  const SUPABASE_URL = "https://brbewkxpvihnsrbrlpzq.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmV3a3hwdmlobnNyYnscHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMTI4OTAsImV4cCI6MjA3ODY4ODg5MH0.SfZMbpxsNHTgoXIvn9HZnXSZAQnCSjKNpAnH4vLVVj4";
 
-  // ---------------------------
-  // Supabase access
-  // ---------------------------
-  async function sb() {
-    if (window.supabaseReady && typeof window.supabaseReady.then === "function") {
-      await window.supabaseReady;
-    }
-    if (!window.supabase) throw new Error("Supabase client not found on window.supabase");
-    return window.supabase;
+  const DEBUG = false;
+
+  const log = (...a) => DEBUG && console.log(...a);
+  const warn = (...a) => DEBUG && console.warn(...a);
+
+  function setWaitHelper() {
+    window.ShopUpSupabaseWait = async function () {
+      const client = await window.supabaseReady;
+      if (!client) throw new Error("Supabase not initialized (supabaseReady returned null).");
+      return client;
+    };
   }
 
-  async function getCurrentUser() {
-    const supabase = await sb();
-    const { data, error } = await supabase.auth.getUser();
-    if (error) throw error;
-    return data?.user || null;
+  // ---------------------------------------------
+  // 1) If module init already exists, reuse it
+  // ---------------------------------------------
+  if (window.supabaseReady && typeof window.supabaseReady.then === "function") {
+    window.supabaseReady = window.supabaseReady.then((client) => {
+      if (client && (!window.supabase || typeof window.supabase.createClient === "function")) {
+        // If window.supabase is currently the LIB, replace with client
+        window.supabase = client;
+      }
+      return client;
+    });
+
+    setWaitHelper();
+    log("✅ supabase-config.js: reusing existing window.supabaseReady (module mode)");
+    return;
   }
 
-  // ---------------------------
-  // Helpers
-  // ---------------------------
-  function n(x) {
-    const v = Number(x);
-    return Number.isFinite(v) ? v : 0;
+  // ---------------------------------------------
+  // 2) If a client already exists, wrap it
+  // ---------------------------------------------
+  if (
+    window.supabase &&
+    window.supabase.auth &&
+    typeof window.supabase.auth.getSession === "function" &&
+    typeof window.supabase.from === "function"
+  ) {
+    window.supabaseReady = Promise.resolve(window.supabase);
+    setWaitHelper();
+    log("✅ supabase-config.js: wrapped existing window.supabase (already client)");
+    return;
   }
 
-  function calcLineSubtotal(qty, unitPrice) {
-    return n(qty) * n(unitPrice);
+  // ---------------------------------------------
+  // 3) Otherwise we must create client via UMD LIB
+  // ---------------------------------------------
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.error("❌ Supabase not initialized: missing SUPABASE_URL / SUPABASE_ANON_KEY");
+    window.supabaseReady = Promise.resolve(null);
+    setWaitHelper();
+    return;
   }
 
-  async function tryGenerateOrderNumber() {
-    try {
-      const supabase = await sb();
-      const { data, error } = await supabase.rpc("generate_order_number");
-      if (error) throw error;
-      return data;
-    } catch {
-      const ts = Date.now().toString().slice(-6);
-      const year = new Date().getFullYear();
-      return `ORD-${year}-${ts}`;
-    }
+  const lib = window.supabase; // In UMD mode, this is the LIB with createClient()
+
+  if (!lib || typeof lib.createClient !== "function") {
+    console.error(
+      "❌ Supabase library not found.\n" +
+        "Old pages must include:\n" +
+        "  <script src=\"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2\"></script>\n" +
+        "New pages must include:\n" +
+        "  <script type=\"module\" src=\"/js/supabase-init.js\"></script>"
+    );
+    window.supabaseReady = Promise.resolve(null);
+    setWaitHelper();
+    return;
   }
 
-  function nowIso() {
-    return new Date().toISOString();
-  }
+  window.supabaseReady = (async () => {
+    const client = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+      global: {
+        headers: { "x-application-name": "shopup-frontend" },
+      },
+    });
 
-  // ---------------------------
-  // 1) Create Order (header)
-  // ---------------------------
-  async function createOrder(input) {
-    try {
-      const supabase = await sb();
-      const user = await getCurrentUser();
-      if (!user) throw new Error("Not authenticated");
+    // Replace LIB reference with CLIENT instance
+    window.supabase = client;
 
-      if (!input?.seller_id) throw new Error("Missing seller_id");
+    warn("✅ Supabase client initialized (UMD) via /js/supabase-config.js");
+    return client;
+  })();
 
-      const order_number = await tryGenerateOrderNumber();
-
-      const order = {
-        order_number,
-        customer_id: user.id,
-        seller_id: input.seller_id,
-        delivery_address_id: input.delivery_address_id || null,
-
-        subtotal: n(input.subtotal),
-        shipping_fee: n(input.shipping_fee),
-        tax: n(input.tax),
-        discount: n(input.discount),
-        total_amount: n(input.total_amount),
-
-        payment_method: input.payment_method || "cod",
-        payment_status: input.payment_status || "unpaid",
-        order_status: input.order_status || "pending",
-
-        notes: input.notes || null,
-
-        // optional fields from your schema
-        payment_reference: input.payment_reference || null,
-        tracking_number: input.tracking_number || null,
-        shipped_at: input.shipped_at || null,
-        delivered_at: input.delivered_at || null,
-        cancelled_at: input.cancelled_at || null,
-        cancellation_reason: input.cancellation_reason || null,
-
-        // keep updated_at in sync if you use it
-        updated_at: nowIso(),
-      };
-
-      const { data, error } = await supabase
-        .from("orders")
-        .insert(order)
-        .select("*")
-        .single();
-
-      if (error) throw error;
-
-      return { success: true, data };
-    } catch (error) {
-      console.error("❌ createOrder error:", error);
-      return { success: false, error: error.message || String(error) };
-    }
-  }
-
-  // ---------------------------
-  // 2) Add items to order
-  // ---------------------------
-  async function addOrderItems(orderId, items) {
-    try {
-      const supabase = await sb();
-      const user = await getCurrentUser();
-      if (!user) throw new Error("Not authenticated");
-
-      if (!orderId) throw new Error("Missing orderId");
-      if (!Array.isArray(items) || items.length === 0) throw new Error("No items provided");
-
-      const rows = items.map((it) => {
-        const quantity = n(it.quantity);
-        const unit_price = n(it.unit_price);
-        const subtotal = calcLineSubtotal(quantity, unit_price);
-
-        return {
-          order_id: orderId,
-          product_id: it.product_id,
-          product_name: it.product_name,
-          product_sku: it.product_sku || null,
-          quantity,
-          unit_price,
-          subtotal,
-        };
-      });
-
-      const { data, error } = await supabase
-        .from("order_items")
-        .insert(rows)
-        .select("*");
-
-      if (error) throw error;
-
-      return { success: true, data: data || [] };
-    } catch (error) {
-      console.error("❌ addOrderItems error:", error);
-      return { success: false, error: error.message || String(error) };
-    }
-  }
-
-  // ---------------------------
-  // 3) Customer orders
-  // ---------------------------
-  async function getMyOrders() {
-    try {
-      const supabase = await sb();
-      const user = await getCurrentUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("customer_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return { success: true, data: data || [] };
-    } catch (error) {
-      console.error("❌ getMyOrders error:", error);
-      return { success: false, error: error.message || String(error) };
-    }
-  }
-
-  // ---------------------------
-  // 4) Seller orders
-  // ---------------------------
-  async function getSellerOrders(sellerId, status = null) {
-    try {
-      const supabase = await sb();
-      const user = await getCurrentUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const sid = sellerId || user.id;
-
-      let query = supabase
-        .from("orders")
-        .select("*")
-        .eq("seller_id", sid)
-        .order("created_at", { ascending: false });
-
-      if (status) query = query.eq("order_status", status);
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      return { success: true, data: data || [] };
-    } catch (error) {
-      console.error("❌ getSellerOrders error:", error);
-      return { success: false, error: error.message || String(error) };
-    }
-  }
-
-  // ---------------------------
-  // 5) Order details (header + items)
-  // ---------------------------
-  async function getOrderDetails(orderId) {
-    try {
-      const supabase = await sb();
-      const user = await getCurrentUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("id", orderId)
-        .single();
-
-      if (orderError) throw orderError;
-
-      const { data: items, error: itemsError } = await supabase
-        .from("order_items")
-        .select("*")
-        .eq("order_id", orderId)
-        .order("created_at", { ascending: true });
-
-      if (itemsError) throw itemsError;
-
-      return { success: true, data: { ...order, items: items || [] } };
-    } catch (error) {
-      console.error("❌ getOrderDetails error:", error);
-      return { success: false, error: error.message || String(error) };
-    }
-  }
-
-  // ---------------------------
-  // 6) Customer cancel order
-  // ---------------------------
-  async function cancelMyOrder(orderId, reason = "") {
-    try {
-      const supabase = await sb();
-      const user = await getCurrentUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const { data, error } = await supabase
-        .from("orders")
-        .update({
-          order_status: "cancelled",
-          cancellation_reason: reason || null,
-          cancelled_at: nowIso(),
-          updated_at: nowIso(),
-        })
-        .eq("id", orderId)
-        .select("*")
-        .single();
-
-      if (error) throw error;
-      return { success: true, data };
-    } catch (error) {
-      console.error("❌ cancelMyOrder error:", error);
-      return { success: false, error: error.message || String(error) };
-    }
-  }
-
-  // ---------------------------
-  // 7) Seller update status
-  // ---------------------------
-  async function updateOrderStatusAsSeller(orderId, newStatus) {
-    try {
-      const supabase = await sb();
-      const user = await getCurrentUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const { data, error } = await supabase
-        .from("orders")
-        .update({
-          order_status: String(newStatus || "pending").toLowerCase(),
-          updated_at: nowIso(),
-        })
-        .eq("id", orderId)
-        .select("*")
-        .single();
-
-      if (error) throw error;
-      return { success: true, data };
-    } catch (error) {
-      console.error("❌ updateOrderStatusAsSeller error:", error);
-      return { success: false, error: error.message || String(error) };
-    }
-  }
-
-  // Expose globally
-  window.orderAPI = {
-    createOrder,
-    addOrderItems,
-    getMyOrders,
-    getSellerOrders,
-    getOrderDetails,
-    cancelMyOrder,
-    updateOrderStatusAsSeller,
-  };
-
-  console.log("✅ orderAPI ready: window.orderAPI");
+  setWaitHelper();
 })();
