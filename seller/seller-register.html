@@ -6,8 +6,7 @@
     <title>Seller Registration - ShopUp</title>
 
     <!-- Supabase CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../js/supabase-config.js"></script>
+<script type="module" src="/js/supabase-init.js"></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -231,7 +230,12 @@ form.addEventListener("submit", async (e) => {
         const password = password.value;
         const businessName = businessName.value;
 
-        const { data, error } = await supabase.auth.signUp({
+        const client =
+            (typeof window.ShopUpSupabaseWait === "function")
+                ? await window.ShopUpSupabaseWait()
+                : await window.supabaseReady;
+
+        const { data, error } = await client.auth.signUp({
             email,
             password,
             options: {

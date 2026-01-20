@@ -493,8 +493,8 @@
     </div>
 
     <!-- Scripts -->
-    <script src="supabase-config.js"></script>
-    <script src="order-management-script.js"></script>
+    <script type="module" src="/js/supabase-init.js"></script>
+    <script src="/js/order-management-script.js"></script>
 
     <script>
         /**
@@ -521,7 +521,12 @@
         async function initializePage() {
             try {
                 // Get current user
-                const { data: { user }, error } = await supabase.auth.getUser();
+                const client =
+                    (typeof window.ShopUpSupabaseWait === "function")
+                        ? await window.ShopUpSupabaseWait()
+                        : await window.supabaseReady;
+
+                const { data: { user }, error } = await client.auth.getUser();
 
                 if (error || !user) {
                     console.warn('⚠️ Not authenticated, showing demo data');

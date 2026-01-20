@@ -1,9 +1,9 @@
 // /js/supabase-init.js
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-// ✅ ShopUp Ghana (Production / Live)
-const SUPABASE_URL = "https://brbewkxpvihnsrbrlpzq.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmV3a3hwdmlobnNyYnJscHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMTI4OTAsImV4cCI6MjA3ODY4ODg5MH0.SfZMbpxsNHTgoXIvn9HZnXSZAQnCSjKNpAnH4vLVVj4";
+// ✅ ShopUp Ghana (Production / Live) — replace with your current Supabase project values
+const SUPABASE_URL = "https://PASTE_YOUR_PROJECT_URL.supabase.co";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_CURRENT_ANON_KEY";
 
 // Optional: quiet logs in production
 const DEBUG = false;

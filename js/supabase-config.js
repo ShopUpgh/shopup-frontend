@@ -3,8 +3,8 @@
   "use strict";
 
   // ✅ MUST match your Supabase project (URL + ANON PUBLIC KEY)
-  const SUPABASE_URL = "https://brbewkxpvihnsrbrlpzq.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyYmV3a3hwdmlobnNyYnJscHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMTI4OTAsImV4cCI6MjA3ODY4ODg5MH0.SfZMbpxsNHTgoXIvn9HZnXSZAQnCSjKNpAnH4vLVVj4E";
+  const SUPABASE_URL = "https://PASTE_YOUR_PROJECT_URL.supabase.co";
+  const SUPABASE_ANON_KEY = "PASTE_YOUR_CURRENT_ANON_KEY";
 
   const DEBUG = false;
 
