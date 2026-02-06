@@ -11,9 +11,8 @@
   if (!c.__shopup_bootstrapped) {
     c.__shopup_bootstrapped = true;
 
-    // Config (Option A: config.js creates ShopUpConfig from window.supabase)
-    c.register("config", () => window.ShopUpConfig);
     c.register("configReady", () => window.ShopUpConfigReady);
+    c.register("config", () => window.ShopUpConfig);
 
     c.register("supabaseWait", () => window.ShopUpSupabaseWait);
     c.register("logger", () => window.ShopUpLoggerFactory.createLogger());
@@ -24,13 +23,20 @@
       })
     );
 
-    c.register("authService", (cc) =>
-      window.ShopUpAuthServiceFactory.createAuthService({
-        config: cc.resolve("config"),
+    // ✅ Ensure config is ready before creating authService
+    c.register("authService", (cc) => {
+      // If config isn't ready yet, throw a clear error (caught by controller) OR wait in controller
+      const cfg = cc.resolve("config");
+      if (!cfg?.storage) {
+        throw new Error("ShopUpConfig not ready or missing storage keys. Ensure /js/core/config.js is loaded.");
+      }
+
+      return window.ShopUpAuthServiceFactory.createAuthService({
+        config: cfg,
         authAdapter: cc.resolve("authAdapter"),
         logger: cc.resolve("logger"),
-      })
-    );
+      });
+    });
   }
 
   if (!window.ShopUpPages?.initSellerLoginPage) {
@@ -38,7 +44,6 @@
     return;
   }
 
-  // Ensure config is ready before running page logic (avoids undefined config)
   Promise.resolve(window.ShopUpConfigReady)
     .catch(() => null)
     .finally(() => window.ShopUpPages.initSellerLoginPage(c));
