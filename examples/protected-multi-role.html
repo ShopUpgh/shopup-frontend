@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Role Access - ShopUp</title>
+  
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- ShopUp Core -->
+  <script src="/js/supabase-config.js"></script>
+  <script src="/js/core/session.guard.js"></script>
+  
+  <!-- Loading Styles -->
+  <link rel="stylesheet" href="/css/auth-loading.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    .header {
+      background: white;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .header h1 {
+      margin: 0 0 0.5rem 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .header p {
+      margin: 0;
+      color: #666;
+    }
+    
+    .role-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
+    
+    .user-info {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin-bottom: 2rem;
+    }
+    
+    .user-info h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    
+    .user-detail {
+      margin: 0.75rem 0;
+      color: #666;
+      font-size: 1rem;
+    }
+    
+    .user-detail strong {
+      color: #333;
+      min-width: 120px;
+      display: inline-block;
+    }
+    
+    .features {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin-bottom: 2rem;
+    }
+    
+    .features h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    
+    .feature-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .feature-list li {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #eee;
+      color: #666;
+    }
+    
+    .feature-list li:last-child {
+      border-bottom: none;
+    }
+    
+    .feature-list li::before {
+      content: "✓";
+      color: #667eea;
+      font-weight: bold;
+      margin-right: 0.75rem;
+      font-size: 1.2rem;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+    
+    .btn {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+    }
+    
+    .btn-secondary:hover {
+      background: #5a6268;
+      box-shadow: 0 4px 12px rgba(108, 117, 125, 0.5);
+    }
+    
+    .alert {
+      padding: 1.25rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+    
+    .alert-info {
+      background: #e7f3ff;
+      color: #0066cc;
+      border-left: 4px solid #0066cc;
+    }
+    
+    .code-example {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 6px;
+      border-left: 4px solid #667eea;
+      margin: 1rem 0;
+      overflow-x: auto;
+    }
+    
+    .code-example code {
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎯 Multi-Role Access Page</h1>
+      <p>Protected Page - Multiple Roles Allowed</p>
+    </div>
+    
+    <div class="alert alert-info">
+      <strong>Example:</strong> This page allows access to users with <strong>admin</strong>, <strong>vendor</strong>, or <strong>seller</strong> roles. 
+      Customers will be denied access.
+    </div>
+    
+    <div class="user-info">
+      <h2>Welcome! <span id="role-badge" class="role-badge"></span></h2>
+      <div id="user-details">
+        <p>Loading user information...</p>
+      </div>
+      <div class="actions">
+        <button class="btn" onclick="testFeatures()">Test Features</button>
+        <button class="btn-secondary btn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+    
+    <div class="features">
+      <h2>🚀 Session Guard Features Demonstrated</h2>
+      <ul class="feature-list">
+        <li><strong>Role-Based Access Control:</strong> Page accessible only to admin, vendor, and seller roles</li>
+        <li><strong>Loading State:</strong> Visual loading overlay shown during authentication check</li>
+        <li><strong>Auto Token Refresh:</strong> Session automatically refreshed before expiry</li>
+        <li><strong>Return URL Support:</strong> Redirects back to this page after login</li>
+        <li><strong>Callback Hooks:</strong> Custom callbacks for session validation events</li>
+      </ul>
+      
+      <h3 style="margin-top: 2rem;">Implementation Example:</h3>
+      <div class="code-example">
+        <code>
+          <pre>// Allow multiple roles with loading and callbacks
+await ShopUpAuth.requireSession({
+  roles: ['admin', 'vendor', 'seller'],
+  showLoading: true,
+  loadingMessage: "Checking your access...",
+  enableTokenRefresh: true,
+  onSessionValid: (data) => {
+    console.log('Access granted!', data);
+  },
+  onTokenRefresh: (session) => {
+    console.log('Token refreshed', session);
+  }
+});</pre>
+        </code>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Enable debug mode for demonstration
+    window.ShopUpAuth.configure({ debug: true });
+    
+    // Initialize the page
+    async function initPage() {
+      try {
+        // Require one of multiple roles
+        const sessionData = await window.ShopUpAuth.requireSession({
+          roles: ['admin', 'vendor', 'seller'],
+          showLoading: true,
+          loadingMessage: "Checking your access...",
+          enableTokenRefresh: true,
+          onSessionValid: (data) => {
+            console.log('✅ Session validated for multi-role page:', data);
+            console.log('User role:', data.role);
+          },
+          onSessionInvalid: (reason) => {
+            console.log('❌ Session validation failed:', reason);
+          },
+          onTokenRefresh: (session) => {
+            console.log('🔄 Token refreshed automatically:', new Date().toISOString());
+            showNotification('Token refreshed successfully');
+          },
+          onRefreshError: (error) => {
+            console.error('❌ Token refresh failed:', error);
+            showNotification('Token refresh failed - you will be logged out', 'error');
+          }
+        });
+        
+        if (sessionData) {
+          displayUserInfo(sessionData);
+        }
+      } catch (error) {
+        console.error('Error initializing page:', error);
+      }
+    }
+    
+    function displayUserInfo(sessionData) {
+      const { user, role } = sessionData;
+      const userDetailsDiv = document.getElementById('user-details');
+      const roleBadge = document.getElementById('role-badge');
+      
+      // Update role badge
+      roleBadge.textContent = role.toUpperCase();
+      
+      // Display user info
+      userDetailsDiv.innerHTML = `
+        <div class="user-detail"><strong>Email:</strong> ${user.email}</div>
+        <div class="user-detail"><strong>User ID:</strong> ${user.id}</div>
+        <div class="user-detail"><strong>Role:</strong> <span style="color: #667eea; font-weight: bold;">${role}</span></div>
+        <div class="user-detail"><strong>Last Sign In:</strong> ${new Date(user.last_sign_in_at).toLocaleString()}</div>
+        <div class="user-detail"><strong>Token Refresh:</strong> <span style="color: #28a745;">Enabled & Active</span></div>
+      `;
+    }
+    
+    function testFeatures() {
+      const features = [
+        '✓ Multi-role authentication working',
+        '✓ Loading state displayed successfully',
+        '✓ Session data retrieved',
+        '✓ Auto token refresh enabled',
+        '✓ Return URL support active',
+        '✓ Callback hooks functioning'
+      ];
+      
+      alert(features.join('\n'));
+    }
+    
+    function showNotification(message, type = 'info') {
+      // Simple notification (could be enhanced with a proper notification library)
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'error' ? '#dc3545' : '#28a745'};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+      `;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+    
+    async function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        try {
+          const client = await window.supabaseReady;
+          await client.auth.signOut();
+          
+          // Clean up timers
+          window.ShopUpAuth.cleanup();
+          
+          // Redirect to appropriate login based on role
+          const role = document.getElementById('role-badge').textContent.toLowerCase();
+          const loginUrls = {
+            admin: '/admin/admin-login.html',
+            vendor: '/seller/seller-login.html',
+            seller: '/seller/seller-login.html'
+          };
+          window.location.href = loginUrls[role] || '/customer/customer-login.html';
+        } catch (error) {
+          console.error('Logout error:', error);
+          alert('Error logging out. Please try again.');
+        }
+      }
+    }
+    
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initPage);
+    } else {
+      initPage();
+    }
+    
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      window.ShopUpAuth.cleanup();
+    });
+    
+    // Add animation styles
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>

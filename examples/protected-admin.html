@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - ShopUp</title>
+  
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- ShopUp Core -->
+  <script src="/js/supabase-config.js"></script>
+  <script src="/js/core/session.guard.js"></script>
+  
+  <!-- Loading Styles -->
+  <link rel="stylesheet" href="/css/auth-loading.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f7fa;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    .header {
+      background: white;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .header h1 {
+      margin: 0 0 0.5rem 0;
+      color: #2d8a3e;
+    }
+    
+    .header p {
+      margin: 0;
+      color: #666;
+    }
+    
+    .user-info {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+    
+    .user-info h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    
+    .user-detail {
+      margin: 0.5rem 0;
+      color: #666;
+    }
+    
+    .user-detail strong {
+      color: #333;
+    }
+    
+    .admin-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    
+    .action-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .action-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .action-card h3 {
+      margin-top: 0;
+      color: #2d8a3e;
+    }
+    
+    .action-card p {
+      color: #666;
+      margin-bottom: 0;
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background: #2d8a3e;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s;
+    }
+    
+    .btn:hover {
+      background: #246e32;
+    }
+    
+    .btn-secondary {
+      background: #666;
+    }
+    
+    .btn-secondary:hover {
+      background: #555;
+    }
+    
+    .alert {
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+    
+    .alert-info {
+      background: #e3f2fd;
+      color: #1976d2;
+      border-left: 4px solid #1976d2;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔐 Admin Dashboard</h1>
+      <p>Protected Page - Admin Access Only</p>
+    </div>
+    
+    <div class="alert alert-info">
+      <strong>Example:</strong> This page demonstrates role-based access control. Only users with the "admin" role can access this page.
+    </div>
+    
+    <div class="user-info">
+      <h2>User Information</h2>
+      <div id="user-details">
+        <p>Loading user information...</p>
+      </div>
+      <button class="btn btn-secondary" onclick="logout()" style="margin-top: 1rem;">Logout</button>
+    </div>
+    
+    <div class="admin-actions">
+      <div class="action-card">
+        <h3>👥 User Management</h3>
+        <p>Manage users, roles, and permissions</p>
+      </div>
+      
+      <div class="action-card">
+        <h3>📊 Analytics</h3>
+        <p>View sales and traffic analytics</p>
+      </div>
+      
+      <div class="action-card">
+        <h3>🏪 Vendor Management</h3>
+        <p>Approve and manage vendors</p>
+      </div>
+      
+      <div class="action-card">
+        <h3>⚙️ Settings</h3>
+        <p>Configure system settings</p>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Enable debug mode for demonstration
+    window.ShopUpAuth.configure({ debug: true });
+    
+    // Initialize the page
+    async function initPage() {
+      try {
+        // Require admin role with loading state
+        const sessionData = await window.ShopUpAuth.requireSession({
+          roles: ['admin'],
+          showLoading: true,
+          loadingMessage: "Verifying admin access...",
+          enableTokenRefresh: true,
+          onSessionValid: (data) => {
+            console.log('✅ Admin session validated:', data);
+          },
+          onSessionInvalid: (reason) => {
+            console.log('❌ Session validation failed:', reason);
+          },
+          onTokenRefresh: (session) => {
+            console.log('🔄 Token refreshed:', session);
+          }
+        });
+        
+        if (sessionData) {
+          displayUserInfo(sessionData);
+        }
+      } catch (error) {
+        console.error('Error initializing page:', error);
+      }
+    }
+    
+    function displayUserInfo(sessionData) {
+      const { user, role } = sessionData;
+      const userDetailsDiv = document.getElementById('user-details');
+      
+      userDetailsDiv.innerHTML = `
+        <div class="user-detail"><strong>Email:</strong> ${user.email}</div>
+        <div class="user-detail"><strong>User ID:</strong> ${user.id}</div>
+        <div class="user-detail"><strong>Role:</strong> <span style="color: #2d8a3e; font-weight: bold;">${role}</span></div>
+        <div class="user-detail"><strong>Last Sign In:</strong> ${new Date(user.last_sign_in_at).toLocaleString()}</div>
+      `;
+    }
+    
+    async function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        try {
+          const client = await window.supabaseReady;
+          await client.auth.signOut();
+          
+          // Clean up timers
+          window.ShopUpAuth.cleanup();
+          
+          // Redirect to login
+          window.location.href = '/admin/admin-login.html';
+        } catch (error) {
+          console.error('Logout error:', error);
+          alert('Error logging out. Please try again.');
+        }
+      }
+    }
+    
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initPage);
+    } else {
+      initPage();
+    }
+    
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      window.ShopUpAuth.cleanup();
+    });
+  </script>
+</body>
+</html>
