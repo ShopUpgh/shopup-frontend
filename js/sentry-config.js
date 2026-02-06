@@ -37,7 +37,7 @@
   window.Sentry.init({
     dsn: SENTRY_DSN,
     environment: "production",
-    tracesSampleRate: 0.2, // keep costs low
+    tracesSampleRate: 0, // keep costs low
     release: "shopup@1.0.0",
 
     beforeSend(event, hint) {
