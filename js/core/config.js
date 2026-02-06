@@ -2,21 +2,16 @@
 (function () {
   "use strict";
 
-  const CONFIG = Object.freeze({
-    storage: {
-      CART_KEY: "cart",
-      AUTH_TOKEN_KEY: "authToken",
-      CURRENT_USER_KEY: "currentUser",
-      ROLE_KEY: "role",
-    },
-    ui: {
-      FALLBACK_IMAGE: "../images/placeholder.png",
-      DASHBOARD_PRODUCTS_LIMIT: 12,
-    },
-    cart: {
-      FLAT_SHIPPING_GHS: 20,
-    },
-  });
+  // If already defined, keep it (allows server-side injected config too)
+  if (window.ShopUpConfig) return;
 
-  window.ShopUpConfig = CONFIG;
+  // Create a minimal config object used by services
+  window.ShopUpConfig = Object.freeze({
+    SUPABASE_URL: window.supabase?.supabaseUrl,
+    SUPABASE_ANON_KEY: window.supabase?.supabaseKey,
+
+    // Optional: app defaults (safe to extend later)
+    APP_NAME: "ShopUp",
+    CURRENCY: "GHS",
+  });
 })();
