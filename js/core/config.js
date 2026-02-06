@@ -2,38 +2,32 @@
 (function () {
   "use strict";
 
+  // PROOF MARKER (so we can confirm the right file loaded)
+  window.__CONFIG_JS_LOADED_AT = new Date().toISOString();
+
   async function init() {
-    // If already set, keep it (supports server-injected config too)
-    if (window.ShopUpConfig) return window.ShopUpConfig;
+    // Wait for Supabase init if available
+    if (window.supabaseReady) await window.supabaseReady;
 
-    // Wait for Supabase module init
-    if (window.supabaseReady) {
-      await window.supabaseReady;
-    }
-
-    // At this point supabase-init.js should have set window.supabase
-    if (!window.supabase) {
-      // Don't throw hard here—keep diagnostics clear
-      console.error("[ShopUpConfig] window.supabase not found. Ensure /js/supabase-init.js is included and working.");
+    // Build config from supabase client
+    if (window.supabase) {
+      window.ShopUpConfig = Object.freeze({
+        SUPABASE_URL: window.supabase.supabaseUrl,
+        SUPABASE_ANON_KEY: window.supabase.supabaseKey,
+        APP_NAME: "ShopUp",
+        CURRENCY: "GHS",
+      });
+    } else {
       window.ShopUpConfig = Object.freeze({
         SUPABASE_URL: undefined,
         SUPABASE_ANON_KEY: undefined,
         APP_NAME: "ShopUp",
         CURRENCY: "GHS",
       });
-      return window.ShopUpConfig;
     }
-
-    window.ShopUpConfig = Object.freeze({
-      SUPABASE_URL: window.supabase.supabaseUrl,
-      SUPABASE_ANON_KEY: window.supabase.supabaseKey,
-      APP_NAME: "ShopUp",
-      CURRENCY: "GHS",
-    });
 
     return window.ShopUpConfig;
   }
 
-  // A promise any page/service can await
   window.ShopUpConfigReady = init();
 })();
