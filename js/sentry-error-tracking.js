@@ -1,4 +1,4 @@
-// sentry-error-tracking.js - SAFE helper (never crashes if Sentry/tracing not available)
+// /js/sentry-error-tracking.js - SAFE helper (NO tracing; avoids BrowserTracing warnings)
 (function () {
   "use strict";
 
@@ -58,51 +58,14 @@
     } catch (_) {}
   }
 
-  // Tracing is optional. Loader script may not provide startTransaction.
-  function safeStartTransaction(name, op) {
-    const S = getSentry();
-    if (!S) return null;
-
-    try {
-      if (typeof S.startTransaction === "function") {
-        return S.startTransaction({ name: name || "Transaction", op: op || "custom" });
-      }
-    } catch (_) {}
-
-    return null;
-  }
-
-  function safeFinishTransaction(tx, status) {
-    if (!tx) return;
-    try {
-      if (status && typeof tx.setStatus === "function") tx.setStatus(status);
-      if (typeof tx.finish === "function") tx.finish();
-    } catch (_) {}
-  }
-
-  // Some SDKs support setMeasurement; loader script often doesn't.
-  function safeSetMeasurement(tx, key, value, unit) {
-    if (!tx) return;
-    try {
-      if (typeof tx.setMeasurement === "function") {
-        tx.setMeasurement(key, value, unit);
-      }
-    } catch (_) {}
-  }
-
   const SentryTracking = {
-    // Track payment operations
-    async trackPayment(paymentFunction, paymentData) {
-      const tx = safeStartTransaction("Process Payment", "payment");
+    // Payment operations
+    async trackPayment(fn, paymentData) {
       safeSetContext("payment", paymentData);
       safeSetTag("transaction_type", "payment");
-
       try {
-        const result = await paymentFunction();
-        safeFinishTransaction(tx, "ok");
-        return result;
+        return await fn();
       } catch (error) {
-        safeFinishTransaction(tx, "internal_error");
         safeCaptureException(error, {
           tags: {
             error_category: "payment",
@@ -112,24 +75,18 @@
           contexts: { payment: paymentData || {} },
         });
         throw error;
-      } finally {
-        // finish already handled
       }
     },
 
-    // Track checkout process
-    async trackCheckout(step, checkoutFunction, checkoutData) {
-      const tx = safeStartTransaction(`Checkout: ${step}`, "checkout");
+    // Checkout process
+    async trackCheckout(step, fn, checkoutData) {
       safeSetContext("checkout", checkoutData);
       safeSetTag("flow", "checkout");
       safeSetTag("checkout_step", step);
 
       try {
-        const result = await checkoutFunction();
-        safeFinishTransaction(tx, "ok");
-        return result;
+        return await fn();
       } catch (error) {
-        safeFinishTransaction(tx, "internal_error");
         safeCaptureException(error, {
           tags: { error_category: "checkout", checkout_step: step },
           contexts: { checkout: checkoutData || {} },
@@ -138,7 +95,7 @@
       }
     },
 
-    // Track cart operations
+    // Cart operations
     async trackCartOperation(operation, action, itemData) {
       safeAddBreadcrumb({
         category: "cart",
@@ -151,49 +108,38 @@
         return await operation();
       } catch (error) {
         safeCaptureException(error, {
-          tags: { error_category: "cart", action: action },
+          tags: { error_category: "cart", action },
           contexts: { cart_item: itemData || {} },
         });
         throw error;
       }
     },
 
-    // Track database operations
-    async trackDatabaseOperation(dbFunction, table, operation) {
-      const tx = safeStartTransaction(`${operation} ${table}`, "db.query");
+    // Database ops
+    async trackDatabaseOperation(fn, table, operation) {
       safeSetTag("db_table", table);
       safeSetTag("db_operation", operation);
 
       try {
-        const result = await dbFunction();
-        safeFinishTransaction(tx, "ok");
-        return result;
+        return await fn();
       } catch (error) {
-        safeFinishTransaction(tx, "internal_error");
         safeCaptureException(error, {
-          tags: { error_category: "database", table: table, operation: operation },
+          tags: { error_category: "database", table, operation },
         });
         throw error;
       }
     },
 
-    // Track authentication
-    async trackAuth(authFunction, method) {
-      const tx = safeStartTransaction(`Authentication: ${method}`, "auth");
+    // Authentication
+    async trackAuth(fn, method) {
       safeSetTag("auth_method", method);
 
       try {
-        const result = await authFunction();
-        safeFinishTransaction(tx, "ok");
-
+        const result = await fn();
         const user = result?.user;
-        if (user?.id || user?.email) {
-          safeSetUser({ id: user.id, email: user.email });
-        }
-
+        if (user?.id || user?.email) safeSetUser({ id: user.id, email: user.email });
         return result;
       } catch (error) {
-        safeFinishTransaction(tx, "unauthenticated");
         safeCaptureException(error, {
           tags: { error_category: "authentication", auth_method: method },
         });
@@ -201,98 +147,42 @@
       }
     },
 
-    // Track API calls
-    async trackAPICall(apiFunction, endpoint, method = "GET") {
-      const tx = safeStartTransaction(`${method} ${endpoint}`, "http.client");
-      const startTime = performance.now();
+    // API calls (no perf timing, just error capture + optional slow warning via message if you pass duration)
+    async trackAPICall(fn, endpoint, method = "GET") {
+      safeSetTag("endpoint", endpoint);
+      safeSetTag("http_method", method);
 
       try {
-        const result = await apiFunction();
-        const duration = performance.now() - startTime;
-
-        safeFinishTransaction(tx, "ok");
-        safeSetMeasurement(tx, "api_call_duration", duration, "millisecond");
-
-        if (duration > 2000) {
-          safeCaptureMessage(`Slow API call: ${endpoint}`, {
-            level: "warning",
-            tags: {
-              performance_issue: "true",
-              endpoint: endpoint,
-              duration: Math.round(duration),
-            },
-          });
-        }
-
-        return result;
+        return await fn();
       } catch (error) {
-        safeFinishTransaction(tx, "internal_error");
         safeCaptureException(error, {
-          tags: { error_category: "api", endpoint: endpoint, method: method },
+          tags: { error_category: "api", endpoint, method },
         });
         throw error;
       }
     },
 
-    // Track product operations
+    // Simple breadcrumbs/messages
     trackProductOperation(action, productData) {
-      safeAddBreadcrumb({
-        category: "product",
-        message: `Product ${action}`,
-        level: "info",
-        data: productData || {},
-      });
+      safeAddBreadcrumb({ category: "product", message: `Product ${action}`, level: "info", data: productData || {} });
     },
 
-    // Track order operations
     trackOrderOperation(action, orderData) {
-      safeAddBreadcrumb({
-        category: "order",
-        message: `Order ${action}`,
-        level: "info",
-        data: orderData || {},
-      });
+      safeAddBreadcrumb({ category: "order", message: `Order ${action}`, level: "info", data: orderData || {} });
     },
 
-    // Track performance metrics
-    trackPerformance(metricName, value, thresholds = {}) {
-      // Measurement API may not exist on loader; capture message if too slow.
-      if (thresholds?.warning && value > thresholds.warning) {
-        safeCaptureMessage(`Performance issue: ${metricName}`, {
-          level: value > (thresholds.critical || Infinity) ? "error" : "warning",
-          tags: {
-            performance_issue: "true",
-            metric_name: metricName,
-            metric_value: value,
-          },
-        });
-      }
-    },
-
-    // Track user actions
     trackUserAction(action, data = {}) {
-      safeAddBreadcrumb({
-        category: "user_action",
-        message: String(action),
-        level: "info",
-        data: data || {},
-      });
+      safeAddBreadcrumb({ category: "user_action", message: String(action), level: "info", data: data || {} });
     },
 
-    // Track business metrics
     trackBusinessMetric(metric, value, metadata = {}) {
       safeCaptureMessage(`Business Metric: ${metric}`, {
         level: "info",
-        tags: {
-          metric_type: "business",
-          metric_name: metric,
-          metric_value: String(value),
-        },
+        tags: { metric_type: "business", metric_name: metric, metric_value: String(value) },
         contexts: { business_metric: metadata || {} },
       });
     },
   };
 
-  // Expose globally
   window.SentryTracking = SentryTracking;
 })();
