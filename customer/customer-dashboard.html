@@ -11,20 +11,23 @@
   <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
   <script src="/js/sentry-config.js"></script>
 
-  <!-- ✅ Supabase (single source of truth) -->
+  <!-- ✅ Supabase (Module init only) -->
   <script type="module" src="/js/supabase-init.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #f5f7fa;
     }
+
     .dashboard-header {
       background: white;
       padding: 20px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+
     .header-content {
       max-width: 1200px;
       margin: 0 auto;
@@ -33,6 +36,7 @@
       align-items: center;
       gap: 16px;
     }
+
     .logo {
       display: flex;
       align-items: center;
@@ -42,19 +46,24 @@
       color: #2d8a3e;
       white-space: nowrap;
     }
+
     .main-nav {
       display: flex;
       gap: 18px;
       flex-wrap: wrap;
       justify-content: center;
     }
+
     .nav-link {
       text-decoration: none;
       color: #333;
-      font-weight: 600;
+      font-weight: 500;
+      transition: color 0.2s;
     }
-    .nav-link.active,
-    .nav-link:hover { color: #2d8a3e; }
+
+    .nav-link:hover, .nav-link.active {
+      color: #2d8a3e;
+    }
 
     .cart-badge {
       background: #e74c3c;
@@ -64,12 +73,14 @@
       font-size: 0.8em;
       margin-left: 5px;
     }
+
     .user-section {
       display: flex;
       align-items: center;
       gap: 12px;
       white-space: nowrap;
     }
+
     .btn-logout {
       padding: 8px 16px;
       background: #e74c3c;
@@ -77,46 +88,61 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      font-weight: 800;
+      font-weight: 600;
     }
+
     .btn-logout:hover { background: #c0392b; }
+
     .dashboard-main {
       max-width: 1200px;
       margin: 40px auto;
       padding: 0 20px;
     }
+
     .welcome-section {
       text-align: center;
       margin-bottom: 40px;
     }
-    .products-section h2 {
-      color: #333;
-      margin-bottom: 30px;
-    }
+
+    .welcome-section h1 { color: #333; margin-bottom: 10px; }
+
+    .products-section h2 { color: #333; margin-bottom: 30px; }
+
     .products-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
       gap: 30px;
     }
+
     .product-card {
       background: white;
       border-radius: 10px;
       overflow: hidden;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
     }
+
+    .product-card:hover { transform: translateY(-4px); }
+
     .product-card img {
       width: 100%;
       height: 200px;
       object-fit: cover;
       background: #f3f4f6;
     }
-    .product-card h3 { padding: 15px; font-size: 1.1em; }
+
+    .product-card h3 {
+      padding: 15px;
+      font-size: 1.1em;
+    }
+
     .product-card .price {
       padding: 0 15px;
       color: #2d8a3e;
-      font-weight: 900;
+      font-weight: bold;
       font-size: 1.2em;
     }
+
     .btn-add-cart {
       width: 100%;
       padding: 12px;
@@ -124,15 +150,22 @@
       color: white;
       border: none;
       cursor: pointer;
-      font-weight: 900;
+      font-weight: 600;
       margin-top: 10px;
     }
+
     .btn-add-cart:hover { background: #236d31; }
-    .loading, .error-message { text-align: center; padding: 40px; color: #666; }
+
+    .loading, .error-message {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
 
     @media (max-width: 720px) {
       .header-content { flex-direction: column; align-items: stretch; }
-      .user-section, .main-nav { justify-content: space-between; width: 100%; }
+      .user-section { justify-content: space-between; width: 100%; }
+      .main-nav { justify-content: space-between; width: 100%; }
     }
   </style>
 </head>
@@ -142,8 +175,8 @@
     <header class="dashboard-header">
       <div class="header-content">
         <div class="logo">
-          <span>🛍️</span>
-          <span>ShopUp</span>
+          <span class="logo-icon">🛍️</span>
+          <span class="logo-text">ShopUp</span>
         </div>
 
         <nav class="main-nav">
@@ -155,7 +188,7 @@
         </nav>
 
         <div class="user-section">
-          <span id="userName">Customer</span>
+          <span class="user-name" id="userName">Customer</span>
           <button class="btn-logout" id="logoutBtn">Logout</button>
         </div>
       </div>
@@ -176,119 +209,34 @@
     </main>
   </div>
 
-  <script>
-    function updateCartCount() {
-      try {
-        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        const count = cart.reduce((total, item) => total + Number(item.quantity || 0), 0);
-        document.getElementById('cartCount').textContent = count;
-      } catch {}
-    }
+  <!-- ===================================================== -->
+  <!-- ✅ Core + DI -->
+  <!-- ===================================================== -->
+  <script defer src="/js/core/container.js"></script>
+  <script defer src="/js/core/config.js"></script>
+  <script defer src="/js/core/dom.js"></script>
+  <script defer src="/js/core/session.guard.js"></script>
 
-    function displayProducts(products) {
-      const grid = document.getElementById('productsGrid');
-      if (!products || products.length === 0) {
-        grid.innerHTML = '<p class="error-message">No products available right now.</p>';
-        return;
-      }
+  <!-- ===================================================== -->
+  <!-- ✅ Adapters -->
+  <!-- ===================================================== -->
+  <script defer src="/js/adapters/supabase.wait.js"></script>
+  <script defer src="/js/adapters/logger.adapter.js"></script>
+  <script defer src="/js/adapters/auth.supabase.js"></script>
+  <script defer src="/js/adapters/products.supabase.js"></script>
+  <script defer src="/js/adapters/cart.storage.js"></script>
 
-      grid.innerHTML = products.map(p => `
-        <div class="product-card">
-          <img src="${p.image_url || '../images/placeholder.png'}" alt="${p.name || 'Product'}">
-          <h3>${p.name || 'Product'}</h3>
-          <p class="price">GHS ${Number(p.price || 0)}</p>
-          <button class="btn-add-cart" data-id="${p.id}">Add to Cart</button>
-        </div>
-      `).join('');
-    }
+  <!-- ===================================================== -->
+  <!-- ✅ Services -->
+  <!-- ===================================================== -->
+  <script defer src="/js/services/auth.service.js"></script>
+  <script defer src="/js/services/products.service.js"></script>
+  <script defer src="/js/services/cart.service.js"></script>
 
-    function addToCart(productId) {
-      let cart = [];
-      try { cart = JSON.parse(localStorage.getItem('cart') || '[]'); } catch {}
-
-      const existing = cart.find(i => String(i.productId) === String(productId));
-      if (existing) existing.quantity += 1;
-      else cart.push({ productId, quantity: 1 });
-
-      localStorage.setItem('cart', JSON.stringify(cart));
-      updateCartCount();
-      alert('Product added to cart!');
-    }
-
-    async function loadProducts(client) {
-      try {
-        const { data: products, error } = await client
-          .from('products')
-          .select('*')
-          .eq('status', 'active')
-          .limit(12);
-
-        if (error) throw error;
-        displayProducts(products);
-      } catch (e) {
-        console.error(e);
-        document.getElementById('productsGrid').innerHTML =
-          '<p class="error-message">Failed to load products. Please refresh.</p>';
-        if (window.Sentry) window.Sentry.captureException(e, { tags: { error_category: "products" } });
-      }
-    }
-
-    document.addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-id]');
-      if (!btn) return;
-      addToCart(btn.getAttribute('data-id'));
-    });
-
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      try {
-        const client = await window.supabaseReady;
-        if (client) await client.auth.signOut();
-      } catch (e) {
-        if (window.Sentry) window.Sentry.captureException(e, { tags: { error_category: "logout" } });
-      } finally {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('currentUser');
-        localStorage.removeItem('sessionExpiry');
-        localStorage.removeItem('role');
-        if (window.Sentry) window.Sentry.setUser(null);
-        window.location.href = 'customer-login.html';
-      }
-    });
-
-    (async function bootDashboard() {
-      try {
-        const client = await window.supabaseReady;
-        if (!client) throw new Error("Supabase not initialized");
-
-        const { data, error } = await client.auth.getSession();
-        if (error) throw error;
-
-        const session = data?.session;
-        if (!session?.user) {
-          window.location.href = "customer-login.html";
-          return;
-        }
-
-        const u = session.user;
-
-        localStorage.setItem("authToken", session.access_token);
-        localStorage.setItem("currentUser", JSON.stringify(u));
-        localStorage.setItem("role", "customer");
-
-        document.getElementById('userName').textContent = (u.email || "Customer").split('@')[0];
-
-        if (window.Sentry) {
-          window.Sentry.setUser({ id: String(u.id), email: u.email || undefined, role: "customer" });
-          window.Sentry.addBreadcrumb({ category: 'navigation', message: 'Customer dashboard viewed', level: 'info' });
-        }
-
-        updateCartCount();
-        await loadProducts(client);
-      } catch (e) {
-        if (window.Sentry) window.Sentry.captureException(e, { tags: { error_category: "dashboard_boot" } });
-        window.location.href = "customer-login.html";
-      }
-    })();
-  </script>
+  <!-- ===================================================== -->
+  <!-- ✅ Controller + bootstrap (runs last) -->
+  <!-- ===================================================== -->
+  <script defer src="/js/pages/customer-dashboard.page.js"></script>
+  <script defer src="/js/customer-dashboard.js"></script>
 </body>
 </html>
