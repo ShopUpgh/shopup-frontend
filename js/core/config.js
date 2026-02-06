@@ -5,9 +5,11 @@
   async function init() {
     if (window.ShopUpConfig) return window.ShopUpConfig;
 
-    if (window.supabaseReady) await window.supabaseReady;
+    // Wait for module init to create window.supabase
+    if (window.supabaseReady && typeof window.supabaseReady.then === "function") {
+      await window.supabaseReady;
+    }
 
-    // ✅ Default storage keys used by services
     const storage = Object.freeze({
       AUTH_TOKEN_KEY: "authToken",
       CURRENT_USER_KEY: "currentUser",
@@ -17,15 +19,14 @@
     });
 
     window.ShopUpConfig = Object.freeze({
-      // Supabase (Option A: derive from client)
+      // Supabase derived from the client created in supabase-init.js
       SUPABASE_URL: window.supabase?.supabaseUrl,
       SUPABASE_ANON_KEY: window.supabase?.supabaseKey,
 
-      // App metadata
       APP_NAME: "ShopUp",
       CURRENCY: "GHS",
 
-      // ✅ This is what your auth.service.js expects
+      // ✅ required by auth.service.js (and other services)
       storage,
     });
 
