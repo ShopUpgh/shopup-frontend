@@ -83,10 +83,19 @@
         await window.supabaseReady;
         if (!window.supabase) throw new Error("Supabase not initialized. Check /js/supabase-init.js");
 
-        // Prefer authService if it supports signIn; fallback direct supabase
+        // ✅ UPDATED: use authService.login / authService.loginSeller (safe storage fallbacks)
         let result;
-        if (typeof authService?.signInWithPassword === "function") {
-          result = await authService.signInWithPassword({ email, password, role: "seller" });
+
+        // Preferred: role-specific helper
+        if (typeof authService?.loginSeller === "function") {
+          result = await authService.loginSeller(email, password);
+
+        // Next: generic login with role option
+        } else if (typeof authService?.login === "function") {
+          const out = await authService.login(email, password, { role: "seller" });
+          result = out;
+
+        // Last resort: direct supabase auth
         } else {
           const { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
           if (error) throw error;
@@ -94,7 +103,12 @@
         }
 
         const session = result?.session;
-        const user = result?.user || result?.user?.user || result?.user;
+        const user =
+          result?.user ||
+          result?.user?.user ||
+          result?.data?.user ||
+          session?.user ||
+          null;
 
         if (!session?.access_token) throw new Error("Login succeeded but session token missing.");
 
