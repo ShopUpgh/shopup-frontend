@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Seller Login - ShopUp</title>
 
-  <!-- ✅ Sentry: ONLY Loader + Central Config (NO bundle.tracing) -->
+  <!-- ✅ Sentry: ONLY Loader + Central Config -->
   <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
   <script src="/js/sentry-config.js"></script>
   <script src="/js/sentry-error-tracking.js"></script>
 
-  <!-- ✅ Supabase (SINGLE source of truth, module init) -->
+  <!-- ✅ Supabase (module init) -->
   <script type="module" src="/js/supabase-init.js"></script>
 
   <style>
@@ -35,10 +35,7 @@
       padding: 40px;
     }
 
-    .logo-section {
-      text-align: center;
-      margin-bottom: 30px;
-    }
+    .logo-section { text-align: center; margin-bottom: 30px; }
 
     .logo { font-size: 3em; margin-bottom: 10px; }
     .logo-text { font-size: 2em; font-weight: bold; color: #667eea; margin-bottom: 5px; }
@@ -165,26 +162,12 @@
     <form id="loginForm">
       <div class="form-group">
         <label for="email">Email Address</label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          required
-          placeholder="seller@email.com"
-          autocomplete="email"
-        />
+        <input type="email" id="email" name="email" required placeholder="seller@email.com" autocomplete="email" />
       </div>
 
       <div class="form-group">
         <label for="password">Password</label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          required
-          placeholder="Enter your password"
-          autocomplete="current-password"
-        />
+        <input type="password" id="password" name="password" required placeholder="Enter your password" autocomplete="current-password" />
       </div>
 
       <div class="form-options">
@@ -192,7 +175,7 @@
           <input type="checkbox" id="rememberMe" name="rememberMe" />
           <span>Remember me</span>
         </label>
-        <span class="forgot-password" onclick="alert('Password reset feature coming soon! Please contact support.')">
+        <span class="forgot-password" id="forgotPasswordBtn">
           Forgot password?
         </span>
       </div>
@@ -216,104 +199,28 @@
     </div>
   </div>
 
-  <script>
-    // Track page view
-    if (typeof Sentry !== "undefined") {
-      Sentry.addBreadcrumb({
-        category: "navigation",
-        message: "Seller login page viewed",
-        level: "info",
-      });
-    }
+  <!-- ===================================================== -->
+  <!-- ✅ Core + DI -->
+  <!-- ===================================================== -->
+  <script defer src="/js/core/container.js"></script>
+  <script defer src="/js/core/config.js"></script>
+  <script defer src="/js/core/dom.js"></script>
 
-    const loginForm = document.getElementById("loginForm");
-    const loginBtn = document.getElementById("loginBtn");
-    const loading = document.getElementById("loading");
-    const successAlert = document.getElementById("successAlert");
-    const errorAlert = document.getElementById("errorAlert");
+  <!-- (Optional) Use if you want role-specific guard later; safe to include now -->
+  <script defer src="/js/core/session.guard.js"></script>
 
-    function showSuccess(message) {
-      successAlert.textContent = message;
-      successAlert.classList.add("show");
-      errorAlert.classList.remove("show");
-    }
+  <!-- ===================================================== -->
+  <!-- ✅ Adapters/Services for auth (seller login only needs auth + logger) -->
+  <!-- ===================================================== -->
+  <script defer src="/js/adapters/supabase.wait.js"></script>
+  <script defer src="/js/adapters/logger.adapter.js"></script>
+  <script defer src="/js/adapters/auth.supabase.js"></script>
+  <script defer src="/js/services/auth.service.js"></script>
 
-    function showError(message) {
-      errorAlert.textContent = message;
-      errorAlert.classList.add("show");
-      successAlert.classList.remove("show");
-    }
-
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      loginBtn.disabled = true;
-      loading.classList.add("show");
-
-      try {
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
-
-        // ✅ Wait for module init (single source of truth)
-        const client = await window.supabaseReady;
-        if (!client) throw new Error("Supabase not initialized. Check /js/supabase-init.js");
-
-        const runLogin = async () => {
-          if (typeof Sentry !== "undefined") {
-            Sentry.addBreadcrumb({
-              category: "auth",
-              message: "Seller login attempt started",
-              level: "info",
-              data: { email, role: "seller" },
-            });
-          }
-
-          const { data, error } = await client.auth.signInWithPassword({ email, password });
-          if (error) throw error;
-
-          // Store auth data
-          localStorage.setItem("authToken", data.session.access_token);
-          localStorage.setItem("currentUser", JSON.stringify(data.user));
-          localStorage.setItem("sessionExpiry", new Date(data.session.expires_at * 1000).toISOString());
-          localStorage.setItem("role", "seller");
-
-          // Identify user in Sentry
-          if (typeof Sentry !== "undefined") {
-            Sentry.setUser({
-              id: data.user.id,
-              email: data.user.email,
-              role: "seller",
-            });
-
-            Sentry.addBreadcrumb({
-              category: "auth",
-              message: "Seller login successful",
-              level: "info",
-            });
-          }
-
-          showSuccess("Login successful! Redirecting to dashboard...");
-
-          setTimeout(() => {
-            window.location.href = "seller-dashboard-enhanced.html";
-          }, 900);
-
-          return { user: data.user };
-        };
-
-        // Use your existing SentryTracking wrapper if present
-        if (typeof Sentry !== "undefined" && typeof SentryTracking !== "undefined") {
-          await SentryTracking.trackAuth(runLogin, "email");
-        } else {
-          await runLogin();
-        }
-      } catch (error) {
-        console.error("Login failed:", error);
-        showError(error.message || "Login failed. Please try again.");
-        loginBtn.disabled = false;
-        loading.classList.remove("show");
-      }
-    });
-  </script>
+  <!-- ===================================================== -->
+  <!-- ✅ Seller Login Controller + Bootstrap -->
+  <!-- ===================================================== -->
+  <script defer src="/js/pages/seller-login.page.js"></script>
+  <script defer src="/js/seller-login.js"></script>
 </body>
 </html>
