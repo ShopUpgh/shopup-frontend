@@ -243,11 +243,38 @@
 
   <div id="toast" class="toast"></div>
 
+  <!-- ===================================================== -->
+  <!-- ✅ Core + DI -->
+  <!-- ===================================================== -->
+  <script defer src="/js/core/container.js"></script>
+  <script defer src="/js/core/config.js"></script>
+  <script defer src="/js/core/dom.js"></script>
+  <script defer src="/js/core/session.guard.js"></script>
+
+  <!-- ===================================================== -->
+  <!-- ✅ Adapters -->
+  <!-- ===================================================== -->
+  <script defer src="/js/adapters/supabase.wait.js"></script>
+  <script defer src="/js/adapters/logger.adapter.js"></script>
+  <script defer src="/js/adapters/auth.supabase.js"></script>
+  <script defer src="/js/adapters/products.supabase.js"></script>
+  <script defer src="/js/adapters/cart.storage.js"></script>
+
+  <!-- ===================================================== -->
+  <!-- ✅ Services -->
+  <!-- ===================================================== -->
+  <script defer src="/js/services/auth.service.js"></script>
+  <script defer src="/js/services/products.service.js"></script>
+  <script defer src="/js/services/cart.service.js"></script>
+
+  <!-- ===================================================== -->
+  <!-- ✅ Controller + bootstrap (runs last) -->
+  <!-- ===================================================== -->
+  <script defer src="/js/pages/customer-cart.page.js"></script>
+  <script defer src="/js/customer-cart-script.js"></script>
+
   <!-- ✅ Logger (optional) -->
   <script defer src="/js/logger.js"></script>
-
-  <!-- ✅ Your existing cart logic -->
-  <script defer src="/js/customer-cart-script.js"></script>
 
   <!-- ✅ Enterprise auth gate: trust Supabase session, not localStorage -->
   <script>
