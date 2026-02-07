@@ -5,11 +5,6 @@
   async function init() {
     if (window.ShopUpConfig) return window.ShopUpConfig;
 
-    // Wait for module init to create window.supabase
-    if (window.supabaseReady && typeof window.supabaseReady.then === "function") {
-      await window.supabaseReady;
-    }
-
     const storage = Object.freeze({
       AUTH_TOKEN_KEY: "authToken",
       CURRENT_USER_KEY: "currentUser",
@@ -19,14 +14,10 @@
     });
 
     window.ShopUpConfig = Object.freeze({
-      // Supabase derived from the client created in supabase-init.js
-      SUPABASE_URL: window.supabase?.supabaseUrl,
-      SUPABASE_ANON_KEY: window.supabase?.supabaseKey,
-
+      SUPABASE_URL: "https://brbewkxpvihnsrbrlpzq.supabase.co",
+      SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyYmV3a3hwdmlobnNyYnJscHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMTI4OTAsImV4cCI6MjA3ODY4ODg5MH0.SfZMbpxsNHTgoXIvn9HZnXSZAQnCSjKNpAnH4vLVVj4",
       APP_NAME: "ShopUp",
       CURRENCY: "GHS",
-
-      // ✅ required by auth.service.js (and other services)
       storage,
     });
 
