@@ -12,9 +12,13 @@
   if (!c.__shopup_bootstrapped) {
     c.__shopup_bootstrapped = true;
 
-    // Core config
-    c.register("configReady", () => window.ShopUpConfigReady);
-    c.register("config", () => window.ShopUpConfig);
+    // ✅ Config: always wait for ShopUpConfigReady before returning config
+    c.register("config", async () => {
+      try {
+        await window.ShopUpConfigReady;
+      } catch (_) {}
+      return window.ShopUpConfig;
+    });
 
     // Supabase + logger
     c.register("supabaseWait", () => window.ShopUpSupabaseWait);
@@ -27,15 +31,13 @@
       })
     );
 
-    // ✅ UPDATED: Auth service with role: "seller"
-    // Also avoids crashing if config/storage isn't ready by falling back to an empty config object
-    // (your authService implementation should provide safe defaults anyway).
-    c.register("authService", (cc) =>
+    // ✅ Auth service with role: seller (do NOT pass fallback {})
+    c.register("authService", async (cc) =>
       window.ShopUpAuthServiceFactory.createAuthService({
-        config: cc.resolve("config") || {},
+        config: await cc.resolve("config"),
         authAdapter: cc.resolve("authAdapter"),
         logger: cc.resolve("logger"),
-        role: "seller", // ✅ add this
+        role: "seller",
       })
     );
   }
