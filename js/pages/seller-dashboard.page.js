@@ -1,5 +1,5 @@
 // /js/pages/seller-dashboard.page.js
-import { requireSellerSession } from "/js/core/seller-session.guard.js";
+import { requireApprovedSeller } from "/js/core/seller-session.guard.js";
 
 (function () {
   "use strict";
@@ -34,11 +34,7 @@ import { requireSellerSession } from "/js/core/seller-session.guard.js";
   }
 
   function formatDate(ts) {
-    try {
-      return ts ? new Date(ts).toLocaleString() : "";
-    } catch {
-      return "";
-    }
+    try { return ts ? new Date(ts).toLocaleString() : ""; } catch { return ""; }
   }
 
   function dayKey(d) {
@@ -148,29 +144,28 @@ import { requireSellerSession } from "/js/core/seller-session.guard.js";
     const ctx = salesChartCanvas.getContext("2d");
     window.__sellerSalesChart = new Chart(ctx, {
       type: "line",
-      data: {
-        labels,
-        datasets: [{ label: "Sales (GHS)", data, tension: 0.35, fill: true }],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } },
-      },
+      data: { labels, datasets: [{ label: "Sales (GHS)", data, tension: 0.35, fill: true }] },
+      options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
     });
   }
 
   async function main() {
-    const auth = await requireSellerSession({ redirectTo: "/seller/seller-login.html" });
+    const auth = await requireApprovedSeller({
+      loginRedirect: "/seller/seller-login.html",
+      verifyRedirect: "/seller/seller-verification.html",
+    });
     if (!auth) return;
 
-    const { client, user } = auth;
+    const { client, user, seller } = auth;
 
-    if (elSellerName) elSellerName.textContent = (user.email || "Seller").split("@")[0];
+    if (elSellerName) {
+      elSellerName.textContent = seller?.business_name
+        ? seller.business_name
+        : (user.email || "Seller").split("@")[0];
+    }
 
-    if (addProductBtn) addProductBtn.addEventListener("click", () => (window.location.href = "products.html?action=add"));
-    if (viewOrdersBtn) viewOrdersBtn.addEventListener("click", () => (window.location.href = "orders.html"));
+    if (addProductBtn) addProductBtn.addEventListener("click", () => (window.location.href = "/seller/products.html?action=add"));
+    if (viewOrdersBtn) viewOrdersBtn.addEventListener("click", () => (window.location.href = "/seller/orders.html"));
 
     const [orders] = await Promise.all([
       loadOrdersSummary(client, user.id),
@@ -182,18 +177,14 @@ import { requireSellerSession } from "/js/core/seller-session.guard.js";
 
     if (logoutBtn) {
       logoutBtn.addEventListener("click", async () => {
-        try {
-          await client.auth.signOut();
-        } catch (_) {}
+        try { await client.auth.signOut(); } catch (_) {}
 
         localStorage.removeItem("authToken");
         localStorage.removeItem("currentUser");
         localStorage.removeItem("sessionExpiry");
         localStorage.removeItem("role");
 
-        try {
-          if (window.Sentry && typeof window.Sentry.setUser === "function") window.Sentry.setUser(null);
-        } catch (_) {}
+        try { window.ShopUpSentry?.setUserSafe?.(null); } catch (_) {}
 
         window.location.href = "/seller/seller-login.html";
       });
@@ -202,8 +193,6 @@ import { requireSellerSession } from "/js/core/seller-session.guard.js";
 
   main().catch((e) => {
     console.error("Seller dashboard fatal error:", e);
-    try {
-      if (window.Sentry && typeof window.Sentry.captureException === "function") window.Sentry.captureException(e);
-    } catch (_) {}
+    try { window.ShopUpSentry?.captureExceptionSafe?.(e); } catch (_) {}
   });
 })();
