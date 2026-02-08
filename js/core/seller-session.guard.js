@@ -1,10 +1,5 @@
 // /js/core/seller-session.guard.js
-export async function requireSellerSession({
-  redirectTo = "/seller/seller-login.html",
-  pendingTo = "/seller/seller-verification.html",
-  rejectedTo = "/seller/seller-verification.html?state=rejected",
-  blockedTo = "/seller/seller-verification.html?state=blocked",
-} = {}) {
+export async function requireSellerSession({ redirectTo = "/seller/seller-login.html" } = {}) {
   const client = await window.supabaseReady;
 
   if (!client || !client.auth) {
@@ -26,53 +21,50 @@ export async function requireSellerSession({
     return null;
   }
 
-  // Must be seller role in localStorage
   const role = localStorage.getItem("role");
   if (role && role !== "seller") {
     window.location.href = redirectTo;
     return null;
   }
 
-  // ✅ Check seller verification status from DB
-  const { data: sellerRow, error: sellerErr } = await client
-    .from("sellers")
-    .select("id, user_id, email, business_name, status, store_slug")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (sellerErr) {
-    // If query fails, treat as not allowed
-    console.error("Seller status check failed:", sellerErr);
-    window.location.href = pendingTo;
-    return null;
-  }
-
-  // If no row exists yet, push into verification flow
-  if (!sellerRow) {
-    window.location.href = pendingTo;
-    return null;
-  }
-
-  const status = String(sellerRow.status || "draft").toLowerCase();
-
-  // Only approved can proceed
-  if (status !== "approved") {
-    if (status === "rejected") window.location.href = rejectedTo;
-    else if (status === "suspended" || status === "disabled") window.location.href = blockedTo;
-    else window.location.href = pendingTo;
-    return null;
-  }
-
-  // Sentry safe setUser
+  // Bind Sentry user safely
   try {
-    if (window.Sentry && typeof window.Sentry.setUser === "function") {
-      window.Sentry.setUser({
-        id: String(user.id),
-        email: user.email || undefined,
-        role: "seller",
-      });
-    }
+    window.ShopUpSentry?.setUserSafe?.({ id: String(user.id), email: user.email || undefined, role: "seller" });
+  } catch (_) {}
+
+  // Check seller status
+  let sellerRow = null;
+  try {
+    const res = await client
+      .from("sellers")
+      .select("id, status, user_id, email, business_name")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!res.error) sellerRow = res.data || null;
   } catch (_) {}
 
   return { client, session, user, seller: sellerRow };
+}
+
+export async function requireApprovedSeller({
+  loginRedirect = "/seller/seller-login.html",
+  verifyRedirect = "/seller/seller-verification.html",
+} = {}) {
+  const auth = await requireSellerSession({ redirectTo: loginRedirect });
+  if (!auth) return null;
+
+  const status = String(auth.seller?.status || "draft").toLowerCase();
+
+  if (!auth.seller) {
+    window.location.href = verifyRedirect;
+    return null;
+  }
+
+  if (status !== "approved") {
+    window.location.href = `${verifyRedirect}?status=${encodeURIComponent(status)}`;
+    return null;
+  }
+
+  return auth;
 }
