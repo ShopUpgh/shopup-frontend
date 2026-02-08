@@ -12,13 +12,9 @@
   if (!c.__shopup_bootstrapped) {
     c.__shopup_bootstrapped = true;
 
-    // ✅ Config: always wait for ShopUpConfigReady before returning config
-    c.register("config", async () => {
-      try {
-        await window.ShopUpConfigReady;
-      } catch (_) {}
-      return window.ShopUpConfig;
-    });
+    // Core config (sync)
+    c.register("configReady", () => window.ShopUpConfigReady);
+    c.register("config", () => window.ShopUpConfig);
 
     // Supabase + logger
     c.register("supabaseWait", () => window.ShopUpSupabaseWait);
@@ -31,10 +27,10 @@
       })
     );
 
-    // ✅ Auth service with role: seller (do NOT pass fallback {})
-    c.register("authService", async (cc) =>
+    // ✅ Auth service with role: seller (sync)
+    c.register("authService", (cc) =>
       window.ShopUpAuthServiceFactory.createAuthService({
-        config: await cc.resolve("config"),
+        config: cc.resolve("config"),
         authAdapter: cc.resolve("authAdapter"),
         logger: cc.resolve("logger"),
         role: "seller",
@@ -42,13 +38,12 @@
     );
   }
 
-  // Ensure page controller exists
   if (!window.ShopUpPages?.initSellerLoginPage) {
     console.error("[ShopUp] Missing initSellerLoginPage. Check /js/pages/seller-login.page.js");
     return;
   }
 
-  // Init page (wait for config if available, but don't block forever)
+  // ✅ Important: wait for config to be ready BEFORE init page
   Promise.resolve(window.ShopUpConfigReady)
     .catch(() => null)
     .finally(() => window.ShopUpPages.initSellerLoginPage(c));
