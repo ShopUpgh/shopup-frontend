@@ -1,15 +1,9 @@
-// /js/core/dom.js
 (function () {
   "use strict";
 
-  function byId(id) {
+  function $(id) {
     return document.getElementById(id);
   }
 
-  function on(el, event, handler, opts) {
-    if (!el) return;
-    el.addEventListener(event, handler, opts);
-  }
-
-  window.ShopUpDOM = { byId, on };
+  window.ShopUpDom = { $ };
 })();
