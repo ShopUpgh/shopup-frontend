@@ -20,8 +20,8 @@
   }
 
   async function init(container) {
-    const logger = container.resolve("logger");
-    const authService = container.resolve("authService");
+    const logger = await container.resolveAsync("logger");
+    const authService = await container.resolveAsync("authService");
 
     // Page view breadcrumb
     if (window.Sentry) {
