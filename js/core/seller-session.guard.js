@@ -1,74 +1,103 @@
-// /js/core/seller-session.guard.js
-export async function requireSellerSession({
-  redirectTo = "/seller/seller-login.html",
-  verificationUrl = "/seller/seller-verification.html",
-  dashboardUrl = "/seller/seller-dashboard-enhanced.html",
-} = {}) {
-  const client = await window.supabaseReady;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Sellers - ShopUp</title>
 
-  if (!client || !client.auth) {
-    window.location.href = redirectTo;
-    return null;
-  }
+  <!-- ✅ Sentry -->
+  <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
+  <script src="/js/sentry-config.js"></script>
+  <script src="/js/sentry-error-tracking.js"></script>
 
-  const { data, error } = await client.auth.getSession();
-  if (error) {
-    window.location.href = redirectTo;
-    return null;
-  }
+  <!-- ✅ Supabase -->
+  <script type="module" src="/js/supabase-init.js"></script>
 
-  const session = data?.session;
-  const user = session?.user;
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:#f5f7fa; padding: 24px; }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    .card { background:#fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(31,45,61,0.08); padding: 22px; }
+    h1 { color:#1f2d3d; margin-bottom: 6px; }
+    .sub { color:#6b7b8a; margin-bottom: 16px; }
 
-  if (!user) {
-    window.location.href = redirectTo;
-    return null;
-  }
+    .toolbar { display:flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+    input, select { padding: 10px 12px; border-radius: 12px; border: 2px solid #e7edf5; outline:none; }
+    input:focus, select:focus { border-color: #667eea; }
 
-  // Optional: also require local role= seller
-  const role = localStorage.getItem("role");
-  if (role && role !== "seller") {
-    window.location.href = redirectTo;
-    return null;
-  }
+    .btn { border:none; border-radius: 12px; padding: 10px 14px; font-weight: 900; cursor:pointer; }
+    .btn.primary { background:#667eea; color:#fff; }
+    .btn.primary:hover { background:#5568d3; }
+    .btn.gray { background:#eef2f7; color:#1f2d3d; }
+    .btn.gray:hover { background:#e2e8f0; }
+    .btn.green { background:#27ae60; color:#fff; }
+    .btn.green:hover { background:#219150; }
+    .btn.red { background:#e74c3c; color:#fff; }
+    .btn.red:hover { background:#c0392b; }
 
-  // ✅ Real seller verification check
-  const { data: seller, error: sellerErr } = await client
-    .from("sellers")
-    .select("id, user_id, status, business_name, email, updated_at")
-    .eq("user_id", user.id)
-    .maybeSingle();
+    .alert { display:none; margin: 12px 0; padding: 12px 14px; border-radius: 12px; border: 1px solid transparent; }
+    .alert.show { display:block; }
+    .alert.error { background:#ffebee; border-color:#ffcdd2; color:#c62828; }
+    .alert.success { background:#e8f5e9; border-color:#c8e6c9; color:#2e7d32; }
 
-  if (sellerErr) {
-    // If RLS blocks this, your policies are wrong.
-    window.location.href = verificationUrl;
-    return null;
-  }
+    table { width:100%; border-collapse: collapse; }
+    th, td { text-align:left; padding: 12px; border-bottom: 1px solid #eef2f7; }
+    th { background:#f6f8fb; color:#1f2d3d; font-weight: 900; font-size: 13px; }
 
-  // If no seller row exists, force verification page
-  if (!seller) {
-    window.location.href = verificationUrl;
-    return null;
-  }
+    .pill { display:inline-block; padding: 5px 10px; border-radius: 999px; font-weight: 900; font-size: 12px; }
+    .pill.draft { background:#eef2ff; color:#3b5bdb; }
+    .pill.pending { background:#fff3cd; color:#856404; }
+    .pill.approved { background:#d1e7dd; color:#0f5132; }
+    .pill.rejected { background:#ffebee; color:#c62828; }
 
-  const status = String(seller.status || "draft").toLowerCase();
+    .actions { display:flex; gap: 8px; flex-wrap: wrap; }
+  </style>
+</head>
 
-  if (status !== "approved") {
-    // Send status as query so page can show correct state
-    window.location.href = `${verificationUrl}?status=${encodeURIComponent(status)}`;
-    return null;
-  }
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Admin: Sellers</h1>
+      <div class="sub">Approve / reject seller accounts.</div>
 
-  // Sentry user binding (safe)
-  try {
-    if (window.Sentry && typeof window.Sentry.setUser === "function") {
-      window.Sentry.setUser({
-        id: String(user.id),
-        email: user.email || undefined,
-        role: "seller",
-      });
-    }
-  } catch (_) {}
+      <div class="alert error" id="errorAlert"></div>
+      <div class="alert success" id="successAlert"></div>
 
-  return { client, session, user, seller };
-}
+      <div class="toolbar">
+        <input id="search" placeholder="Search by email / business name..." />
+        <select id="statusFilter">
+          <option value="">All statuses</option>
+          <option value="draft">draft</option>
+          <option value="pending">pending</option>
+          <option value="approved">approved</option>
+          <option value="rejected">rejected</option>
+        </select>
+        <button class="btn gray" id="refreshBtn">Refresh</button>
+        <button class="btn red" id="logoutBtn" style="margin-left:auto;">Logout</button>
+      </div>
+
+      <div style="overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Business</th>
+              <th>Phone</th>
+              <th>Region</th>
+              <th>Status</th>
+              <th>Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rows">
+            <tr><td colspan="7" style="padding: 30px; text-align:center;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ IMPORTANT: point to YOUR admin module -->
+  <script type="module" src="/admin/admin-sellers.page.js"></script>
+</body>
+</html>
