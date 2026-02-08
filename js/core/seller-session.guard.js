@@ -2,7 +2,7 @@
 export async function requireSellerSession({ redirectTo = "/seller/seller-login.html" } = {}) {
   const client = await window.supabaseReady;
 
-  if (!client || !client.auth) {
+  if (!client?.auth) {
     window.location.href = redirectTo;
     return null;
   }
@@ -16,35 +16,44 @@ export async function requireSellerSession({ redirectTo = "/seller/seller-login.
   const session = data?.session;
   const user = session?.user;
 
-  if (!session || !user) {
+  if (!session || !user?.id) {
     window.location.href = redirectTo;
     return null;
   }
 
-  // ✅ Strict role check (recommended)
-  const role = localStorage.getItem("role");
-  if (role !== "seller") {
+  // ✅ Check sellers table by user_id
+  const { data: seller, error: sellerErr } = await client
+    .from("sellers")
+    .select("id, user_id, email, status, business_name, store_slug")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (sellerErr || !seller) {
+    // Not a registered seller
     window.location.href = redirectTo;
     return null;
   }
 
-  // ✅ Optional: ensure your token key exists too (matches your app storage)
-  const token = localStorage.getItem("authToken");
-  if (!token) {
-    window.location.href = redirectTo;
+  const status = String(seller.status || "").toLowerCase();
+  if (status !== "approved") {
+    // Seller exists, but not approved yet
+    window.location.href = "/seller/seller-verification.html";
     return null;
   }
 
-  // ✅ Sentry safe setUser
+  // ✅ Persist role locally (helps your UI + your old checks)
+  localStorage.setItem("role", "seller");
+
+  // ✅ Safe Sentry setUser
   try {
     if (window.Sentry && typeof window.Sentry.setUser === "function") {
       window.Sentry.setUser({
         id: String(user.id),
-        email: user.email || undefined,
+        email: user.email || seller.email || undefined,
         role: "seller",
       });
     }
   } catch (_) {}
 
-  return { client, session, user };
+  return { client, session, user, seller };
 }
