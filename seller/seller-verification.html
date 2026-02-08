@@ -3,347 +3,148 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seller Verification - ShopUp</title>
+  <title>Seller Verification | ShopUp</title>
 
-  <!-- ✅ Sentry -->
+  <!-- Sentry -->
   <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
   <script src="/js/sentry-config.js"></script>
   <script src="/js/sentry-error-tracking.js"></script>
 
-  <!-- ✅ Supabase (single source of truth) -->
+  <!-- Supabase -->
   <script type="module" src="/js/supabase-init.js"></script>
 
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body{
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f5f7fa;}
+    .wrap{max-width:760px;margin:28px auto;padding:0 16px;}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:18px;}
+    h1{font-size:22px;color:#111827;margin-bottom:6px;}
+    .sub{color:#6b7280;font-size:13px;margin-bottom:14px;}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    @media (max-width:720px){.row{grid-template-columns:1fr;}}
+    label{display:block;font-size:12px;color:#374151;font-weight:800;margin-bottom:6px;}
+    input,select,textarea{
+      width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:12px;outline:none;
+      background:#fff;font-size:14px;
     }
-    .wrap{
-      width:100%;
-      max-width:860px;
-      background:#fff;
-      border-radius:18px;
-      box-shadow:0 20px 60px rgba(0,0,0,0.3);
-      overflow:hidden;
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      min-height:560px;
-    }
-    @media (max-width: 900px){
-      .wrap{ grid-template-columns: 1fr; }
-    }
-
-    .left{
-      padding:34px;
-      background: #ffffff;
-    }
-    .right{
-      padding:34px;
-      background: #f7f8ff;
-      border-left: 1px solid #eee;
-    }
-    @media (max-width: 900px){
-      .right{ border-left:none; border-top:1px solid #eee; }
-    }
-
-    .brand{
-      display:flex;
-      gap:12px;
-      align-items:center;
-      margin-bottom:18px;
-    }
-    .brand .icon{
-      width:46px;height:46px;border-radius:12px;
-      display:flex;align-items:center;justify-content:center;
-      background:#667eea;color:#fff;font-size:22px;font-weight:800;
-    }
-    .brand .name{
-      font-size:20px;font-weight:800;color:#2c3e50;
-    }
-    .brand .tag{
-      font-size:12px;color:#6b7280;margin-top:2px;
-    }
-
-    h1{ font-size:26px; color:#111827; margin-bottom:6px; }
-    .sub{ color:#6b7280; margin-bottom:18px; line-height:1.4; }
-
-    .alert{
-      padding:12px 14px;
-      border-radius:10px;
-      border:1px solid transparent;
-      margin:14px 0;
-      display:none;
-      word-break: break-word;
-    }
-    .alert.show{ display:block; }
-    .alert.info{ background:#eef2ff; border-color:#c7d2fe; color:#1e40af; }
-    .alert.ok{ background:#ecfdf5; border-color:#a7f3d0; color:#065f46; }
-    .alert.err{ background:#fff1f2; border-color:#fecdd3; color:#9f1239; }
-    .alert.warn{ background:#fffbeb; border-color:#fde68a; color:#92400e; }
-
-    .card{
-      background:#fff;
-      border:1px solid #eee;
-      border-radius:14px;
-      padding:18px;
-      margin-top:14px;
-    }
-    .row{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-    }
-    @media (max-width: 520px){
-      .row{ grid-template-columns:1fr; }
-    }
-
-    label{ display:block; font-size:13px; font-weight:700; color:#374151; margin:10px 0 6px; }
-    input, select, textarea{
-      width:100%;
-      padding:11px 12px;
-      border:2px solid #e5e7eb;
-      border-radius:10px;
-      font-size:14px;
-      outline:none;
-      transition: border-color .2s;
-      background:#fff;
-    }
-    input:focus, select:focus, textarea:focus{ border-color:#667eea; }
-    textarea{ min-height:90px; resize:vertical; }
-
+    input:focus,select:focus,textarea:focus{border-color:#667eea;}
+    textarea{min-height:92px;resize:vertical;}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap;}
+    .pill{display:inline-block;padding:6px 12px;border-radius:999px;font-weight:900;font-size:12px;}
+    .draft{background:#eef2ff;color:#1e40af;}
+    .pending{background:#fffbeb;color:#92400e;}
+    .approved{background:#ecfdf5;color:#065f46;}
+    .rejected{background:#fff1f2;color:#9f1239;}
+    .blocked{background:#fee2e2;color:#991b1b;}
     .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      border:none;
-      border-radius:10px;
-      padding:12px 14px;
-      font-weight:800;
-      cursor:pointer;
-      transition: opacity .2s;
+      padding:12px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:900;
     }
-    .btn:disabled{ opacity:.6; cursor:not-allowed; }
-    .btn.primary{ background:#667eea; color:#fff; width:100%; margin-top:14px; }
-    .btn.ghost{ background:#fff; color:#374151; border:1px solid #e5e7eb; width:100%; margin-top:10px; }
-    .btn.danger{ background:#ef4444; color:#fff; width:100%; margin-top:10px; }
-
-    .steps{
-      list-style:none;
-      display:grid;
-      gap:10px;
-      margin-top:10px;
-    }
-    .steps li{
-      background:#fff;
-      border:1px solid #e5e7eb;
-      border-radius:12px;
-      padding:12px 12px;
-      color:#374151;
-      font-size:14px;
-    }
-    .pill{
-      display:inline-block;
-      padding:4px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:800;
-      margin-left:8px;
-      vertical-align:middle;
-    }
-    .pill.draft{ background:#eef2ff; color:#1e40af; }
-    .pill.pending{ background:#fffbeb; color:#92400e; }
-    .pill.approved{ background:#ecfdf5; color:#065f46; }
-    .pill.rejected{ background:#fff1f2; color:#9f1239; }
-    .pill.suspended{ background:#fef3c7; color:#92400e; }
-    .pill.disabled{ background:#fee2e2; color:#991b1b; }
-
-    .meta{
-      display:grid;
-      gap:6px;
-      margin-top:10px;
-      color:#6b7280;
-      font-size:13px;
-    }
-    .meta strong{ color:#111827; }
-    .small{ font-size:12px; color:#6b7280; margin-top:10px; line-height:1.4; }
-    .link{ color:#667eea; text-decoration:none; font-weight:800; }
-    .link:hover{ text-decoration:underline; }
-
-    .loading{
-      display:none;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      margin-top:12px;
-      color:#6b7280;
-      font-weight:700;
-    }
-    .loading.show{ display:flex; }
-    .spinner{
-      width:18px;height:18px;border-radius:999px;
-      border:3px solid #e5e7eb;
-      border-top:3px solid #667eea;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin{ 0%{ transform:rotate(0deg);} 100%{ transform:rotate(360deg);} }
+    .btn.primary{background:#667eea;color:#fff;}
+    .btn.ghost{background:#fff;border:1px solid #e5e7eb;color:#374151;}
+    .btn:disabled{opacity:.6;cursor:not-allowed;}
+    .alert{display:none;margin:12px 0;padding:12px;border-radius:12px;border:1px solid transparent;}
+    .alert.show{display:block;}
+    .alert.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46;}
+    .alert.err{background:#fff1f2;border-color:#fecdd3;color:#9f1239;}
+    .muted{color:#6b7280;font-size:12px;}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+    hr{border:none;border-top:1px solid #eef2f7;margin:14px 0;}
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <div class="left">
-      <div class="brand">
-        <div class="icon">🏪</div>
-        <div>
-          <div class="name">ShopUp</div>
-          <div class="tag">Seller Verification</div>
-        </div>
+    <div class="topbar">
+      <div>
+        <h1>Seller Verification</h1>
+        <div class="sub">Complete your seller profile and submit for approval.</div>
       </div>
-
-      <h1>Verify your seller account</h1>
-      <p class="sub">
-        To protect customers and sellers, ShopUp verifies sellers before enabling full dashboard access.
-      </p>
-
-      <div id="statusAlert" class="alert info"></div>
-
-      <div class="card" id="formCard">
-        <h3 style="margin-bottom:6px;color:#111827;">Verification details</h3>
-        <p class="small" style="margin-top:0;">
-          Uploads are optional in this simple v1 flow. You can store file links later in Supabase Storage.
-          For now, we collect details and mark your status as <strong>pending</strong>.
-        </p>
-
-        <form id="verifyForm">
-          <div class="row">
-            <div>
-              <label for="businessName">Business name</label>
-              <input id="businessName" name="businessName" type="text" placeholder="e.g., Alden’s Store" required />
-            </div>
-            <div>
-              <label for="businessCategory">Business category</label>
-              <select id="businessCategory" name="businessCategory" required>
-                <option value="">Select category</option>
-                <option>Fashion</option>
-                <option>Electronics</option>
-                <option>Beauty</option>
-                <option>Groceries</option>
-                <option>Home & Living</option>
-                <option>Health</option>
-                <option>Other</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="row">
-            <div>
-              <label for="phone">Phone</label>
-              <input id="phone" name="phone" type="text" placeholder="e.g., +233..." />
-            </div>
-            <div>
-              <label for="city">City</label>
-              <input id="city" name="city" type="text" placeholder="e.g., Accra" />
-            </div>
-          </div>
-
-          <div class="row">
-            <div>
-              <label for="region">Region/State</label>
-              <input id="region" name="region" type="text" placeholder="e.g., Greater Accra" />
-            </div>
-            <div>
-              <label for="storeSlug">Store slug</label>
-              <input id="storeSlug" name="storeSlug" type="text" placeholder="e.g., aldens-store" />
-            </div>
-          </div>
-
-          <label for="notes">Notes (optional)</label>
-          <textarea id="notes" name="notes" placeholder="Tell us what you sell, where you ship, etc."></textarea>
-
-          <button class="btn primary" id="submitBtn" type="submit">Submit for verification</button>
-          <button class="btn ghost" id="backBtn" type="button">Back to login</button>
-
-          <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <span>Submitting...</span>
-          </div>
-        </form>
-      </div>
-
-      <div class="card" id="pendingCard" style="display:none;">
-        <h3 style="margin-bottom:6px;color:#111827;">Under review</h3>
-        <p class="small" style="margin-top:0;">
-          Your verification is <strong>pending</strong>. We’ll notify you when approved.
-          You can check back later.
-        </p>
-        <button class="btn ghost" id="refreshBtn" type="button">Refresh status</button>
-        <button class="btn danger" id="logoutBtn" type="button">Logout</button>
-      </div>
-
-      <div class="card" id="rejectedCard" style="display:none;">
-        <h3 style="margin-bottom:6px;color:#111827;">Needs changes</h3>
-        <p class="small" style="margin-top:0;">
-          Your verification was <strong>rejected</strong>. Please correct your details and resubmit.
-        </p>
-        <button class="btn primary" id="resubmitBtn" type="button">Resubmit verification</button>
-        <button class="btn ghost" id="logoutBtn2" type="button">Logout</button>
-      </div>
-
-      <div class="card" id="suspendedCard" style="display:none;">
-        <h3 style="margin-bottom:6px;color:#111827;">Temporarily suspended</h3>
-        <p class="small" style="margin-top:0;">
-          Your account is temporarily suspended. Please contact support.
-        </p>
-        <p class="small"><a class="link" href="/support.html">Contact support</a></p>
-        <button class="btn danger" id="logoutBtn3" type="button">Logout</button>
+      <div>
+        <span class="pill draft" id="statusPill">draft</span>
       </div>
     </div>
 
-    <div class="right">
-      <h3 style="color:#111827;">How verification works</h3>
-      <ul class="steps">
-        <li>1) Complete verification form <span class="pill draft">draft</span></li>
-        <li>2) Submitted for review <span class="pill pending">pending</span></li>
-        <li>3) Approved to sell <span class="pill approved">approved</span></li>
-        <li>4) If rejected, resubmit <span class="pill rejected">rejected</span></li>
-      </ul>
+    <div class="card">
+      <div class="alert ok" id="okAlert"></div>
+      <div class="alert err" id="errAlert"></div>
 
-      <div class="card">
-        <h3 style="margin-bottom:6px;color:#111827;">Your seller status</h3>
-        <div class="meta">
-          <div>Current status: <strong id="statusText">—</strong></div>
-          <div>Seller email: <strong id="sellerEmail">—</strong></div>
-          <div>Business name: <strong id="sellerBiz">—</strong></div>
+      <div class="muted" id="stateMessage"></div>
+      <hr />
+
+      <form id="sellerForm">
+        <div class="row">
+          <div>
+            <label>Business Name</label>
+            <input id="business_name" placeholder="Dennis Electronics" required />
+          </div>
+          <div>
+            <label>Business Category</label>
+            <select id="business_category" required>
+              <option value="">Select...</option>
+              <option>Electronics</option>
+              <option>Fashion</option>
+              <option>Beauty</option>
+              <option>Groceries</option>
+              <option>Home & Living</option>
+              <option>Phones & Accessories</option>
+              <option>Health</option>
+              <option>Other</option>
+            </select>
+          </div>
         </div>
-        <p class="small">
-          Once approved, you’ll be redirected to your dashboard automatically.
-        </p>
-      </div>
 
-      <div class="small">
-        Tip: Keep status values consistent: <code>draft</code>, <code>pending</code>, <code>approved</code>, <code>rejected</code>, <code>suspended</code>, <code>disabled</code>.
-      </div>
+        <div class="row" style="margin-top:12px;">
+          <div>
+            <label>First Name</label>
+            <input id="first_name" placeholder="Albert" required />
+          </div>
+          <div>
+            <label>Last Name</label>
+            <input id="last_name" placeholder="Dennis" required />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+          <div>
+            <label>Phone</label>
+            <input id="phone" placeholder="+233..." required />
+          </div>
+          <div>
+            <label>Region</label>
+            <input id="region" placeholder="Greater Accra" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+          <div>
+            <label>City</label>
+            <input id="city" placeholder="Accra" />
+          </div>
+          <div>
+            <label>Store Slug (URL)</label>
+            <input id="store_slug" placeholder="dennis-electronics" />
+            <div class="muted">Used for store URL. Letters/numbers/hyphens only.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <label>Store URL (optional)</label>
+          <input id="store_url" placeholder="https://instagram.com/yourstore" />
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" type="submit" id="saveBtn">Save Profile</button>
+          <button class="btn ghost" type="button" id="submitBtn">Submit for Approval</button>
+          <button class="btn ghost" type="button" id="logoutBtn">Logout</button>
+        </div>
+
+        <div class="muted" style="margin-top:10px;">
+          After submission, your status becomes <b>pending</b>. Admin approves you to become <b>approved</b>.
+        </div>
+      </form>
     </div>
   </div>
 
-  <!-- ✅ DI Core -->
-  <script defer src="/js/core/container.js"></script>
-  <script defer src="/js/core/config.js"></script>
-  <script defer src="/js/core/dom.js"></script>
-
-  <!-- ✅ Adapters + services -->
-  <script defer src="/js/adapters/supabase.wait.js"></script>
-  <script defer src="/js/adapters/logger.adapter.js"></script>
-
-  <!-- ✅ Seller service + page controller -->
-  <script defer src="/js/services/seller.service.js"></script>
   <script type="module" src="/js/pages/seller-verification.page.js"></script>
 </body>
 </html>
