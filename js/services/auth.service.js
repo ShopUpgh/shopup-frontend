@@ -17,15 +17,15 @@
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
       localStorage.setItem(ROLE_KEY, role);
 
-      // Supabase session uses expires_at (unix seconds)
       if (session?.expires_at) {
         localStorage.setItem(
           SESSION_EXPIRY_KEY,
           new Date(session.expires_at * 1000).toISOString()
         );
       } else {
-        // no expires? clear to avoid stale value
-        localStorage.removeItem(SESSION_EXPIRY_KEY);
+        // If expires_at missing, store a short-lived fallback timestamp
+        const fallback = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // +1hr
+        localStorage.setItem(SESSION_EXPIRY_KEY, fallback);
       }
     }
 
@@ -37,36 +37,42 @@
     }
 
     async function login(email, password) {
+      // 1) Attempt sign in
       const { data, error } = await authAdapter.signIn(email, password);
       if (error) throw error;
 
-      // Supabase commonly returns both user + session.
-      // But in some cases session can be null; fallback to getSession().
-      const user = data?.user || null;
+      let user = data?.user || null;
       let session = data?.session || null;
 
-      if (!user) throw new Error("Login succeeded but user missing.");
-
-      // ✅ Fallback: ask Supabase client for the current session if missing
+      // 2) Fallback: if session is missing, try getSession immediately
       if (!session?.access_token) {
-        try {
-          const { data: sessData, error: sessErr } = await authAdapter.getSession();
-          if (sessErr) throw sessErr;
-          session = sessData?.session || null;
-        } catch (e) {
-          // we'll handle below with the normal token check
+        const sessRes = await authAdapter.getSession();
+        const fallbackSession = sessRes?.data?.session || null;
+
+        if (fallbackSession?.access_token) {
+          session = fallbackSession;
+          // If user missing, try from session
+          user = user || fallbackSession.user || null;
         }
       }
 
+      if (!user) throw new Error("Login succeeded but user missing.");
       if (!session?.access_token) {
-        // If email confirmation is required, Supabase may return no session.
-        // You can customize this message if needed.
+        // Extra debug for you in console/Sentry
+        logger?.error?.("Session missing after login", {
+          role,
+          hasUser: !!user,
+          hasSession: !!session,
+          signInReturned: {
+            user: !!data?.user,
+            session: !!data?.session,
+          },
+        });
         throw new Error("Login succeeded but session token missing.");
       }
 
       saveSession(user, session);
 
-      // Sentry/logger user context
       try {
         logger.setUser({ id: user.id, email: user.email, role });
       } catch (_) {}
@@ -82,13 +88,10 @@
       } catch (err) {
         logger.warn("Supabase signOut failed; clearing local session anyway", { err: err?.message });
       }
-
       clearSession();
-
       try {
         logger.setUser(null);
       } catch (_) {}
-
       logger.info("Logout", { role });
     }
 
