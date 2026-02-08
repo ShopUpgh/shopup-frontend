@@ -3,20 +3,25 @@
   "use strict";
 
   function createAuthService({ config, authAdapter, logger, role = "customer" }) {
-    if (!config || !config.storage) {
-      throw new Error("AuthService requires config.storage. Check /js/core/config.js load order.");
-    }
+    const storage = config?.storage || {};
+    const AUTH_TOKEN_KEY = storage.AUTH_TOKEN_KEY || "authToken";
+    const CURRENT_USER_KEY = storage.CURRENT_USER_KEY || "currentUser";
+    const SESSION_EXPIRY_KEY = storage.SESSION_EXPIRY_KEY || "sessionExpiry";
+    const ROLE_KEY = storage.ROLE_KEY || "role";
 
-    const { AUTH_TOKEN_KEY, CURRENT_USER_KEY, ROLE_KEY, SESSION_EXPIRY_KEY } = config.storage;
+    function saveSession(user, session) {
+      const token = session?.access_token;
+      if (!token) throw new Error("Login succeeded but session token missing.");
 
-    function saveSession(user, accessToken, expiresAtSeconds) {
-      localStorage.setItem(AUTH_TOKEN_KEY, accessToken);
+      localStorage.setItem(AUTH_TOKEN_KEY, token);
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
       localStorage.setItem(ROLE_KEY, role);
 
-      // optional expiry
-      if (expiresAtSeconds) {
-        localStorage.setItem(SESSION_EXPIRY_KEY, new Date(expiresAtSeconds * 1000).toISOString());
+      if (session?.expires_at) {
+        localStorage.setItem(
+          SESSION_EXPIRY_KEY,
+          new Date(session.expires_at * 1000).toISOString()
+        );
       }
     }
 
@@ -27,36 +32,21 @@
       localStorage.removeItem(SESSION_EXPIRY_KEY);
     }
 
-    function getStoredUser() {
-      try {
-        return JSON.parse(localStorage.getItem(CURRENT_USER_KEY) || "null");
-      } catch {
-        return null;
-      }
-    }
-
-    function isAuthenticated() {
-      return !!localStorage.getItem(AUTH_TOKEN_KEY);
-    }
-
     async function login(email, password) {
       const { data, error } = await authAdapter.signIn(email, password);
       if (error) throw error;
 
-      const token = data?.session?.access_token;
       const user = data?.user;
-      const expiresAt = data?.session?.expires_at;
+      const session = data?.session;
 
-      if (!token || !user) {
-        throw new Error("Login succeeded but session token missing.");
-      }
+      if (!user) throw new Error("Login succeeded but user missing.");
+      if (!session?.access_token) throw new Error("Login succeeded but session token missing.");
 
-      saveSession(user, token, expiresAt);
-
+      saveSession(user, session);
       logger.setUser({ id: user.id, email: user.email, role });
       logger.info("Login success", { userId: user.id, role });
 
-      return { user, token };
+      return { user, session, token: session.access_token };
     }
 
     async function logout() {
@@ -70,21 +60,7 @@
       logger.info("Logout", { role });
     }
 
-    function requireAuthOrRedirect(redirectUrl) {
-      if (!isAuthenticated()) {
-        window.location.href = redirectUrl;
-        return false;
-      }
-      return true;
-    }
-
-    return {
-      login,
-      logout,
-      isAuthenticated,
-      getStoredUser,
-      requireAuthOrRedirect,
-    };
+    return { login, logout };
   }
 
   window.ShopUpAuthServiceFactory = { createAuthService };
