@@ -2,18 +2,15 @@
 (function () {
   "use strict";
 
-  async function waitForSupabase() {
-    if (window.supabaseReady && typeof window.supabaseReady.then === "function") {
-      const client = await window.supabaseReady;
-      if (client) {
-        window.supabase = window.supabase || client;
-        return client;
-      }
+  async function waitForSupabase(maxMs = 8000) {
+    const start = Date.now();
+    while (!window.supabase && Date.now() - start < maxMs) {
+      await new Promise((r) => setTimeout(r, 50));
     }
-
-    if (window.supabase && window.supabase.auth) return window.supabase;
-
-    throw new Error("Supabase not ready. Check /js/supabase-init.js.");
+    if (!window.supabase) {
+      throw new Error("Supabase not ready. Check /js/supabase-init.js or script order.");
+    }
+    return window.supabase;
   }
 
   window.ShopUpSupabaseWait = { waitForSupabase };
