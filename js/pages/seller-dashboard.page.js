@@ -1,5 +1,4 @@
-// /js/pages/seller-dashboard.page.js
-import { requireApprovedSeller } from "/js/core/seller-session.guard.js";
+import { requireSellerSession } from "/js/core/seller-session.guard.js";
 
 (function () {
   "use strict";
@@ -52,7 +51,7 @@ import { requireApprovedSeller } from "/js/core/seller-session.guard.js";
       .eq("seller_id", sellerId);
 
     if (error) throw error;
-    activeProductsEl.textContent = data?.length || 0;
+    if (activeProductsEl) activeProductsEl.textContent = data?.length || 0;
   }
 
   async function loadOrdersSummary(client, sellerId) {
@@ -75,39 +74,36 @@ import { requireApprovedSeller } from "/js/core/seller-session.guard.js";
       .filter((o) => (o.order_status || "").toLowerCase() === "delivered")
       .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
 
-    totalOrdersEl.textContent = totalOrders;
-    pendingOrdersEl.textContent = pending;
-    totalRevenueEl.textContent = money(revenue);
+    if (totalOrdersEl) totalOrdersEl.textContent = totalOrders;
+    if (pendingOrdersEl) pendingOrdersEl.textContent = pending;
+    if (totalRevenueEl) totalRevenueEl.textContent = money(revenue);
 
     return all;
   }
 
   function renderRecentOrders(orders) {
-    const rows = (orders || []).slice(0, 8);
+    if (!recentOrdersBody) return;
 
+    const rows = (orders || []).slice(0, 8);
     if (!rows.length) {
       recentOrdersBody.innerHTML = `
-        <tr>
-          <td colspan="5" style="text-align:center; padding:40px;">No recent orders yet.</td>
-        </tr>
+        <tr><td colspan="5" style="text-align:center; padding:40px;">No recent orders yet.</td></tr>
       `;
       return;
     }
 
-    recentOrdersBody.innerHTML = rows
-      .map((o) => {
-        const label = o.order_number || o.id;
-        return `
-          <tr>
-            <td><strong>${label}</strong></td>
-            <td>${money(o.total_amount)}</td>
-            <td><span class="status-badge ${badgeClass(o.order_status)}">${o.order_status || "pending"}</span></td>
-            <td>${o.payment_status || "unpaid"}</td>
-            <td>${formatDate(o.created_at)}</td>
-          </tr>
-        `;
-      })
-      .join("");
+    recentOrdersBody.innerHTML = rows.map((o) => {
+      const label = o.order_number || o.id;
+      return `
+        <tr>
+          <td><strong>${label}</strong></td>
+          <td>${money(o.total_amount)}</td>
+          <td><span class="status-badge ${badgeClass(o.order_status)}">${o.order_status || "pending"}</span></td>
+          <td>${o.payment_status || "unpaid"}</td>
+          <td>${formatDate(o.created_at)}</td>
+        </tr>
+      `;
+    }).join("");
   }
 
   function renderSalesChart(orders) {
@@ -149,50 +145,46 @@ import { requireApprovedSeller } from "/js/core/seller-session.guard.js";
     });
   }
 
+  async function logout(client) {
+    try { await client.auth.signOut(); } catch (_) {}
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("sessionExpiry");
+    localStorage.removeItem("role");
+    try { if (window.Sentry?.setUser) window.Sentry.setUser(null); } catch (_) {}
+    window.location.href = "/seller/seller-login.html";
+  }
+
   async function main() {
-    const auth = await requireApprovedSeller({
-      loginRedirect: "/seller/seller-login.html",
-      verifyRedirect: "/seller/seller-verification.html",
+    const auth = await requireSellerSession({
+      redirectTo: "/seller/seller-login.html",
+      verificationUrl: "/seller/seller-verification.html",
+      requireApproved: true,
     });
     if (!auth) return;
 
     const { client, user, seller } = auth;
 
-    if (elSellerName) {
-      elSellerName.textContent = seller?.business_name
-        ? seller.business_name
-        : (user.email || "Seller").split("@")[0];
-    }
+    if (elSellerName) elSellerName.textContent = seller.business_name || (user.email || "Seller").split("@")[0];
 
-    if (addProductBtn) addProductBtn.addEventListener("click", () => (window.location.href = "/seller/products.html?action=add"));
-    if (viewOrdersBtn) viewOrdersBtn.addEventListener("click", () => (window.location.href = "/seller/orders.html"));
+    if (addProductBtn) addProductBtn.addEventListener("click", () => (window.location.href = "products.html?action=add"));
+    if (viewOrdersBtn) viewOrdersBtn.addEventListener("click", () => (window.location.href = "orders.html"));
+
+    const sellerId = seller.id; // ✅ real seller uuid
 
     const [orders] = await Promise.all([
-      loadOrdersSummary(client, user.id),
-      loadActiveProducts(client, user.id),
+      loadOrdersSummary(client, sellerId),
+      loadActiveProducts(client, sellerId),
     ]);
 
     renderRecentOrders(orders);
     renderSalesChart(orders);
 
-    if (logoutBtn) {
-      logoutBtn.addEventListener("click", async () => {
-        try { await client.auth.signOut(); } catch (_) {}
-
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("currentUser");
-        localStorage.removeItem("sessionExpiry");
-        localStorage.removeItem("role");
-
-        try { window.ShopUpSentry?.setUserSafe?.(null); } catch (_) {}
-
-        window.location.href = "/seller/seller-login.html";
-      });
-    }
+    if (logoutBtn) logoutBtn.addEventListener("click", () => logout(client));
   }
 
   main().catch((e) => {
     console.error("Seller dashboard fatal error:", e);
-    try { window.ShopUpSentry?.captureExceptionSafe?.(e); } catch (_) {}
+    try { window.Sentry?.captureException?.(e); } catch (_) {}
   });
 })();
