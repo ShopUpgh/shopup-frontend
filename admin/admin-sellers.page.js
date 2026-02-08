@@ -1,103 +1,104 @@
-// /admin/admin-sellers.page.js
-const $ = (id) => document.getElementById(id);
+function $(id) { return document.getElementById(id); }
 
-function showError(msg) {
-  const el = $("errorAlert");
-  el.textContent = msg;
+function show(el, msg) {
+  if (!el) return;
+  el.textContent = msg || "";
   el.classList.add("show");
-  $("successAlert").classList.remove("show");
 }
-function showSuccess(msg) {
-  const el = $("successAlert");
-  el.textContent = msg;
-  el.classList.add("show");
-  $("errorAlert").classList.remove("show");
-}
+function hide(el) { el?.classList.remove("show"); }
+
 function pill(status) {
   const s = String(status || "draft").toLowerCase();
-  const cls = ["draft","pending","approved","rejected","suspended"].includes(s) ? s : "draft";
-  return `<span class="pill ${cls}">${cls}</span>`;
+  return `<span class="pill ${s}">${s}</span>`;
 }
+
 function fmtDate(ts) {
   try { return ts ? new Date(ts).toLocaleString() : ""; } catch { return ""; }
 }
 
-async function requireAdmin(client) {
-  const { data } = await client.auth.getSession();
-  const user = data?.session?.user;
-  if (!user) {
-    window.location.href = "/admin/admin-login.html";
-    return null;
-  }
-
-  // must be admin/moderator + active
-  const { data: roleRow, error } = await client
+async function isAdmin(client, userId) {
+  const { data, error } = await client
     .from("user_roles")
-    .select("role, is_active")
-    .eq("user_id", user.id)
+    .select("role,is_active")
+    .eq("user_id", userId)
     .eq("is_active", true)
     .in("role", ["admin", "moderator"])
     .maybeSingle();
 
-  if (error || !roleRow) {
-    await client.auth.signOut().catch(() => {});
-    window.location.href = "/admin/admin-login.html?err=not_admin";
-    return null;
-  }
-
-  return user;
+  if (error) return false;
+  return !!data;
 }
 
-async function fetchSellers(client) {
-  const search = ($("search").value || "").trim().toLowerCase();
-  const status = $("statusFilter").value;
-  const activeFilter = $("activeFilter").value;
+async function logout(client) {
+  try { await client.auth.signOut(); } catch (_) {}
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("currentUser");
+  localStorage.removeItem("sessionExpiry");
+  localStorage.removeItem("role");
+  try { window.Sentry?.setUser?.(null); } catch (_) {}
+  window.location.href = "/admin/admin-login.html";
+}
+
+async function loadSellers(client) {
+  const search = ($("search")?.value || "").trim().toLowerCase();
+  const statusFilter = ($("statusFilter")?.value || "").trim().toLowerCase();
 
   let q = client
     .from("sellers")
-    .select("id,user_id,email,business_name,phone,region,status,updated_at,is_active", { count: "exact" })
-    .order("updated_at", { ascending: false });
+    .select("id,user_id,email,business_name,phone,region,status,updated_at")
+    .order("updated_at", { ascending: false })
+    .limit(200);
 
-  if (status) q = q.eq("status", status);
-  if (activeFilter === "true") q = q.eq("is_active", true);
-  if (activeFilter === "false") q = q.eq("is_active", false);
+  if (statusFilter) q = q.eq("status", statusFilter);
 
-  // simple search (OR)
-  if (search) {
-    q = q.or(`email.ilike.%${search}%,business_name.ilike.%${search}%`);
-  }
-
+  // Simple client-side search (safe + avoids complex filters)
   const { data, error } = await q;
   if (error) throw error;
-  return data || [];
+
+  let rows = data || [];
+  if (search) {
+    rows = rows.filter((r) =>
+      String(r.email || "").toLowerCase().includes(search) ||
+      String(r.business_name || "").toLowerCase().includes(search)
+    );
+  }
+  return rows;
 }
 
-function renderRows(list) {
+async function setSellerStatus(client, sellerId, status) {
+  const s = String(status).toLowerCase();
+  const { error } = await client
+    .from("sellers")
+    .update({ status: s, updated_at: new Date().toISOString() })
+    .eq("id", sellerId);
+
+  if (error) throw error;
+}
+
+function renderRows(rows) {
   const tbody = $("rows");
-  if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="padding:30px;text-align:center;">No sellers found.</td></tr>`;
+  if (!tbody) return;
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="padding:30px; text-align:center;">No sellers found.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = list.map((s) => {
-    const status = String(s.status || "draft").toLowerCase();
-
+  tbody.innerHTML = rows.map((r) => {
     return `
-      <tr>
-        <td><strong>${s.email || ""}</strong><div style="color:#6b7b8a;font-size:12px;">${s.user_id || ""}</div></td>
-        <td>${s.business_name || ""}</td>
-        <td>${s.phone || ""}</td>
-        <td>${s.region || ""}</td>
-        <td>${pill(status)} <div style="color:#6b7b8a;font-size:12px;">active: ${s.is_active === false ? "false" : "true"}</div></td>
-        <td>${fmtDate(s.updated_at)}</td>
+      <tr data-id="${r.id}">
+        <td>${r.email || ""}</td>
+        <td>${r.business_name || ""}</td>
+        <td>${r.phone || ""}</td>
+        <td>${r.region || ""}</td>
+        <td>${pill(r.status)}</td>
+        <td>${fmtDate(r.updated_at)}</td>
         <td>
           <div class="actions">
-            <button class="btn green" data-act="approve" data-id="${s.id}">Approve</button>
-            <button class="btn red" data-act="reject" data-id="${s.id}">Reject</button>
-            <button class="btn gray" data-act="suspend" data-id="${s.id}">Suspend</button>
-            <button class="btn gray" data-act="toggleActive" data-id="${s.id}" style="border:2px solid #e7edf5;">
-              ${s.is_active === false ? "Set Active" : "Disable"}
-            </button>
+            <button class="btn green" data-action="approve">Approve</button>
+            <button class="btn red" data-action="reject">Reject</button>
+            <button class="btn gray" data-action="pending">Set Pending</button>
+            <button class="btn gray" data-action="draft">Set Draft</button>
           </div>
         </td>
       </tr>
@@ -105,76 +106,75 @@ function renderRows(list) {
   }).join("");
 }
 
-async function updateSeller(client, sellerId, patch) {
-  const { error } = await client
-    .from("sellers")
-    .update({ ...patch, updated_at: new Date().toISOString() })
-    .eq("id", sellerId);
-
-  if (error) throw error;
-}
-
 async function main() {
   const client = await window.supabaseReady;
-
-  const user = await requireAdmin(client);
-  if (!user) return;
-
-  // Logout
-  $("logoutBtn").addEventListener("click", async () => {
-    await client.auth.signOut().catch(() => {});
+  if (!client) {
     window.location.href = "/admin/admin-login.html";
-  });
+    return;
+  }
+
+  const { data } = await client.auth.getSession();
+  const user = data?.session?.user;
+  if (!user) {
+    window.location.href = "/admin/admin-login.html";
+    return;
+  }
+
+  const ok = await isAdmin(client, user.id);
+  if (!ok) {
+    await logout(client);
+    return;
+  }
+
+  $("logoutBtn")?.addEventListener("click", () => logout(client));
 
   async function refresh() {
+    hide($("errorAlert")); hide($("successAlert"));
     try {
-      $("errorAlert").classList.remove("show");
-      $("successAlert").classList.remove("show");
-      $("rows").innerHTML = `<tr><td colspan="7" style="padding:30px;text-align:center;">Loading...</td></tr>`;
-      const sellers = await fetchSellers(client);
-      renderRows(sellers);
+      $("rows").innerHTML = `<tr><td colspan="7" style="padding:30px; text-align:center;">Loading...</td></tr>`;
+      const rows = await loadSellers(client);
+      renderRows(rows);
+      show($("successAlert"), "Loaded.");
+      setTimeout(() => hide($("successAlert")), 900);
     } catch (e) {
-      showError(e?.message || String(e));
+      console.error(e);
+      show($("errorAlert"), e?.message || String(e));
+      try { window.Sentry?.captureException?.(e); } catch (_) {}
     }
   }
 
-  $("refreshBtn").addEventListener("click", refresh);
-  $("statusFilter").addEventListener("change", refresh);
-  $("activeFilter").addEventListener("change", refresh);
-  $("search").addEventListener("input", () => {
+  $("refreshBtn")?.addEventListener("click", refresh);
+  $("statusFilter")?.addEventListener("change", refresh);
+  $("search")?.addEventListener("input", () => {
+    // small debounce-like behavior
     clearTimeout(window.__adminSellerSearchT);
     window.__adminSellerSearchT = setTimeout(refresh, 250);
   });
 
-  $("rows").addEventListener("click", async (ev) => {
-    const btn = ev.target.closest("button[data-act]");
+  $("rows")?.addEventListener("click", async (e) => {
+    const btn = e.target?.closest("button[data-action]");
     if (!btn) return;
 
-    const act = btn.getAttribute("data-act");
-    const id = btn.getAttribute("data-id");
+    const tr = e.target?.closest("tr[data-id]");
+    const sellerId = tr?.getAttribute("data-id");
+    const action = btn.getAttribute("data-action");
+    if (!sellerId || !action) return;
+
+    hide($("errorAlert")); hide($("successAlert"));
 
     try {
       btn.disabled = true;
+      if (action === "approve") await setSellerStatus(client, sellerId, "approved");
+      if (action === "reject") await setSellerStatus(client, sellerId, "rejected");
+      if (action === "pending") await setSellerStatus(client, sellerId, "pending");
+      if (action === "draft") await setSellerStatus(client, sellerId, "draft");
 
-      if (act === "approve") {
-        await updateSeller(client, id, { status: "approved", is_active: true });
-        showSuccess("Seller approved.");
-      } else if (act === "reject") {
-        await updateSeller(client, id, { status: "rejected", is_active: false });
-        showSuccess("Seller rejected.");
-      } else if (act === "suspend") {
-        await updateSeller(client, id, { status: "suspended", is_active: false });
-        showSuccess("Seller suspended.");
-      } else if (act === "toggleActive") {
-        // We need current state. Simple approach: flip based on button text:
-        const makeActive = btn.textContent.trim().toLowerCase().includes("set active");
-        await updateSeller(client, id, { is_active: makeActive });
-        showSuccess(makeActive ? "Seller activated." : "Seller disabled.");
-      }
-
+      show($("successAlert"), `Updated seller to ${action}.`);
       await refresh();
-    } catch (e) {
-      showError(e?.message || String(e));
+    } catch (err) {
+      console.error(err);
+      show($("errorAlert"), err?.message || String(err));
+      try { window.Sentry?.captureException?.(err); } catch (_) {}
     } finally {
       btn.disabled = false;
     }
@@ -184,6 +184,7 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error(e);
-  showError(e?.message || String(e));
+  console.error("Admin sellers fatal:", e);
+  try { window.Sentry?.captureException?.(e); } catch (_) {}
+  window.location.href = "/admin/admin-login.html";
 });
