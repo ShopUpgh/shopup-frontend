@@ -1,182 +1,187 @@
 // /js/pages/seller-verification.page.js
+import { requireSellerSession } from "/js/core/seller-session.guard.js";
+
 (function () {
   "use strict";
 
-  function qs(name) {
-    const url = new URL(window.location.href);
-    return url.searchParams.get(name);
-  }
+  const $ = (id) => document.getElementById(id);
 
-  function setPill(status) {
-    const pill = document.getElementById("statusPill");
-    if (!pill) return;
+  const statusPill = $("statusPill");
+  const whoEmail = $("whoEmail");
+  const errorAlert = $("errorAlert");
+  const successAlert = $("successAlert");
+  const infoAlert = $("infoAlert");
 
-    const s = String(status || "draft").toLowerCase();
-    pill.textContent = s;
+  const form = $("sellerForm");
+  const saveDraftBtn = $("saveDraftBtn");
+  const logoutBtn = $("logoutBtn");
 
-    pill.className = "pill " + (
-      s === "approved" ? "approved" :
-      s === "pending" ? "pending" :
-      s === "rejected" ? "rejected" :
-      (s === "suspended" || s === "disabled") ? "blocked" :
-      "draft"
-    );
-  }
+  const fields = [
+    "business_name",
+    "business_category",
+    "first_name",
+    "last_name",
+    "phone",
+    "region",
+    "city",
+    "store_slug",
+  ];
 
-  function showAlert(type, msg) {
-    const ok = document.getElementById("okAlert");
-    const err = document.getElementById("errAlert");
-    if (ok) ok.classList.remove("show");
-    if (err) err.classList.remove("show");
-
-    const el = type === "ok" ? ok : err;
+  function show(el, msg) {
     if (!el) return;
-
     el.textContent = msg;
     el.classList.add("show");
   }
-
-  function slugify(input) {
-    return String(input || "")
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
+  function hide(el) {
+    if (!el) return;
+    el.classList.remove("show");
   }
 
-  async function main() {
-    const client = await window.supabaseReady;
+  function setPill(status) {
+    const s = String(status || "draft").toLowerCase();
+    statusPill.textContent = s;
+    statusPill.className = "pill " + (["draft","pending","approved","rejected"].includes(s) ? s : "draft");
+  }
 
-    // Must be logged in
-    const { data, error } = await client.auth.getSession();
-    if (error || !data?.session?.user) {
-      window.location.href = "/seller/seller-login.html";
-      return;
+  function readForm() {
+    const out = {};
+    for (const k of fields) out[k] = ($(k)?.value || "").trim();
+    return out;
+  }
+
+  function fillForm(row) {
+    if (!row) return;
+    for (const k of fields) {
+      if ($(k) && row[k] != null) $(k).value = String(row[k] ?? "");
     }
+  }
 
-    const user = data.session.user;
-
-    // Optional message states
-    const state = qs("state");
-    const stateMessage = document.getElementById("stateMessage");
-    if (stateMessage) {
-      if (state === "rejected") {
-        stateMessage.innerHTML = `<span style="color:#9f1239;font-weight:900;">Your verification was rejected.</span> Please correct and resubmit.`;
-      } else if (state === "blocked") {
-        stateMessage.innerHTML = `<span style="color:#991b1b;font-weight:900;">Your seller account is blocked.</span> Please contact support.`;
-      } else {
-        stateMessage.innerHTML = `Logged in as <b>${user.email}</b>`;
-      }
-    }
-
-    // Elements
-    const form = document.getElementById("sellerForm");
-    const saveBtn = document.getElementById("saveBtn");
-    const submitBtn = document.getElementById("submitBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    const fields = {
-      business_name: document.getElementById("business_name"),
-      business_category: document.getElementById("business_category"),
-      first_name: document.getElementById("first_name"),
-      last_name: document.getElementById("last_name"),
-      phone: document.getElementById("phone"),
-      city: document.getElementById("city"),
-      region: document.getElementById("region"),
-      store_slug: document.getElementById("store_slug"),
-      store_url: document.getElementById("store_url"),
-    };
-
-    // Load existing seller row
-    const { data: sellerRow } = await client
+  async function getSellerRow(client, userId) {
+    const res = await client
       .from("sellers")
-      .select("*")
-      .eq("user_id", user.id)
+      .select("id, user_id, email, status, business_name, business_category, first_name, last_name, phone, region, city, store_slug, updated_at")
+      .eq("user_id", userId)
       .maybeSingle();
+    if (res.error) throw res.error;
+    return res.data || null;
+  }
 
-    if (sellerRow) {
-      setPill(sellerRow.status);
+  async function saveSeller(client, user, patch) {
+    const existing = await getSellerRow(client, user.id);
 
-      // Fill form
-      for (const k of Object.keys(fields)) {
-        if (!fields[k]) continue;
-        fields[k].value = sellerRow[k] ?? "";
-      }
+    if (existing) {
+      const res = await client
+        .from("sellers")
+        .update({ ...patch, updated_at: new Date().toISOString() })
+        .eq("user_id", user.id)
+        .select("*")
+        .maybeSingle();
+      if (res.error) throw res.error;
+      return res.data;
     } else {
-      setPill("draft");
-      // Pre-fill name/email if you want
-    }
-
-    async function upsertSeller({ statusOverride } = {}) {
       const payload = {
         user_id: user.id,
         email: user.email,
-        business_name: fields.business_name.value.trim(),
-        business_category: fields.business_category.value,
-        first_name: fields.first_name.value.trim(),
-        last_name: fields.last_name.value.trim(),
-        phone: fields.phone.value.trim(),
-        city: fields.city.value.trim(),
-        region: fields.region.value.trim(),
-        store_slug: slugify(fields.store_slug.value || fields.business_name.value),
-        store_url: fields.store_url.value.trim(),
-        status: statusOverride || (sellerRow?.status || "draft"),
-        updated_at: new Date().toISOString(),
+        status: "draft",
+        ...patch,
       };
 
-      // If your DB has NOT NULL created_at trigger, it’s fine.
-      // If not, include created_at for new rows:
-      if (!sellerRow) payload.created_at = new Date().toISOString();
-
-      const { data, error } = await client
+      const res = await client
         .from("sellers")
-        .upsert(payload, { onConflict: "user_id" })
+        .insert(payload)
         .select("*")
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
-      return data;
+      if (res.error) throw res.error;
+      return res.data;
+    }
+  }
+
+  async function main() {
+    const auth = await requireSellerSession({ redirectTo: "/seller/seller-login.html" });
+    if (!auth) return;
+
+    const { client, user, seller } = auth;
+
+    whoEmail.textContent = user.email || "seller";
+    setPill(seller?.status || "draft");
+
+    // If redirected with status query
+    const qs = new URLSearchParams(location.search);
+    const incoming = qs.get("status");
+    if (incoming && ["draft","pending","approved","rejected"].includes(incoming)) {
+      setPill(incoming);
     }
 
+    if (seller) {
+      fillForm(seller);
+
+      if (String(seller.status || "").toLowerCase() === "pending") {
+        show(infoAlert, "Your application is pending review. You can still update and resubmit if needed.");
+      }
+
+      if (String(seller.status || "").toLowerCase() === "rejected") {
+        show(errorAlert, "Your application was rejected. Please update your details and submit again.");
+      }
+    }
+
+    // Save Draft
+    saveDraftBtn.addEventListener("click", async () => {
+      hide(errorAlert); hide(successAlert); hide(infoAlert);
+
+      try {
+        const payload = readForm();
+        const row = await saveSeller(client, user, { ...payload, status: "draft" });
+
+        setPill(row.status);
+        show(successAlert, "Draft saved.");
+      } catch (e) {
+        console.error(e);
+        show(errorAlert, e?.message || String(e));
+        try { window.ShopUpSentry?.captureExceptionSafe?.(e); } catch (_) {}
+      }
+    });
+
+    // Submit for Approval
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      saveBtn.disabled = true;
+      hide(errorAlert); hide(successAlert); hide(infoAlert);
 
       try {
-        const row = await upsertSeller({ statusOverride: sellerRow?.status || "draft" });
-        showAlert("ok", "Profile saved.");
+        const payload = readForm();
+
+        // Basic validation
+        if (!payload.business_name || !payload.business_category || !payload.first_name || !payload.last_name || !payload.phone || !payload.region) {
+          show(errorAlert, "Please complete all required fields.");
+          return;
+        }
+
+        const row = await saveSeller(client, user, { ...payload, status: "pending" });
+
         setPill(row.status);
+        show(successAlert, "Submitted! Your status is now pending approval.");
+        show(infoAlert, "Once approved, you can access the dashboard.");
       } catch (err) {
-        showAlert("err", err?.message || "Save failed.");
-        try { if (window.Sentry) window.Sentry.captureException(err); } catch (_) {}
-      } finally {
-        saveBtn.disabled = false;
+        console.error(err);
+        show(errorAlert, err?.message || String(err));
+        try { window.ShopUpSentry?.captureExceptionSafe?.(err); } catch (_) {}
       }
     });
 
-    submitBtn.addEventListener("click", async () => {
-      submitBtn.disabled = true;
-      try {
-        const row = await upsertSeller({ statusOverride: "pending" });
-        showAlert("ok", "Submitted! Your status is now pending. Please wait for approval.");
-        setPill(row.status);
-      } catch (err) {
-        showAlert("err", err?.message || "Submit failed.");
-        try { if (window.Sentry) window.Sentry.captureException(err); } catch (_) {}
-      } finally {
-        submitBtn.disabled = false;
-      }
-    });
-
+    // Logout
     logoutBtn.addEventListener("click", async () => {
       try { await client.auth.signOut(); } catch (_) {}
       localStorage.removeItem("authToken");
       localStorage.removeItem("currentUser");
       localStorage.removeItem("sessionExpiry");
       localStorage.removeItem("role");
+      try { window.ShopUpSentry?.setUserSafe?.(null); } catch (_) {}
       window.location.href = "/seller/seller-login.html";
     });
   }
 
-  main();
+  main().catch((e) => {
+    console.error("Seller verification fatal:", e);
+    try { window.ShopUpSentry?.captureExceptionSafe?.(e); } catch (_) {}
+  });
 })();
