@@ -36,7 +36,6 @@
     }
 
     .logo-section { text-align: center; margin-bottom: 30px; }
-
     .logo { font-size: 3em; margin-bottom: 10px; }
     .logo-text { font-size: 2em; font-weight: bold; color: #667eea; margin-bottom: 5px; }
     .tagline { color: #666; font-size: 0.95em; }
@@ -73,7 +72,6 @@
       font-size: 1em;
       transition: border-color 0.3s;
     }
-
     input:focus { outline: none; border-color: #667eea; }
 
     .form-options {
@@ -85,7 +83,7 @@
     }
 
     .remember-me { display: flex; align-items: center; gap: 8px; color: #666; }
-    .forgot-password { color: #667eea; text-decoration: none; cursor: pointer; opacity: 0.5; }
+    .forgot-password { color: #667eea; cursor: pointer; opacity: 0.7; }
 
     .btn-login {
       width: 100%;
@@ -132,10 +130,7 @@
       animation: spin 1s linear infinite;
       margin: 0 auto;
     }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
     @media (max-width: 600px) {
       .login-container { padding: 30px 20px; }
@@ -175,14 +170,10 @@
           <input type="checkbox" id="rememberMe" name="rememberMe" />
           <span>Remember me</span>
         </label>
-        <span class="forgot-password" id="forgotPasswordBtn">
-          Forgot password?
-        </span>
+        <span class="forgot-password" id="forgotPasswordBtn">Forgot password?</span>
       </div>
 
-      <button type="submit" class="btn-login" id="loginBtn">
-        Sign In to Dashboard
-      </button>
+      <button type="submit" class="btn-login" id="loginBtn">Sign In to Dashboard</button>
 
       <div class="loading" id="loading">
         <div class="spinner"></div>
@@ -199,27 +190,18 @@
     </div>
   </div>
 
-  <!-- ===================================================== -->
   <!-- ✅ Core + DI -->
-  <!-- ===================================================== -->
   <script defer src="/js/core/container.js"></script>
   <script defer src="/js/core/config.js"></script>
   <script defer src="/js/core/dom.js"></script>
 
-  <!-- (Optional) Use if you want role-specific guard later; safe to include now -->
-  <script defer src="/js/core/session.guard.js"></script>
-
-  <!-- ===================================================== -->
-  <!-- ✅ Adapters/Services for auth (seller login only needs auth + logger) -->
-  <!-- ===================================================== -->
+  <!-- ✅ Adapters + Services -->
   <script defer src="/js/adapters/supabase.wait.js"></script>
   <script defer src="/js/adapters/logger.adapter.js"></script>
   <script defer src="/js/adapters/auth.supabase.js"></script>
   <script defer src="/js/services/auth.service.js"></script>
 
-  <!-- ===================================================== -->
-  <!-- ✅ Seller Login Controller + Bootstrap -->
-  <!-- ===================================================== -->
+  <!-- ✅ Page Controller + Bootstrap -->
   <script defer src="/js/pages/seller-login.page.js"></script>
   <script defer src="/js/seller-login.js"></script>
 </body>
