@@ -2,9 +2,9 @@
 (function () {
   "use strict";
 
-  function initSellerLoginPage(container) {
+  async function initSellerLoginPage(container) {
     const logger = container.resolve("logger");
-    const authService = container.resolve("authService"); // role already set to "seller" via bootstrap
+    const authService = container.resolve("authService");
 
     const loginForm = document.getElementById("loginForm");
     const loginBtn = document.getElementById("loginBtn");
@@ -25,20 +25,15 @@
       successAlert.classList.remove("show");
     }
 
-    // Page view breadcrumb (safe)
-    try {
-      window.Sentry?.addBreadcrumb?.({
-        category: "navigation",
-        message: "Seller login page viewed",
-        level: "info",
-      });
-    } catch (_) {}
-    logger.pageView(document.title);
-
     if (forgotPasswordBtn) {
       forgotPasswordBtn.addEventListener("click", () => {
-        alert("Password reset coming soon. Please contact support.");
+        alert("Password reset feature coming soon! Please contact support.");
       });
+    }
+
+    if (!loginForm) {
+      console.error("[ShopUp] loginForm not found");
+      return;
     }
 
     loginForm.addEventListener("submit", async (e) => {
@@ -56,14 +51,15 @@
         await authService.login(email, password);
 
         showSuccess("Login successful! Redirecting to dashboard...");
-        setTimeout(() => {
-          window.location.href = "seller-dashboard-enhanced.html";
-        }, 700);
-      } catch (error) {
-        console.error("Login failed:", error);
-        logger.error("Seller login failed", { error: { message: error?.message, name: error?.name } });
 
-        showError(error?.message || "Login failed. Please try again.");
+        setTimeout(() => {
+          window.location.href = "/seller/seller-dashboard-enhanced.html";
+        }, 600);
+      } catch (err) {
+        console.error("Login failed:", err);
+        logger.error("Seller login failed", { error: err?.message || String(err) });
+
+        showError(err?.message || "Login failed. Please try again.");
         loginBtn.disabled = false;
         loading.classList.remove("show");
       }
