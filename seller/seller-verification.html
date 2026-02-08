@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Seller Verification | ShopUp</title>
 
-  <!-- Sentry -->
+  <!-- ✅ Sentry -->
   <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
   <script src="/js/sentry-config.js"></script>
   <script src="/js/sentry-error-tracking.js"></script>
 
-  <!-- Supabase -->
+  <!-- ✅ Supabase -->
   <script type="module" src="/js/supabase-init.js"></script>
 
   <style>
@@ -22,13 +22,12 @@
     .sub{color:#6b7280;font-size:13px;margin-bottom:14px;}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
     @media (max-width:720px){.row{grid-template-columns:1fr;}}
-    label{display:block;font-size:12px;color:#374151;font-weight:800;margin-bottom:6px;}
-    input,select,textarea{
+    label{display:block;font-size:12px;color:#374151;font-weight:900;margin-bottom:6px;}
+    input,select{
       width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:12px;outline:none;
       background:#fff;font-size:14px;
     }
-    input:focus,select:focus,textarea:focus{border-color:#667eea;}
-    textarea{min-height:92px;resize:vertical;}
+    input:focus,select:focus{border-color:#667eea;}
     .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap;}
     .pill{display:inline-block;padding:6px 12px;border-radius:999px;font-weight:900;font-size:12px;}
     .draft{background:#eef2ff;color:#1e40af;}
@@ -36,9 +35,7 @@
     .approved{background:#ecfdf5;color:#065f46;}
     .rejected{background:#fff1f2;color:#9f1239;}
     .blocked{background:#fee2e2;color:#991b1b;}
-    .btn{
-      padding:12px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:900;
-    }
+    .btn{padding:12px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:900;}
     .btn.primary{background:#667eea;color:#fff;}
     .btn.ghost{background:#fff;border:1px solid #e5e7eb;color:#374151;}
     .btn:disabled{opacity:.6;cursor:not-allowed;}
@@ -59,9 +56,7 @@
         <h1>Seller Verification</h1>
         <div class="sub">Complete your seller profile and submit for approval.</div>
       </div>
-      <div>
-        <span class="pill draft" id="statusPill">draft</span>
-      </div>
+      <div><span class="pill draft" id="statusPill">draft</span></div>
     </div>
 
     <div class="card">
@@ -123,7 +118,7 @@
           <div>
             <label>Store Slug (URL)</label>
             <input id="store_slug" placeholder="dennis-electronics" />
-            <div class="muted">Used for store URL. Letters/numbers/hyphens only.</div>
+            <div class="muted">Letters/numbers/hyphens only. Auto-generated from business name if blank.</div>
           </div>
         </div>
 
@@ -145,6 +140,186 @@
     </div>
   </div>
 
-  <script type="module" src="/js/pages/seller-verification.page.js"></script>
+  <script type="module">
+    function qs(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
+    }
+
+    function setPill(status) {
+      const pill = document.getElementById("statusPill");
+      if (!pill) return;
+
+      const s = String(status || "draft").toLowerCase();
+      pill.textContent = s;
+
+      pill.className =
+        "pill " +
+        (s === "approved"
+          ? "approved"
+          : s === "pending"
+          ? "pending"
+          : s === "rejected"
+          ? "rejected"
+          : s === "suspended" || s === "disabled"
+          ? "blocked"
+          : "draft");
+    }
+
+    function showAlert(type, msg) {
+      const ok = document.getElementById("okAlert");
+      const err = document.getElementById("errAlert");
+      ok?.classList.remove("show");
+      err?.classList.remove("show");
+
+      const el = type === "ok" ? ok : err;
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.add("show");
+    }
+
+    function slugify(input) {
+      return String(input || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    async function main() {
+      const client = await window.supabaseReady;
+
+      const { data, error } = await client.auth.getSession();
+      if (error || !data?.session?.user) {
+        window.location.href = "/seller/seller-login.html";
+        return;
+      }
+
+      const user = data.session.user;
+
+      const state = qs("state");
+      const stateMessage = document.getElementById("stateMessage");
+      if (stateMessage) {
+        if (state === "rejected") {
+          stateMessage.innerHTML = `<span style="color:#9f1239;font-weight:900;">Your verification was rejected.</span> Please correct and resubmit.`;
+        } else if (state === "blocked") {
+          stateMessage.innerHTML = `<span style="color:#991b1b;font-weight:900;">Your seller account is blocked.</span> Please contact support.`;
+        } else {
+          stateMessage.innerHTML = `Logged in as <b>${user.email}</b>`;
+        }
+      }
+
+      const form = document.getElementById("sellerForm");
+      const saveBtn = document.getElementById("saveBtn");
+      const submitBtn = document.getElementById("submitBtn");
+      const logoutBtn = document.getElementById("logoutBtn");
+
+      const fields = {
+        business_name: document.getElementById("business_name"),
+        business_category: document.getElementById("business_category"),
+        first_name: document.getElementById("first_name"),
+        last_name: document.getElementById("last_name"),
+        phone: document.getElementById("phone"),
+        city: document.getElementById("city"),
+        region: document.getElementById("region"),
+        store_slug: document.getElementById("store_slug"),
+        store_url: document.getElementById("store_url"),
+      };
+
+      // Load existing seller row
+      const { data: existing, error: loadErr } = await client
+        .from("sellers")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (loadErr) {
+        showAlert("err", loadErr.message || "Failed to load seller profile.");
+      }
+
+      if (existing) {
+        setPill(existing.status || "draft");
+        Object.keys(fields).forEach((k) => {
+          if (!fields[k]) return;
+          fields[k].value = existing[k] ?? "";
+        });
+      } else {
+        setPill("draft");
+      }
+
+      async function upsertSeller(statusOverride) {
+        const store_slug = slugify(fields.store_slug.value || fields.business_name.value);
+
+        const payload = {
+          user_id: user.id,
+          email: user.email,
+          business_name: fields.business_name.value.trim(),
+          business_category: fields.business_category.value,
+          first_name: fields.first_name.value.trim(),
+          last_name: fields.last_name.value.trim(),
+          phone: fields.phone.value.trim(),
+          city: fields.city.value.trim(),
+          region: fields.region.value.trim(),
+          store_slug,
+          store_url: fields.store_url.value.trim(),
+          status: statusOverride || (existing?.status || "draft"),
+          updated_at: new Date().toISOString(),
+        };
+
+        if (!existing) payload.created_at = new Date().toISOString();
+
+        // ✅ requires UNIQUE constraint on (user_id)
+        const { data, error } = await client
+          .from("sellers")
+          .upsert(payload, { onConflict: "user_id" })
+          .select("*")
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        saveBtn.disabled = true;
+        try {
+          const row = await upsertSeller(existing?.status || "draft");
+          showAlert("ok", "Profile saved.");
+          setPill(row.status);
+        } catch (err) {
+          showAlert("err", err?.message || "Save failed.");
+          try { window.Sentry?.captureException?.(err); } catch (_) {}
+        } finally {
+          saveBtn.disabled = false;
+        }
+      });
+
+      submitBtn.addEventListener("click", async () => {
+        submitBtn.disabled = true;
+        try {
+          const row = await upsertSeller("pending");
+          showAlert("ok", "Submitted! Your status is now pending. Please wait for approval.");
+          setPill(row.status);
+        } catch (err) {
+          showAlert("err", err?.message || "Submit failed.");
+          try { window.Sentry?.captureException?.(err); } catch (_) {}
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+
+      logoutBtn.addEventListener("click", async () => {
+        try { await client.auth.signOut(); } catch (_) {}
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("sessionExpiry");
+        localStorage.removeItem("role");
+        try { window.Sentry?.setUser?.(null); } catch (_) {}
+        window.location.href = "/seller/seller-login.html";
+      });
+    }
+
+    main();
+  </script>
 </body>
 </html>
