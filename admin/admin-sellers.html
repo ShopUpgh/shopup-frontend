@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin - Seller Approvals | ShopUp</title>
+  <title>Admin - Sellers | ShopUp</title>
 
   <!-- Sentry -->
   <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
@@ -16,88 +16,203 @@
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f5f7fa;}
-    .wrap{max-width:1100px;margin:28px auto;padding:0 16px;}
-    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
-    h1{color:#111827;font-size:22px;}
-    .sub{color:#6b7280;font-size:13px;margin-top:6px;}
-    .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;}
-    .topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
-    input, select{
-      padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;outline:none;
+    .wrap{max-width:1100px;margin:26px auto;padding:0 16px;}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px;}
+    h1{font-size:22px;color:#111827;margin-bottom:10px;}
+    .sub{color:#6b7280;font-size:13px;margin-bottom:12px;}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+    input{
+      padding:10px 12px;border:1px solid #e5e7eb;border-radius:12px;outline:none;min-width:260px;
     }
-    input:focus, select:focus{border-color:#667eea;}
-    .btn{padding:10px 12px;border:none;border-radius:10px;cursor:pointer;font-weight:700;}
+    input:focus{border-color:#667eea;}
+    .btn{padding:10px 12px;border:none;border-radius:12px;cursor:pointer;font-weight:900;}
     .btn.primary{background:#667eea;color:#fff;}
     .btn.ghost{background:#fff;border:1px solid #e5e7eb;color:#374151;}
-    .btn.ok{background:#16a34a;color:#fff;}
-    .btn.err{background:#ef4444;color:#fff;}
-    .btn.warn{background:#f59e0b;color:#111827;}
-    table{width:100%;border-collapse:collapse;margin-top:8px;}
+    table{width:100%;border-collapse:collapse;}
     th,td{padding:12px;border-bottom:1px solid #eef2f7;text-align:left;font-size:13px;}
-    th{background:#f8fafc;color:#111827;font-weight:800;}
-    .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:800;font-size:12px;}
+    th{background:#f8fafc;color:#111827;font-weight:900;}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:900;font-size:12px;}
     .draft{background:#eef2ff;color:#1e40af;}
     .pending{background:#fffbeb;color:#92400e;}
     .approved{background:#ecfdf5;color:#065f46;}
     .rejected{background:#fff1f2;color:#9f1239;}
-    .suspended{background:#fef3c7;color:#92400e;}
-    .disabled{background:#fee2e2;color:#991b1b;}
-    .muted{color:#6b7280;}
+    .blocked{background:#fee2e2;color:#991b1b;}
     .actions{display:flex;gap:8px;flex-wrap:wrap;}
-    .alert{display:none;margin:12px 0;padding:12px;border-radius:10px;border:1px solid transparent;}
+    .small{padding:7px 10px;border-radius:10px;font-size:12px;}
+    .ok{background:#16a34a;color:#fff;}
+    .warn{background:#f59e0b;color:#111;}
+    .bad{background:#ef4444;color:#fff;}
+    .muted{color:#6b7280;font-size:12px;}
+    .alert{display:none;margin-bottom:12px;padding:12px;border-radius:12px;}
     .alert.show{display:block;}
-    .alert.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46;}
-    .alert.err{background:#fff1f2;border-color:#fecdd3;color:#9f1239;}
+    .alert.err{background:#fff1f2;color:#9f1239;border:1px solid #fecdd3;}
+    .alert.ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;}
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <header>
-      <div>
-        <h1>Admin — Seller Approvals</h1>
-        <div class="sub">Approve, reject, suspend sellers (status lives in <code>public.sellers</code>).</div>
-      </div>
-      <button class="btn ghost" id="logoutBtn">Logout</button>
-    </header>
+    <h1>Admin — Sellers</h1>
+    <div class="sub">Approve or reject seller accounts. Status controls dashboard access.</div>
 
     <div class="card">
-      <div class="topbar">
-        <select id="statusFilter">
-          <option value="">All statuses</option>
-          <option value="pending" selected>Pending</option>
-          <option value="draft">Draft</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-          <option value="suspended">Suspended</option>
-          <option value="disabled">Disabled</option>
-        </select>
-
-        <input id="searchBox" type="text" placeholder="Search email / business name / phone..." style="min-width:260px;" />
-
-        <button class="btn primary" id="refreshBtn">Refresh</button>
-      </div>
-
       <div class="alert ok" id="okAlert"></div>
       <div class="alert err" id="errAlert"></div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Seller</th>
-            <th>Business</th>
-            <th>Status</th>
-            <th>Updated</th>
-            <th style="width:330px;">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="rows">
-          <tr><td colspan="5" class="muted">Loading...</td></tr>
-        </tbody>
-      </table>
+      <div class="toolbar">
+        <input id="q" placeholder="Search email/business/phone..." />
+        <button class="btn primary" id="refreshBtn">Refresh</button>
+        <button class="btn ghost" id="logoutBtn">Logout</button>
+      </div>
+
+      <div class="muted" id="who"></div>
+      <div style="overflow:auto;margin-top:12px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Business</th>
+              <th>Phone</th>
+              <th>Status</th>
+              <th>Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rows">
+            <tr><td colspan="6" style="padding:24px;text-align:center;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <script type="module" src="/admin/admin-sellers.page.js"></script>
+  <script type="module">
+    function show(type, msg) {
+      const ok = document.getElementById("okAlert");
+      const err = document.getElementById("errAlert");
+      ok.classList.remove("show"); err.classList.remove("show");
+      const el = type === "ok" ? ok : err;
+      el.textContent = msg;
+      el.classList.add("show");
+    }
+
+    function pill(status) {
+      const s = String(status || "draft").toLowerCase();
+      const cls =
+        s === "approved" ? "approved" :
+        s === "pending" ? "pending" :
+        s === "rejected" ? "rejected" :
+        (s === "suspended" || s === "disabled") ? "blocked" :
+        "draft";
+      return `<span class="pill ${cls}">${s}</span>`;
+    }
+
+    async function main() {
+      const client = await window.supabaseReady;
+
+      const sess = await client.auth.getSession();
+      const user = sess.data?.session?.user;
+      if (!user) {
+        show("err", "Not logged in. Please login as admin first.");
+        return;
+      }
+      document.getElementById("who").innerHTML = `Logged in as <b>${user.email}</b>`;
+
+      const q = document.getElementById("q");
+      const rowsEl = document.getElementById("rows");
+      const refreshBtn = document.getElementById("refreshBtn");
+      const logoutBtn = document.getElementById("logoutBtn");
+
+      async function load() {
+        rowsEl.innerHTML = `<tr><td colspan="6" style="padding:24px;text-align:center;">Loading...</td></tr>`;
+
+        const { data, error } = await client
+          .from("sellers")
+          .select("id,user_id,email,business_name,phone,status,updated_at")
+          .order("updated_at", { ascending: false });
+
+        if (error) {
+          show("err", error.message || "Failed to load sellers.");
+          rowsEl.innerHTML = `<tr><td colspan="6" style="padding:24px;text-align:center;">Failed to load.</td></tr>`;
+          return;
+        }
+
+        const term = (q.value || "").toLowerCase().trim();
+        const list = (data || []).filter((r) => {
+          if (!term) return true;
+          return (
+            String(r.email || "").toLowerCase().includes(term) ||
+            String(r.business_name || "").toLowerCase().includes(term) ||
+            String(r.phone || "").toLowerCase().includes(term)
+          );
+        });
+
+        if (!list.length) {
+          rowsEl.innerHTML = `<tr><td colspan="6" style="padding:24px;text-align:center;">No sellers found.</td></tr>`;
+          return;
+        }
+
+        rowsEl.innerHTML = list.map((r) => `
+          <tr data-id="${r.id}">
+            <td>${r.email || ""}</td>
+            <td><b>${r.business_name || ""}</b></td>
+            <td>${r.phone || ""}</td>
+            <td>${pill(r.status)}</td>
+            <td>${r.updated_at ? new Date(r.updated_at).toLocaleString() : ""}</td>
+            <td>
+              <div class="actions">
+                <button class="btn small ok" data-action="approved">Approve</button>
+                <button class="btn small warn" data-action="pending">Pending</button>
+                <button class="btn small bad" data-action="rejected">Reject</button>
+                <button class="btn small bad" data-action="suspended">Suspend</button>
+              </div>
+            </td>
+          </tr>
+        `).join("");
+      }
+
+      async function setStatus(rowId, status) {
+        const { error } = await client
+          .from("sellers")
+          .update({ status, updated_at: new Date().toISOString() })
+          .eq("id", rowId);
+
+        if (error) {
+          show("err", error.message || "Update failed.");
+          try { window.Sentry?.captureException?.(error); } catch (_) {}
+          return;
+        }
+
+        show("ok", `Seller updated → ${status}`);
+        await load();
+      }
+
+      rowsEl.addEventListener("click", async (e) => {
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+
+        const tr = e.target.closest("tr[data-id]");
+        if (!tr) return;
+
+        const id = tr.getAttribute("data-id");
+        const status = btn.getAttribute("data-action");
+        await setStatus(id, status);
+      });
+
+      refreshBtn.addEventListener("click", load);
+      q.addEventListener("input", load);
+
+      logoutBtn.addEventListener("click", async () => {
+        try { await client.auth.signOut(); } catch (_) {}
+        localStorage.clear();
+        try { window.Sentry?.setUser?.(null); } catch (_) {}
+        window.location.href = "/admin/admin-login.html";
+      });
+
+      await load();
+    }
+
+    main();
+  </script>
 </body>
 </html>
