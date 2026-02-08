@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Seller Login - ShopUp</title>
 
-  <!-- ✅ Sentry: ONLY Loader + Central Config -->
+  <!-- ✅ Sentry: Loader + config + safe tracking helper -->
   <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
   <script src="/js/sentry-config.js"></script>
   <script src="/js/sentry-error-tracking.js"></script>
 
-  <!-- ✅ Supabase (module init) -->
+  <!-- ✅ Supabase (single source of truth) -->
   <script type="module" src="/js/supabase-init.js"></script>
 
   <style>
@@ -36,6 +36,7 @@
     }
 
     .logo-section { text-align: center; margin-bottom: 30px; }
+
     .logo { font-size: 3em; margin-bottom: 10px; }
     .logo-text { font-size: 2em; font-weight: bold; color: #667eea; margin-bottom: 5px; }
     .tagline { color: #666; font-size: 0.95em; }
@@ -48,6 +49,7 @@
       border-radius: 8px;
       margin-bottom: 20px;
       display: none;
+      word-break: break-word;
     }
     .alert.show { display: block; }
     .alert-success {
@@ -195,13 +197,13 @@
   <script defer src="/js/core/config.js"></script>
   <script defer src="/js/core/dom.js"></script>
 
-  <!-- ✅ Adapters + Services -->
+  <!-- ✅ Adapters + services -->
   <script defer src="/js/adapters/supabase.wait.js"></script>
   <script defer src="/js/adapters/logger.adapter.js"></script>
   <script defer src="/js/adapters/auth.supabase.js"></script>
   <script defer src="/js/services/auth.service.js"></script>
 
-  <!-- ✅ Page Controller + Bootstrap -->
+  <!-- ✅ Controller + bootstrap -->
   <script defer src="/js/pages/seller-login.page.js"></script>
   <script defer src="/js/seller-login.js"></script>
 </body>
