@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seller Verification - ShopUp</title>
+  <title>Seller Dashboard - ShopUp</title>
 
   <!-- ✅ Sentry -->
   <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
@@ -13,156 +13,153 @@
   <!-- ✅ Supabase -->
   <script type="module" src="/js/supabase-init.js"></script>
 
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f7fa; padding: 24px; }
-    .wrap { max-width: 900px; margin: 0 auto; }
-    .card { background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(31,45,61,0.08); padding: 24px; }
-    h1 { color:#1f2d3d; margin-bottom: 6px; }
-    .sub { color:#6b7b8a; margin-bottom: 18px; }
-
-    .pill { display:inline-block; padding:6px 12px; border-radius: 999px; font-weight: 800; font-size: 12px; }
-    .pill.draft { background:#eef2ff; color:#3b5bdb; }
-    .pill.pending { background:#fff3cd; color:#856404; }
-    .pill.approved { background:#d1e7dd; color:#0f5132; }
-    .pill.rejected { background:#ffebee; color:#c62828; }
-
-    .row { display:flex; gap: 14px; flex-wrap: wrap; }
-    .col { flex: 1; min-width: 260px; }
-
-    label { display:block; margin: 14px 0 8px; font-weight: 800; color:#1f2d3d; font-size: 13px; }
-    input, select {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 2px solid #e7edf5;
-      outline: none;
-      font-size: 14px;
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f7fa; }
+    .dashboard-container { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 260px; background: #2c3e50; color: white; padding: 20px 0;
+      position: fixed; height: 100vh; overflow-y: auto;
     }
-    input:focus, select:focus { border-color: #667eea; }
-
-    .alert {
-      margin: 14px 0;
-      padding: 12px 14px;
-      border-radius: 12px;
-      display:none;
-      border: 1px solid transparent;
-      word-break: break-word;
+    .sidebar-header { padding: 0 20px 30px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .logo { font-size: 1.5em; font-weight: 900; color: #667eea; margin-bottom: 5px; }
+    .sidebar-menu { padding: 20px 0; }
+    .menu-item {
+      padding: 12px 20px; color: rgba(255,255,255,0.85); text-decoration: none;
+      display: block; transition: all 0.2s;
     }
-    .alert.show { display:block; }
-    .alert.error { background:#ffebee; border-color:#ffcdd2; color:#c62828; }
-    .alert.success { background:#e8f5e9; border-color:#c8e6c9; color:#2e7d32; }
-    .alert.info { background:#e3f2fd; border-color:#bbdefb; color:#0d47a1; }
+    .menu-item:hover, .menu-item.active { background: rgba(255,255,255,0.1); color: white; }
+    .main-content { margin-left: 260px; flex: 1; padding: 30px; }
 
-    .topbar { display:flex; justify-content: space-between; align-items:center; gap: 10px; margin-bottom: 14px; }
-    .who { color:#6b7b8a; font-weight: 700; }
-
-    .actions { display:flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
-    .btn {
-      border: none; border-radius: 12px; padding: 12px 16px;
-      font-weight: 900; cursor: pointer;
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .header h1 { color: #2c3e50; }
+    .user-section { display: flex; align-items: center; gap: 15px; }
+    .btn-logout {
+      padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 6px;
+      cursor: pointer; font-weight: 800;
     }
-    .btn.primary { background:#667eea; color:#fff; }
-    .btn.primary:hover { background:#5568d3; }
-    .btn.gray { background:#eef2f7; color:#1f2d3d; }
-    .btn.gray:hover { background:#e2e8f0; }
-    .btn.red { background:#e74c3c; color:#fff; margin-left:auto; }
-    .btn.red:hover { background:#c0392b; }
+    .btn-logout:hover { background: #c0392b; }
 
-    .small { font-size: 12px; color:#6b7b8a; margin-top: 8px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .stat-card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    .stat-card h3 { color: #7f8c8d; font-size: 0.9em; font-weight: 800; margin-bottom: 10px; text-transform: uppercase; }
+    .stat-value { font-size: 2em; font-weight: 900; color: #2c3e50; }
+    .stat-sub { font-size: 0.9em; margin-top: 10px; color: #7f8c8d; }
+
+    .section { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); margin-bottom: 30px; }
+    .section h2 { color: #2c3e50; margin-bottom: 20px; }
+
+    .table { width: 100%; border-collapse: collapse; }
+    .table th { text-align: left; padding: 12px; background: #f8f9fa; font-weight: 800; color: #2c3e50; }
+    .table td { padding: 12px; border-bottom: 1px solid #e9ecef; }
+
+    .status-badge { padding: 4px 12px; border-radius: 999px; font-size: 0.85em; font-weight: 800; display: inline-block; }
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-processing { background: #cfe2ff; color: #084298; }
+    .status-shipped { background: #e3f2fd; color: #1976d2; }
+    .status-delivered { background: #d1e7dd; color: #0f5132; }
+    .status-cancelled { background: #ffebee; color: #c62828; }
+
+    .btn-add-product {
+      padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 6px;
+      cursor: pointer; font-weight: 800; margin-right: 10px;
+    }
+    .btn-add-product:hover { background: #5568d3; }
+
+    @media (max-width: 768px) {
+      .sidebar { width: 0; overflow: hidden; }
+      .main-content { margin-left: 0; }
+      .stats-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="topbar">
-        <div>
-          <h1>Seller Verification</h1>
-          <div class="sub">Complete your seller profile and submit for approval.</div>
-        </div>
-        <div>
-          <span class="pill draft" id="statusPill">draft</span>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">🏪 ShopUp</div>
+        <p style="font-size: 0.9em; opacity: 0.7;">Seller Dashboard</p>
+      </div>
+      <nav class="sidebar-menu">
+        <a href="seller-dashboard-enhanced.html" class="menu-item active">📊 Dashboard</a>
+        <a href="products.html" class="menu-item">📦 Products</a>
+        <a href="orders.html" class="menu-item">🛒 Orders</a>
+        <a href="analytics.html" class="menu-item">📈 Analytics</a>
+        <a href="settings.html" class="menu-item">⚙️ Settings</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <div class="header">
+        <h1>Dashboard Overview</h1>
+        <div class="user-section">
+          <span id="sellerName">Seller</span>
+          <button class="btn-logout" id="logoutBtn">Logout</button>
         </div>
       </div>
 
-      <div class="alert error" id="errorAlert"></div>
-      <div class="alert success" id="successAlert"></div>
-      <div class="alert info" id="infoAlert"></div>
-
-      <div class="who">Logged in as <span id="whoEmail">...</span></div>
-
-      <form id="sellerForm" autocomplete="on">
-        <div class="row">
-          <div class="col">
-            <label for="business_name">Business Name</label>
-            <input id="business_name" placeholder="e.g., Dennis Electronics" required />
-          </div>
-          <div class="col">
-            <label for="business_category">Business Category</label>
-            <select id="business_category" required>
-              <option value="">Select a category</option>
-              <option>Electronics</option>
-              <option>Fashion</option>
-              <option>Beauty</option>
-              <option>Home & Living</option>
-              <option>Groceries</option>
-              <option>Phones & Accessories</option>
-              <option>Computing</option>
-              <option>Baby & Kids</option>
-              <option>Health</option>
-              <option>Other</option>
-            </select>
-          </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Total Revenue</h3>
+          <div class="stat-value" id="totalRevenue">GHS 0.00</div>
+          <div class="stat-sub">From delivered orders</div>
         </div>
 
-        <div class="row">
-          <div class="col">
-            <label for="first_name">First Name</label>
-            <input id="first_name" placeholder="First name" required />
-          </div>
-          <div class="col">
-            <label for="last_name">Last Name</label>
-            <input id="last_name" placeholder="Last name" required />
-          </div>
+        <div class="stat-card">
+          <h3>Total Orders</h3>
+          <div class="stat-value" id="totalOrders">0</div>
+          <div class="stat-sub">All statuses</div>
         </div>
 
-        <div class="row">
-          <div class="col">
-            <label for="phone">Phone</label>
-            <input id="phone" placeholder="e.g., 0244000000" required />
-          </div>
-          <div class="col">
-            <label for="region">Region</label>
-            <input id="region" placeholder="e.g., Greater Accra" required />
-          </div>
+        <div class="stat-card">
+          <h3>Active Products</h3>
+          <div class="stat-value" id="activeProducts">0</div>
+          <div class="stat-sub">Products under your store</div>
         </div>
 
-        <div class="row">
-          <div class="col">
-            <label for="city">City</label>
-            <input id="city" placeholder="e.g., Accra" />
-          </div>
-          <div class="col">
-            <label for="store_slug">Store Slug</label>
-            <input id="store_slug" placeholder="e.g., dennis-electronics" />
-            <div class="small">This can be used for your store URL later.</div>
-          </div>
+        <div class="stat-card">
+          <h3>Pending Orders</h3>
+          <div class="stat-value" id="pendingOrders">0</div>
+          <div class="stat-sub">Needs attention</div>
         </div>
+      </div>
 
-        <div class="actions">
-          <button type="button" class="btn gray" id="saveDraftBtn">Save Draft</button>
-          <button type="submit" class="btn primary" id="submitBtn">Submit for Approval</button>
-          <button type="button" class="btn red" id="logoutBtn">Logout</button>
-        </div>
+      <div class="section">
+        <h2>Quick Actions</h2>
+        <button class="btn-add-product" id="addProductBtn">➕ Add New Product</button>
+        <button class="btn-add-product" id="viewOrdersBtn" style="background:#27ae60;">📋 View All Orders</button>
+      </div>
 
-        <div class="small">
-          After you submit, your status becomes <b>pending</b>. Once approved, you’ll access the dashboard automatically.
-        </div>
-      </form>
-    </div>
+      <div class="section">
+        <h2>Recent Orders</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Payment</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="recentOrders">
+            <tr><td colspan="5" style="text-align:center; padding:40px;">Loading orders...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section">
+        <h2>Sales Overview (Last 7 Days)</h2>
+        <canvas id="salesChart" width="400" height="110"></canvas>
+      </div>
+    </main>
   </div>
 
-  <script type="module" src="/js/pages/seller-verification.page.js"></script>
+  <!-- ✅ Seller dashboard controller -->
+  <script type="module" src="/js/pages/seller-dashboard.page.js"></script>
 </body>
 </html>
