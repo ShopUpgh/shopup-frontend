@@ -1,4 +1,3 @@
-// /js/services/auth.service.js
 (function () {
   "use strict";
 
@@ -44,15 +43,11 @@
 
       saveSession(user, session);
 
-      // Safe logger user binding
       try {
-        if (logger && typeof logger.setUser === "function") {
-          logger.setUser({ id: user.id, email: user.email, role });
-        }
+        logger?.setUser?.({ id: user.id, email: user.email, role });
       } catch (_) {}
 
       logger?.info?.("Login success", { userId: user.id, role });
-
       return { user, session, token: session.access_token };
     }
 
@@ -67,10 +62,7 @@
 
       clearSession();
 
-      try {
-        if (logger && typeof logger.setUser === "function") logger.setUser(null);
-      } catch (_) {}
-
+      try { logger?.setUser?.(null); } catch (_) {}
       logger?.info?.("Logout", { role });
     }
 
