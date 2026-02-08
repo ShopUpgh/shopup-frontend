@@ -1,111 +1,280 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin - Sellers - ShopUp</title>
+// /admin/admin-sellers.page.js
+const $ = (id) => document.getElementById(id);
 
-  <!-- ✅ Sentry -->
-  <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
-  <script src="/js/sentry-config.js"></script>
-  <script src="/js/sentry-error-tracking.js"></script>
+function safeUUID() {
+  if (crypto && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
-  <!-- ✅ Supabase -->
-  <script type="module" src="/js/supabase-init.js"></script>
+function show(el, msg) { el.textContent = msg; el.classList.add("show"); }
+function hide(el) { el.classList.remove("show"); el.textContent = ""; }
 
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:#f5f7fa; padding: 24px; }
-    .wrap { max-width: 1100px; margin: 0 auto; }
-    .card { background:#fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(31,45,61,0.08); padding: 22px; }
-    h1 { color:#1f2d3d; margin-bottom: 6px; }
-    .sub { color:#6b7b8a; margin-bottom: 16px; }
+function pill(status) {
+  const s = String(status || "draft").toLowerCase();
+  const ok = ["draft","pending","approved","rejected","suspended"].includes(s) ? s : "draft";
+  return `<span class="pill ${ok}">${ok}</span>`;
+}
 
-    .toolbar { display:flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
-    input, select {
-      padding: 10px 12px; border-radius: 12px; border: 2px solid #e7edf5; outline:none;
+function fmtDate(ts) {
+  try { return ts ? new Date(ts).toLocaleString() : ""; } catch { return ""; }
+}
+
+async function requireAdmin(client) {
+  const { data, error } = await client.auth.getSession();
+  const user = data?.session?.user;
+
+  if (error || !user) {
+    window.location.href = "/admin/admin-login.html";
+    return null;
+  }
+
+  // Check admin role
+  const { data: roles, error: rerr } = await client
+    .from("user_roles")
+    .select("role, is_active")
+    .eq("user_id", user.id)
+    .eq("role", "admin")
+    .eq("is_active", true)
+    .limit(1);
+
+  if (rerr || !roles || roles.length === 0) {
+    // No access
+    window.location.href = "/admin/admin-login.html";
+    return null;
+  }
+
+  try {
+    if (window.Sentry && typeof window.Sentry.setUser === "function") {
+      window.Sentry.setUser({ id: user.id, email: user.email || undefined, role: "admin" });
     }
-    input:focus, select:focus { border-color: #667eea; }
+  } catch (_) {}
 
-    .btn { border:none; border-radius: 12px; padding: 10px 14px; font-weight: 900; cursor:pointer; }
-    .btn.primary { background:#667eea; color:#fff; }
-    .btn.primary:hover { background:#5568d3; }
-    .btn.gray { background:#eef2f7; color:#1f2d3d; }
-    .btn.gray:hover { background:#e2e8f0; }
-    .btn.green { background:#27ae60; color:#fff; }
-    .btn.green:hover { background:#219150; }
-    .btn.red { background:#e74c3c; color:#fff; }
-    .btn.red:hover { background:#c0392b; }
+  return user;
+}
 
-    .alert { display:none; margin: 12px 0; padding: 12px 14px; border-radius: 12px; border: 1px solid transparent; }
-    .alert.show { display:block; }
-    .alert.error { background:#ffebee; border-color:#ffcdd2; color:#c62828; }
-    .alert.success { background:#e8f5e9; border-color:#c8e6c9; color:#2e7d32; }
+async function setSellerRoleActive(client, userId, isActive) {
+  // We try to find existing seller role row
+  const { data: existing, error: e1 } = await client
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("role", "seller")
+    .order("created_at", { ascending: false })
+    .limit(1);
 
-    table { width:100%; border-collapse: collapse; }
-    th, td { text-align:left; padding: 12px; border-bottom: 1px solid #eef2f7; }
-    th { background:#f6f8fb; color:#1f2d3d; font-weight: 900; font-size: 13px; }
+  if (e1) throw e1;
 
-    .pill { display:inline-block; padding: 5px 10px; border-radius: 999px; font-weight: 900; font-size: 12px; }
-    .pill.draft { background:#eef2ff; color:#3b5bdb; }
-    .pill.pending { background:#fff3cd; color:#856404; }
-    .pill.approved { background:#d1e7dd; color:#0f5132; }
-    .pill.rejected { background:#ffebee; color:#c62828; }
-    .pill.suspended { background:#fde2e2; color:#b42318; }
+  if (existing && existing.length > 0) {
+    const id = existing[0].id;
+    const { error } = await client
+      .from("user_roles")
+      .update({ is_active: isActive, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) throw error;
+    return;
+  }
 
-    .actions { display:flex; gap: 8px; flex-wrap: wrap; }
-    .muted { color:#6b7b8a; font-size: 12px; }
-  </style>
-</head>
+  // Insert new role row (id might need UUID)
+  const { error } = await client.from("user_roles").insert({
+    id: safeUUID(),
+    user_id: userId,
+    role: "seller",
+    is_active: isActive,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
 
-<body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Admin: Sellers</h1>
-      <div class="sub">Approve / reject seller accounts. (Role activation is handled via <code>user_roles.is_active</code>.)</div>
+  if (error) throw error;
+}
 
-      <div class="alert error" id="errorAlert"></div>
-      <div class="alert success" id="successAlert"></div>
+async function getSellerRoleActive(client, userId) {
+  const { data, error } = await client
+    .from("user_roles")
+    .select("is_active")
+    .eq("user_id", userId)
+    .eq("role", "seller")
+    .order("created_at", { ascending: false })
+    .limit(1);
 
-      <div class="toolbar">
-        <input id="search" placeholder="Search by email / business name..." />
-        <select id="statusFilter">
-          <option value="">All statuses</option>
-          <option value="draft">draft</option>
-          <option value="pending">pending</option>
-          <option value="approved">approved</option>
-          <option value="rejected">rejected</option>
-          <option value="suspended">suspended</option>
-        </select>
-        <button class="btn gray" id="refreshBtn">Refresh</button>
-        <button class="btn red" id="logoutBtn" style="margin-left:auto;">Logout</button>
-      </div>
+  if (error) throw error;
+  if (!data || data.length === 0) return false;
+  return !!data[0].is_active;
+}
 
-      <div class="muted" id="adminHint"></div>
+async function fetchSellers(client) {
+  const { data, error } = await client
+    .from("sellers")
+    .select("id, user_id, email, business_name, phone, region, status, updated_at")
+    .order("updated_at", { ascending: false });
 
-      <div style="overflow:auto; margin-top:10px;">
-        <table>
-          <thead>
-            <tr>
-              <th>Email</th>
-              <th>Business</th>
-              <th>Phone</th>
-              <th>Region</th>
-              <th>Status</th>
-              <th>Seller Role Active</th>
-              <th>Updated</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="rows">
-            <tr><td colspan="8" style="padding: 30px; text-align:center;">Loading...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+  if (error) throw error;
+  return data || [];
+}
 
-  <!-- ✅ Use the admin script you already have -->
-  <script type="module" src="/admin/admin-sellers.page.js"></script>
-</body>
-</html>
+function filterList(list, search, status) {
+  const q = String(search || "").trim().toLowerCase();
+  const st = String(status || "").trim().toLowerCase();
+
+  return (list || []).filter((r) => {
+    if (st && String(r.status || "").toLowerCase() !== st) return false;
+    if (!q) return true;
+
+    const hay = `${r.email || ""} ${r.business_name || ""} ${r.phone || ""} ${r.region || ""}`.toLowerCase();
+    return hay.includes(q);
+  });
+}
+
+async function main() {
+  const errorAlert = $("errorAlert");
+  const successAlert = $("successAlert");
+  const rowsEl = $("rows");
+  const searchEl = $("search");
+  const statusEl = $("statusFilter");
+  const refreshBtn = $("refreshBtn");
+  const logoutBtn = $("logoutBtn");
+  const adminHint = $("adminHint");
+
+  const client = await window.supabaseReady;
+
+  const adminUser = await requireAdmin(client);
+  if (!adminUser) return;
+
+  adminHint.textContent = `Logged in as ${adminUser.email || adminUser.id}`;
+
+  let all = [];
+
+  async function render() {
+    hide(errorAlert);
+    hide(successAlert);
+
+    const filtered = filterList(all, searchEl.value, statusEl.value);
+
+    if (!filtered.length) {
+      rowsEl.innerHTML = `<tr><td colspan="8" style="padding:30px; text-align:center;">No sellers found.</td></tr>`;
+      return;
+    }
+
+    // Enrich with seller role active
+    const enriched = [];
+    for (const s of filtered) {
+      let active = false;
+      try { active = await getSellerRoleActive(client, s.user_id); } catch (_) {}
+      enriched.push({ ...s, sellerRoleActive: active });
+    }
+
+    rowsEl.innerHTML = enriched.map((s) => {
+      const activeLabel = s.sellerRoleActive ? "Yes" : "No";
+      return `
+        <tr>
+          <td>${s.email || ""}</td>
+          <td>${s.business_name || ""}</td>
+          <td>${s.phone || ""}</td>
+          <td>${s.region || ""}</td>
+          <td>${pill(s.status)}</td>
+          <td>${activeLabel}</td>
+          <td>${fmtDate(s.updated_at)}</td>
+          <td>
+            <div class="actions">
+              <button class="btn green" data-action="approve" data-user="${s.user_id}">Approve</button>
+              <button class="btn red" data-action="reject" data-user="${s.user_id}">Reject</button>
+              <button class="btn gray" data-action="suspend" data-user="${s.user_id}">Suspend</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  async function load() {
+    rowsEl.innerHTML = `<tr><td colspan="8" style="padding:30px; text-align:center;">Loading...</td></tr>`;
+    try {
+      all = await fetchSellers(client);
+      await render();
+    } catch (e) {
+      console.error(e);
+      show(errorAlert, e?.message || "Failed to load sellers.");
+      rowsEl.innerHTML = `<tr><td colspan="8" style="padding:30px; text-align:center;">Error loading.</td></tr>`;
+      try { if (window.Sentry && typeof window.Sentry.captureException === "function") window.Sentry.captureException(e); } catch (_) {}
+    }
+  }
+
+  rowsEl.addEventListener("click", async (e) => {
+    const btn = e.target?.closest("button[data-action]");
+    if (!btn) return;
+
+    hide(errorAlert);
+    hide(successAlert);
+
+    const action = btn.getAttribute("data-action");
+    const userId = btn.getAttribute("data-user");
+
+    try {
+      if (!userId) throw new Error("Missing seller user_id");
+
+      if (action === "approve") {
+        // approve seller + activate seller role
+        const { error } = await client
+          .from("sellers")
+          .update({ status: "approved", updated_at: new Date().toISOString() })
+          .eq("user_id", userId);
+
+        if (error) throw error;
+
+        await setSellerRoleActive(client, userId, true);
+        show(successAlert, "Seller approved.");
+      }
+
+      if (action === "reject") {
+        const { error } = await client
+          .from("sellers")
+          .update({ status: "rejected", updated_at: new Date().toISOString() })
+          .eq("user_id", userId);
+
+        if (error) throw error;
+
+        await setSellerRoleActive(client, userId, false);
+        show(successAlert, "Seller rejected.");
+      }
+
+      if (action === "suspend") {
+        const { error } = await client
+          .from("sellers")
+          .update({ status: "suspended", updated_at: new Date().toISOString() })
+          .eq("user_id", userId);
+
+        if (error) throw error;
+
+        await setSellerRoleActive(client, userId, false);
+        show(successAlert, "Seller suspended.");
+      }
+
+      await load();
+    } catch (err) {
+      console.error(err);
+      show(errorAlert, err?.message || "Action failed.");
+      try { if (window.Sentry && typeof window.Sentry.captureException === "function") window.Sentry.captureException(err); } catch (_) {}
+    }
+  });
+
+  searchEl.addEventListener("input", () => render());
+  statusEl.addEventListener("change", () => render());
+  refreshBtn.addEventListener("click", () => load());
+
+  logoutBtn.addEventListener("click", async () => {
+    try { await client.auth.signOut(); } catch (_) {}
+    try { if (window.Sentry && typeof window.Sentry.setUser === "function") window.Sentry.setUser(null); } catch (_) {}
+    window.location.href = "/admin/admin-login.html";
+  });
+
+  await load();
+}
+
+main().catch((e) => {
+  console.error("admin sellers fatal:", e);
+  try { if (window.Sentry && typeof window.Sentry.captureException === "function") window.Sentry.captureException(e); } catch (_) {}
+  window.location.href = "/admin/admin-login.html";
+});
