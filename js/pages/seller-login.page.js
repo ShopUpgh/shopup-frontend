@@ -1,4 +1,3 @@
-// /js/pages/seller-login.page.js
 (function () {
   "use strict";
 
@@ -14,20 +13,22 @@
     const forgotPasswordBtn = document.getElementById("forgotPasswordBtn");
 
     function showSuccess(message) {
+      if (!successAlert) return;
       successAlert.textContent = message;
       successAlert.classList.add("show");
-      errorAlert.classList.remove("show");
+      if (errorAlert) errorAlert.classList.remove("show");
     }
 
     function showError(message) {
+      if (!errorAlert) return;
       errorAlert.textContent = message;
       errorAlert.classList.add("show");
-      successAlert.classList.remove("show");
+      if (successAlert) successAlert.classList.remove("show");
     }
 
     if (forgotPasswordBtn) {
       forgotPasswordBtn.addEventListener("click", () => {
-        alert("Password reset feature coming soon! Please contact support.");
+        alert("Password reset coming soon. Please contact support for now.");
       });
     }
 
@@ -39,10 +40,10 @@
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      loginBtn.disabled = true;
-      loading.classList.add("show");
-
       try {
+        loginBtn.disabled = true;
+        loading.classList.add("show");
+
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value;
 
@@ -50,23 +51,15 @@
 
         await authService.login(email, password);
 
-        // ✅ Verify storage before redirect
-        const role = localStorage.getItem("role");
-        const token = localStorage.getItem("authToken");
+        showSuccess("Login successful! Redirecting...");
 
-        if (!token || role !== "seller") {
-          throw new Error("Login completed but authToken/role was not saved. Check auth.service.js storage step.");
-        }
-
-        showSuccess("Login successful! Redirecting to dashboard...");
-
+        // Always route to dashboard; dashboard guard will redirect to verification if needed
         setTimeout(() => {
           window.location.href = "/seller/seller-dashboard-enhanced.html";
-        }, 600);
+        }, 500);
       } catch (err) {
         console.error("Login failed:", err);
         logger.error("Seller login failed", { error: err?.message || String(err) });
-
         showError(err?.message || "Login failed. Please try again.");
         loginBtn.disabled = false;
         loading.classList.remove("show");
