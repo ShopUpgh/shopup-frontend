@@ -12,7 +12,7 @@
   if (!c.__shopup_bootstrapped) {
     c.__shopup_bootstrapped = true;
 
-    // Core config (sync)
+    // Core config
     c.register("configReady", () => window.ShopUpConfigReady);
     c.register("config", () => window.ShopUpConfig);
 
@@ -27,7 +27,7 @@
       })
     );
 
-    // ✅ Auth service with role: seller (sync)
+    // ✅ Auth service role=seller
     c.register("authService", (cc) =>
       window.ShopUpAuthServiceFactory.createAuthService({
         config: cc.resolve("config"),
@@ -43,7 +43,7 @@
     return;
   }
 
-  // ✅ Important: wait for config to be ready BEFORE init page
+  // Wait for config init (but do not block forever)
   Promise.resolve(window.ShopUpConfigReady)
     .catch(() => null)
     .finally(() => window.ShopUpPages.initSellerLoginPage(c));
