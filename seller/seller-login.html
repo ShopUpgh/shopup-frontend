@@ -5,17 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Seller Login - ShopUp</title>
 
-  <!-- ✅ Sentry Loader (global Sentry object) -->
+  <!-- ✅ Sentry -->
   <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
   <script src="/js/sentry-config.js"></script>
   <script src="/js/sentry-error-tracking.js"></script>
 
-  <!-- ✅ Supabase (single source of truth) -->
+  <!-- ✅ Supabase SINGLE source of truth -->
   <script type="module" src="/js/supabase-init.js"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -25,7 +24,6 @@
       justify-content: center;
       padding: 20px;
     }
-
     .login-container {
       background: white;
       border-radius: 20px;
@@ -34,7 +32,6 @@
       width: 100%;
       padding: 40px;
     }
-
     .logo-section { text-align: center; margin-bottom: 30px; }
     .logo { font-size: 3em; margin-bottom: 10px; }
     .logo-text { font-size: 2em; font-weight: bold; color: #667eea; margin-bottom: 5px; }
@@ -45,14 +42,14 @@
 
     .alert {
       padding: 12px 15px;
-      border-radius: 10px;
+      border-radius: 8px;
       margin-bottom: 20px;
       display: none;
       word-break: break-word;
     }
     .alert.show { display: block; }
-    .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
-    .alert-error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+    .alert-success { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #43a047; }
+    .alert-error { background: #ffebee; color: #c62828; border-left: 4px solid #e53935; }
 
     .form-group { margin-bottom: 20px; }
     label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; font-size: 0.9em; }
@@ -61,9 +58,9 @@
       width: 100%;
       padding: 12px 15px;
       border: 2px solid #e0e0e0;
-      border-radius: 10px;
+      border-radius: 8px;
       font-size: 1em;
-      transition: border-color 0.2s;
+      transition: border-color 0.3s;
     }
     input:focus { outline: none; border-color: #667eea; }
 
@@ -74,9 +71,8 @@
       margin-bottom: 25px;
       font-size: 0.9em;
     }
-
     .remember-me { display: flex; align-items: center; gap: 8px; color: #666; }
-    .forgot-password { color: #667eea; cursor: pointer; opacity: 0.85; }
+    .forgot-password { color: #667eea; cursor: pointer; opacity: 0.75; }
     .forgot-password:hover { opacity: 1; }
 
     .btn-login {
@@ -85,14 +81,14 @@
       background: #667eea;
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       font-size: 1.1em;
       font-weight: 700;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.3s;
     }
     .btn-login:hover { background: #5568d3; }
-    .btn-login:disabled { background: #bdbdbd; cursor: not-allowed; }
+    .btn-login:disabled { background: #ccc; cursor: not-allowed; }
 
     .register-link {
       text-align: center;
@@ -114,7 +110,6 @@
 
     .loading { display: none; text-align: center; margin-top: 15px; }
     .loading.show { display: block; }
-
     .spinner {
       border: 3px solid #f3f3f3;
       border-top: 3px solid #667eea;
@@ -151,17 +146,17 @@
     <form id="loginForm">
       <div class="form-group">
         <label for="email">Email Address</label>
-        <input type="email" id="email" required placeholder="seller@email.com" autocomplete="email" />
+        <input type="email" id="email" name="email" required placeholder="seller@email.com" autocomplete="email" />
       </div>
 
       <div class="form-group">
         <label for="password">Password</label>
-        <input type="password" id="password" required placeholder="Enter your password" autocomplete="current-password" />
+        <input type="password" id="password" name="password" required placeholder="Enter your password" autocomplete="current-password" />
       </div>
 
       <div class="form-options">
         <label class="remember-me">
-          <input type="checkbox" id="rememberMe" />
+          <input type="checkbox" id="rememberMe" name="rememberMe" />
           <span>Remember me</span>
         </label>
         <span class="forgot-password" id="forgotPasswordBtn">Forgot password?</span>
@@ -176,7 +171,7 @@
     </form>
 
     <div class="register-link">
-      Don't have a seller account? <a href="/seller/seller-register.html">Register Now</a>
+      Don't have a seller account? <a href="seller-register.html">Register Now</a>
     </div>
 
     <div class="customer-link">
@@ -195,7 +190,7 @@
   <script defer src="/js/adapters/auth.supabase.js"></script>
   <script defer src="/js/services/auth.service.js"></script>
 
-  <!-- ✅ Page controller + bootstrap -->
+  <!-- ✅ Controller + bootstrap -->
   <script defer src="/js/pages/seller-login.page.js"></script>
   <script defer src="/js/seller-login.js"></script>
 </body>
