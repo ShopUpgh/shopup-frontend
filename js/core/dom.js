@@ -2,12 +2,14 @@
 (function () {
   "use strict";
 
-  function qs(sel, root = document) {
-    return root.querySelector(sel);
-  }
-  function qsa(sel, root = document) {
-    return Array.from(root.querySelectorAll(sel));
+  function byId(id) {
+    return document.getElementById(id);
   }
 
-  window.ShopUpDOM = { qs, qsa };
+  function on(el, event, handler, opts) {
+    if (!el) return;
+    el.addEventListener(event, handler, opts);
+  }
+
+  window.ShopUpDOM = { byId, on };
 })();
