@@ -2,60 +2,47 @@
 (function () {
   "use strict";
 
-  function safeSentrySetUser(user) {
-    const S = window.Sentry;
-    if (!S) return;
+  function safeSentry() {
+    return typeof window !== "undefined" ? window.Sentry : undefined;
+  }
 
+  function safeCall(obj, fnName, ...args) {
     try {
-      // Some bundles expose setUser directly
-      if (typeof S.setUser === "function") {
-        S.setUser(user || null);
-        return;
-      }
-
-      // Newer SDK patterns
-      if (typeof S.getCurrentScope === "function") {
-        const scope = S.getCurrentScope();
-        if (scope && typeof scope.setUser === "function") {
-          scope.setUser(user || null);
-          return;
-        }
-      }
-
-      // Older SDK patterns
-      if (typeof S.configureScope === "function") {
-        S.configureScope((scope) => {
-          if (scope && typeof scope.setUser === "function") scope.setUser(user || null);
-        });
-      }
+      if (obj && typeof obj[fnName] === "function") return obj[fnName](...args);
     } catch (_) {}
+    return undefined;
   }
 
   function createLogger() {
     return {
       info(msg, data) {
         console.log(msg, data || "");
-        try {
-          window.SentryTracking?.trackUserAction?.(msg, data || {});
-        } catch (_) {}
+        safeCall(safeSentry(), "addBreadcrumb", {
+          category: "log",
+          message: String(msg),
+          level: "info",
+          data: data || {},
+        });
       },
       warn(msg, data) {
         console.warn(msg, data || "");
+        safeCall(safeSentry(), "addBreadcrumb", {
+          category: "log",
+          message: String(msg),
+          level: "warning",
+          data: data || {},
+        });
       },
       error(msg, data) {
         console.error(msg, data || "");
-      },
-      pageView(title) {
-        try {
-          window.Sentry?.addBreadcrumb?.({
-            category: "navigation",
-            message: String(title || "Page View"),
-            level: "info",
-          });
-        } catch (_) {}
+        safeCall(safeSentry(), "captureMessage", String(msg), {
+          level: "error",
+          extra: data || {},
+        });
       },
       setUser(user) {
-        safeSentrySetUser(user);
+        // ✅ Some Sentry bundles don't have setUser
+        safeCall(safeSentry(), "setUser", user || null);
       },
     };
   }
