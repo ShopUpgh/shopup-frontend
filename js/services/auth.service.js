@@ -17,11 +17,15 @@
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
       localStorage.setItem(ROLE_KEY, role);
 
+      // Supabase session uses expires_at (unix seconds)
       if (session?.expires_at) {
         localStorage.setItem(
           SESSION_EXPIRY_KEY,
           new Date(session.expires_at * 1000).toISOString()
         );
+      } else {
+        // no expires? clear to avoid stale value
+        localStorage.removeItem(SESSION_EXPIRY_KEY);
       }
     }
 
@@ -36,14 +40,37 @@
       const { data, error } = await authAdapter.signIn(email, password);
       if (error) throw error;
 
-      const user = data?.user;
-      const session = data?.session;
+      // Supabase commonly returns both user + session.
+      // But in some cases session can be null; fallback to getSession().
+      const user = data?.user || null;
+      let session = data?.session || null;
 
       if (!user) throw new Error("Login succeeded but user missing.");
-      if (!session?.access_token) throw new Error("Login succeeded but session token missing.");
+
+      // ✅ Fallback: ask Supabase client for the current session if missing
+      if (!session?.access_token) {
+        try {
+          const { data: sessData, error: sessErr } = await authAdapter.getSession();
+          if (sessErr) throw sessErr;
+          session = sessData?.session || null;
+        } catch (e) {
+          // we'll handle below with the normal token check
+        }
+      }
+
+      if (!session?.access_token) {
+        // If email confirmation is required, Supabase may return no session.
+        // You can customize this message if needed.
+        throw new Error("Login succeeded but session token missing.");
+      }
 
       saveSession(user, session);
-      logger.setUser({ id: user.id, email: user.email, role });
+
+      // Sentry/logger user context
+      try {
+        logger.setUser({ id: user.id, email: user.email, role });
+      } catch (_) {}
+
       logger.info("Login success", { userId: user.id, role });
 
       return { user, session, token: session.access_token };
@@ -55,8 +82,13 @@
       } catch (err) {
         logger.warn("Supabase signOut failed; clearing local session anyway", { err: err?.message });
       }
+
       clearSession();
-      logger.setUser(null);
+
+      try {
+        logger.setUser(null);
+      } catch (_) {}
+
       logger.info("Logout", { role });
     }
 
