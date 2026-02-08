@@ -14,15 +14,24 @@
     const forgotPasswordBtn = document.getElementById("forgotPasswordBtn");
 
     function showSuccess(message) {
-      successAlert.textContent = message;
-      successAlert.classList.add("show");
-      errorAlert.classList.remove("show");
+      if (successAlert) {
+        successAlert.textContent = message || "";
+        successAlert.classList.add("show");
+      }
+      if (errorAlert) errorAlert.classList.remove("show");
     }
 
     function showError(message) {
-      errorAlert.textContent = message;
-      errorAlert.classList.add("show");
-      successAlert.classList.remove("show");
+      if (errorAlert) {
+        errorAlert.textContent = message || "Login failed. Please try again.";
+        errorAlert.classList.add("show");
+      }
+      if (successAlert) successAlert.classList.remove("show");
+    }
+
+    function setLoading(isLoading) {
+      if (loginBtn) loginBtn.disabled = !!isLoading;
+      if (loading) loading.classList.toggle("show", !!isLoading);
     }
 
     if (forgotPasswordBtn) {
@@ -38,17 +47,27 @@
 
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-
-      loginBtn.disabled = true;
-      loading.classList.add("show");
+      setLoading(true);
 
       try {
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
+        const email = (document.getElementById("email")?.value || "").trim();
+        const password = document.getElementById("password")?.value || "";
+
+        if (!email || !password) {
+          showError("Please enter your email and password.");
+          setLoading(false);
+          return;
+        }
 
         logger.info("Seller login attempt", { email });
 
-        await authService.login(email, password);
+        const result = await authService.login(email, password);
+
+        // Optional: if you want to verify token exists in localStorage immediately
+        // (keeps it simple; auth.service.js guarantees it now)
+        if (!result?.token) {
+          throw new Error("Login succeeded but session token missing.");
+        }
 
         showSuccess("Login successful! Redirecting to dashboard...");
 
@@ -60,8 +79,7 @@
         logger.error("Seller login failed", { error: err?.message || String(err) });
 
         showError(err?.message || "Login failed. Please try again.");
-        loginBtn.disabled = false;
-        loading.classList.remove("show");
+        setLoading(false);
       }
     });
   }
