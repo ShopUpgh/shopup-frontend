@@ -1,490 +1,349 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seller Verification - ShopUp</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seller Verification - ShopUp</title>
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
+  <!-- ✅ Sentry -->
+  <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
+  <script src="/js/sentry-config.js"></script>
+  <script src="/js/sentry-error-tracking.js"></script>
 
-        .verification-container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
+  <!-- ✅ Supabase (single source of truth) -->
+  <script type="module" src="/js/supabase-init.js"></script>
 
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+    .wrap{
+      width:100%;
+      max-width:860px;
+      background:#fff;
+      border-radius:18px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.3);
+      overflow:hidden;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      min-height:560px;
+    }
+    @media (max-width: 900px){
+      .wrap{ grid-template-columns: 1fr; }
+    }
 
-        .header-icon {
-            font-size: 4em;
-            margin-bottom: 15px;
-        }
+    .left{
+      padding:34px;
+      background: #ffffff;
+    }
+    .right{
+      padding:34px;
+      background: #f7f8ff;
+      border-left: 1px solid #eee;
+    }
+    @media (max-width: 900px){
+      .right{ border-left:none; border-top:1px solid #eee; }
+    }
 
-        .header h1 {
-            color: #2d3748;
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:18px;
+    }
+    .brand .icon{
+      width:46px;height:46px;border-radius:12px;
+      display:flex;align-items:center;justify-content:center;
+      background:#667eea;color:#fff;font-size:22px;font-weight:800;
+    }
+    .brand .name{
+      font-size:20px;font-weight:800;color:#2c3e50;
+    }
+    .brand .tag{
+      font-size:12px;color:#6b7280;margin-top:2px;
+    }
 
-        .header p {
-            color: #718096;
-        }
+    h1{ font-size:26px; color:#111827; margin-bottom:6px; }
+    .sub{ color:#6b7280; margin-bottom:18px; line-height:1.4; }
 
-        .security-notice {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            font-size: 0.9em;
-            color: #92400e;
-        }
+    .alert{
+      padding:12px 14px;
+      border-radius:10px;
+      border:1px solid transparent;
+      margin:14px 0;
+      display:none;
+      word-break: break-word;
+    }
+    .alert.show{ display:block; }
+    .alert.info{ background:#eef2ff; border-color:#c7d2fe; color:#1e40af; }
+    .alert.ok{ background:#ecfdf5; border-color:#a7f3d0; color:#065f46; }
+    .alert.err{ background:#fff1f2; border-color:#fecdd3; color:#9f1239; }
+    .alert.warn{ background:#fffbeb; border-color:#fde68a; color:#92400e; }
 
-        .progress-steps {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 40px;
-            position: relative;
-        }
+    .card{
+      background:#fff;
+      border:1px solid #eee;
+      border-radius:14px;
+      padding:18px;
+      margin-top:14px;
+    }
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width: 520px){
+      .row{ grid-template-columns:1fr; }
+    }
 
-        .progress-steps::before {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: #e2e8f0;
-            z-index: 0;
-        }
+    label{ display:block; font-size:13px; font-weight:700; color:#374151; margin:10px 0 6px; }
+    input, select, textarea{
+      width:100%;
+      padding:11px 12px;
+      border:2px solid #e5e7eb;
+      border-radius:10px;
+      font-size:14px;
+      outline:none;
+      transition: border-color .2s;
+      background:#fff;
+    }
+    input:focus, select:focus, textarea:focus{ border-color:#667eea; }
+    textarea{ min-height:90px; resize:vertical; }
 
-        .step {
-            flex: 1;
-            text-align: center;
-            position: relative;
-            z-index: 1;
-        }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      border:none;
+      border-radius:10px;
+      padding:12px 14px;
+      font-weight:800;
+      cursor:pointer;
+      transition: opacity .2s;
+    }
+    .btn:disabled{ opacity:.6; cursor:not-allowed; }
+    .btn.primary{ background:#667eea; color:#fff; width:100%; margin-top:14px; }
+    .btn.ghost{ background:#fff; color:#374151; border:1px solid #e5e7eb; width:100%; margin-top:10px; }
+    .btn.danger{ background:#ef4444; color:#fff; width:100%; margin-top:10px; }
 
-        .step-circle {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #e2e8f0;
-            color: #718096;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 10px;
-            font-weight: bold;
-        }
+    .steps{
+      list-style:none;
+      display:grid;
+      gap:10px;
+      margin-top:10px;
+    }
+    .steps li{
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      padding:12px 12px;
+      color:#374151;
+      font-size:14px;
+    }
+    .pill{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      margin-left:8px;
+      vertical-align:middle;
+    }
+    .pill.draft{ background:#eef2ff; color:#1e40af; }
+    .pill.pending{ background:#fffbeb; color:#92400e; }
+    .pill.approved{ background:#ecfdf5; color:#065f46; }
+    .pill.rejected{ background:#fff1f2; color:#9f1239; }
+    .pill.suspended{ background:#fef3c7; color:#92400e; }
+    .pill.disabled{ background:#fee2e2; color:#991b1b; }
 
-        .step.active .step-circle {
-            background: #667eea;
-            color: white;
-        }
+    .meta{
+      display:grid;
+      gap:6px;
+      margin-top:10px;
+      color:#6b7280;
+      font-size:13px;
+    }
+    .meta strong{ color:#111827; }
+    .small{ font-size:12px; color:#6b7280; margin-top:10px; line-height:1.4; }
+    .link{ color:#667eea; text-decoration:none; font-weight:800; }
+    .link:hover{ text-decoration:underline; }
 
-        .step.completed .step-circle {
-            background: #10b981;
-            color: white;
-        }
-
-        .step-label {
-            font-size: 0.85em;
-            color: #718096;
-        }
-
-        .form-section {
-            display: none;
-            margin-bottom: 30px;
-        }
-
-        .form-section.active {
-            display: block;
-        }
-
-        .form-section h2 {
-            color: #2d3748;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #2d3748;
-            font-weight: 600;
-            font-size: 0.9em;
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 1em;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .file-upload {
-            border: 2px dashed #e2e8f0;
-            border-radius: 8px;
-            padding: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .file-upload:hover {
-            border-color: #667eea;
-            background: #f7fafc;
-        }
-
-        .file-upload.has-file {
-            border-color: #10b981;
-            background: #f0fdf4;
-        }
-
-        .file-upload-icon {
-            font-size: 3em;
-            margin-bottom: 10px;
-            color: #718096;
-        }
-
-        .file-upload.has-file .file-upload-icon {
-            color: #10b981;
-        }
-
-        .file-upload-text {
-            color: #718096;
-            font-size: 0.9em;
-        }
-
-        .file-upload input {
-            display: none;
-        }
-
-        .preview-image {
-            max-width: 200px;
-            max-height: 200px;
-            margin-top: 15px;
-            border-radius: 8px;
-            border: 2px solid #e2e8f0;
-        }
-
-        .info-box {
-            background: #e0e7ff;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 0.9em;
-            color: #3730a3;
-        }
-
-        .requirement-list {
-            margin: 15px 0;
-            padding-left: 20px;
-        }
-
-        .requirement-list li {
-            margin-bottom: 8px;
-            color: #2d3748;
-        }
-
-        .btn-container {
-            display: flex;
-            gap: 15px;
-            justify-content: space-between;
-            margin-top: 30px;
-        }
-
-        .btn {
-            padding: 12px 30px;
-            border-radius: 8px;
-            border: none;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-            flex: 1;
-        }
-
-        .btn-primary:hover {
-            background: #5568d3;
-        }
-
-        .btn-secondary {
-            background: #e2e8f0;
-            color: #2d3748;
-        }
-
-        .btn-secondary:hover {
-            background: #cbd5e0;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .alert {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 0.9em;
-        }
-
-        .alert-error {
-            background: #fee2e2;
-            color: #7f1d1d;
-            border: 1px solid #fca5a5;
-        }
-
-        .alert-success {
-            background: #dcfce7;
-            color: #166534;
-            border: 1px solid #86efac;
-        }
-
-        .verification-status {
-            text-align: center;
-            padding: 40px;
-        }
-
-        .status-icon {
-            font-size: 5em;
-            margin-bottom: 20px;
-        }
-
-        .status-icon.pending {
-            color: #f59e0b;
-        }
-
-        .status-icon.approved {
-            color: #10b981;
-        }
-
-        .status-icon.rejected {
-            color: #ef4444;
-        }
-    </style>
+    .loading{
+      display:none;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      margin-top:12px;
+      color:#6b7280;
+      font-weight:700;
+    }
+    .loading.show{ display:flex; }
+    .spinner{
+      width:18px;height:18px;border-radius:999px;
+      border:3px solid #e5e7eb;
+      border-top:3px solid #667eea;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin{ 0%{ transform:rotate(0deg);} 100%{ transform:rotate(360deg);} }
+  </style>
 </head>
+
 <body>
-    <div class="verification-container">
-        <div class="header">
-            <div class="header-icon">🔐</div>
-            <h1>Seller Verification</h1>
-            <p>Complete KYC verification to start selling on ShopUp</p>
+  <div class="wrap">
+    <div class="left">
+      <div class="brand">
+        <div class="icon">🏪</div>
+        <div>
+          <div class="name">ShopUp</div>
+          <div class="tag">Seller Verification</div>
         </div>
+      </div>
 
-        <div class="security-notice">
-            🔒 <strong>Secure Process:</strong> Your information is encrypted and used only for verification purposes. We comply with Ghana's data protection laws.
-        </div>
+      <h1>Verify your seller account</h1>
+      <p class="sub">
+        To protect customers and sellers, ShopUp verifies sellers before enabling full dashboard access.
+      </p>
 
-        <div id="alertContainer"></div>
+      <div id="statusAlert" class="alert info"></div>
 
-        <!-- Verification Status (for already submitted) -->
-        <div id="verificationStatus" style="display: none;">
-            <!-- Will be populated dynamically -->
-        </div>
+      <div class="card" id="formCard">
+        <h3 style="margin-bottom:6px;color:#111827;">Verification details</h3>
+        <p class="small" style="margin-top:0;">
+          Uploads are optional in this simple v1 flow. You can store file links later in Supabase Storage.
+          For now, we collect details and mark your status as <strong>pending</strong>.
+        </p>
 
-        <!-- Verification Form -->
-        <div id="verificationForm">
-            <!-- Progress Steps -->
-            <div class="progress-steps">
-                <div class="step active" id="step1">
-                    <div class="step-circle">1</div>
-                    <div class="step-label">Ghana Card</div>
-                </div>
-                <div class="step" id="step2">
-                    <div class="step-circle">2</div>
-                    <div class="step-label">Mobile Money</div>
-                </div>
-                <div class="step" id="step3">
-                    <div class="step-circle">3</div>
-                    <div class="step-label">Selfie</div>
-                </div>
-                <div class="step" id="step4">
-                    <div class="step-circle">4</div>
-                    <div class="step-label">Review</div>
-                </div>
+        <form id="verifyForm">
+          <div class="row">
+            <div>
+              <label for="businessName">Business name</label>
+              <input id="businessName" name="businessName" type="text" placeholder="e.g., Alden’s Store" required />
             </div>
-
-            <!-- Step 1: Ghana Card -->
-            <div class="form-section active" id="section1">
-                <h2>📇 Ghana Card Details</h2>
-
-                <div class="info-box">
-                    <strong>Requirements:</strong>
-                    <ul class="requirement-list">
-                        <li>Valid Ghana Card (not expired)</li>
-                        <li>Clear photos of front and back</li>
-                        <li>All text must be readable</li>
-                    </ul>
-                </div>
-
-                <div class="form-group">
-                    <label for="ghanaCardNumber">Ghana Card Number *</label>
-                    <input type="text" id="ghanaCardNumber" placeholder="GHA-000000000-0" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="ghanaCardName">Full Name (as on Ghana Card) *</label>
-                    <input type="text" id="ghanaCardName" placeholder="John Doe Mensah" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="ghanaCardDob">Date of Birth *</label>
-                    <input type="date" id="ghanaCardDob" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Ghana Card Front Photo *</label>
-                    <div class="file-upload" id="cardFrontUpload" onclick="document.getElementById('cardFrontInput').click()">
-                        <div class="file-upload-icon">📷</div>
-                        <div class="file-upload-text">Click to upload Ghana Card (Front)</div>
-                        <input type="file" id="cardFrontInput" accept="image/*" onchange="handleFileSelect(this, 'cardFrontUpload')">
-                        <img id="cardFrontPreview" class="preview-image" style="display: none;">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Ghana Card Back Photo *</label>
-                    <div class="file-upload" id="cardBackUpload" onclick="document.getElementById('cardBackInput').click()">
-                        <div class="file-upload-icon">📷</div>
-                        <div class="file-upload-text">Click to upload Ghana Card (Back)</div>
-                        <input type="file" id="cardBackInput" accept="image/*" onchange="handleFileSelect(this, 'cardBackUpload')">
-                        <img id="cardBackPreview" class="preview-image" style="display: none;">
-                    </div>
-                </div>
+            <div>
+              <label for="businessCategory">Business category</label>
+              <select id="businessCategory" name="businessCategory" required>
+                <option value="">Select category</option>
+                <option>Fashion</option>
+                <option>Electronics</option>
+                <option>Beauty</option>
+                <option>Groceries</option>
+                <option>Home & Living</option>
+                <option>Health</option>
+                <option>Other</option>
+              </select>
             </div>
+          </div>
 
-            <!-- Step 2: Mobile Money -->
-            <div class="form-section" id="section2">
-                <h2>📱 Mobile Money Details</h2>
-
-                <div class="info-box">
-                    <strong>Important:</strong> The name on your Mobile Money account must match the name on your Ghana Card exactly.
-                </div>
-
-                <div class="form-group">
-                    <label for="momoProvider">Mobile Money Provider *</label>
-                    <select id="momoProvider" required>
-                        <option value="">Select provider</option>
-                        <option value="MTN">MTN Mobile Money</option>
-                        <option value="Vodafone">Vodafone Cash</option>
-                        <option value="AirtelTigo">AirtelTigo Money</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="momoNumber">Mobile Money Number *</label>
-                    <input type="tel" id="momoNumber" placeholder="0241234567" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="momoAccountName">Account Name (as registered with MoMo) *</label>
-                    <input type="text" id="momoAccountName" placeholder="John Doe Mensah" required>
-                </div>
-
-                <div class="security-notice">
-                    ℹ️ We will verify that your Mobile Money account name matches your Ghana Card name.
-                </div>
+          <div class="row">
+            <div>
+              <label for="phone">Phone</label>
+              <input id="phone" name="phone" type="text" placeholder="e.g., +233..." />
             </div>
-
-            <!-- Step 3: Selfie -->
-            <div class="form-section" id="section3">
-                <h2>🤳 Selfie Verification</h2>
-
-                <div class="info-box">
-                    <strong>Selfie Requirements:</strong>
-                    <ul class="requirement-list">
-                        <li>Clear photo of your face</li>
-                        <li>Good lighting</li>
-                        <li>No sunglasses or face covering</li>
-                        <li>Hold your Ghana Card next to your face</li>
-                    </ul>
-                </div>
-
-                <div class="form-group">
-                    <label>Selfie with Ghana Card *</label>
-                    <div class="file-upload" id="selfieUpload" onclick="document.getElementById('selfieInput').click()">
-                        <div class="file-upload-icon">🤳</div>
-                        <div class="file-upload-text">Click to upload selfie with Ghana Card</div>
-                        <input type="file" id="selfieInput" accept="image/*" capture="user" onchange="handleFileSelect(this, 'selfieUpload')">
-                        <img id="selfiePreview" class="preview-image" style="display: none;">
-                    </div>
-                </div>
-
-                <div class="security-notice">
-                    ✅ This helps us verify that the Ghana Card belongs to you.
-                </div>
+            <div>
+              <label for="city">City</label>
+              <input id="city" name="city" type="text" placeholder="e.g., Accra" />
             </div>
+          </div>
 
-            <!-- Step 4: Review -->
-            <div class="form-section" id="section4">
-                <h2>📋 Review Your Information</h2>
-
-                <div id="reviewContent">
-                    <!-- Will be populated dynamically -->
-                </div>
-
-                <div class="security-notice">
-                    <strong>⚠️ Important:</strong> Please review all information carefully. Submitting false information may result in permanent ban.
-                </div>
+          <div class="row">
+            <div>
+              <label for="region">Region/State</label>
+              <input id="region" name="region" type="text" placeholder="e.g., Greater Accra" />
             </div>
-
-            <!-- Navigation Buttons -->
-            <div class="btn-container">
-                <button type="button" class="btn btn-secondary" id="prevBtn" onclick="previousStep()" style="display: none;">
-                    ← Previous
-                </button>
-                <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextStep()">
-                    Next →
-                </button>
-                <button type="button" class="btn btn-primary" id="submitBtn" onclick="submitVerification()" style="display: none;">
-                    Submit for Verification
-                </button>
+            <div>
+              <label for="storeSlug">Store slug</label>
+              <input id="storeSlug" name="storeSlug" type="text" placeholder="e.g., aldens-store" />
             </div>
-        </div>
+          </div>
+
+          <label for="notes">Notes (optional)</label>
+          <textarea id="notes" name="notes" placeholder="Tell us what you sell, where you ship, etc."></textarea>
+
+          <button class="btn primary" id="submitBtn" type="submit">Submit for verification</button>
+          <button class="btn ghost" id="backBtn" type="button">Back to login</button>
+
+          <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <span>Submitting...</span>
+          </div>
+        </form>
+      </div>
+
+      <div class="card" id="pendingCard" style="display:none;">
+        <h3 style="margin-bottom:6px;color:#111827;">Under review</h3>
+        <p class="small" style="margin-top:0;">
+          Your verification is <strong>pending</strong>. We’ll notify you when approved.
+          You can check back later.
+        </p>
+        <button class="btn ghost" id="refreshBtn" type="button">Refresh status</button>
+        <button class="btn danger" id="logoutBtn" type="button">Logout</button>
+      </div>
+
+      <div class="card" id="rejectedCard" style="display:none;">
+        <h3 style="margin-bottom:6px;color:#111827;">Needs changes</h3>
+        <p class="small" style="margin-top:0;">
+          Your verification was <strong>rejected</strong>. Please correct your details and resubmit.
+        </p>
+        <button class="btn primary" id="resubmitBtn" type="button">Resubmit verification</button>
+        <button class="btn ghost" id="logoutBtn2" type="button">Logout</button>
+      </div>
+
+      <div class="card" id="suspendedCard" style="display:none;">
+        <h3 style="margin-bottom:6px;color:#111827;">Temporarily suspended</h3>
+        <p class="small" style="margin-top:0;">
+          Your account is temporarily suspended. Please contact support.
+        </p>
+        <p class="small"><a class="link" href="/support.html">Contact support</a></p>
+        <button class="btn danger" id="logoutBtn3" type="button">Logout</button>
+      </div>
     </div>
 
-    <script src="seller-verification-script.js"></script>
+    <div class="right">
+      <h3 style="color:#111827;">How verification works</h3>
+      <ul class="steps">
+        <li>1) Complete verification form <span class="pill draft">draft</span></li>
+        <li>2) Submitted for review <span class="pill pending">pending</span></li>
+        <li>3) Approved to sell <span class="pill approved">approved</span></li>
+        <li>4) If rejected, resubmit <span class="pill rejected">rejected</span></li>
+      </ul>
+
+      <div class="card">
+        <h3 style="margin-bottom:6px;color:#111827;">Your seller status</h3>
+        <div class="meta">
+          <div>Current status: <strong id="statusText">—</strong></div>
+          <div>Seller email: <strong id="sellerEmail">—</strong></div>
+          <div>Business name: <strong id="sellerBiz">—</strong></div>
+        </div>
+        <p class="small">
+          Once approved, you’ll be redirected to your dashboard automatically.
+        </p>
+      </div>
+
+      <div class="small">
+        Tip: Keep status values consistent: <code>draft</code>, <code>pending</code>, <code>approved</code>, <code>rejected</code>, <code>suspended</code>, <code>disabled</code>.
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ DI Core -->
+  <script defer src="/js/core/container.js"></script>
+  <script defer src="/js/core/config.js"></script>
+  <script defer src="/js/core/dom.js"></script>
+
+  <!-- ✅ Adapters + services -->
+  <script defer src="/js/adapters/supabase.wait.js"></script>
+  <script defer src="/js/adapters/logger.adapter.js"></script>
+
+  <!-- ✅ Seller service + page controller -->
+  <script defer src="/js/services/seller.service.js"></script>
+  <script type="module" src="/js/pages/seller-verification.page.js"></script>
 </body>
 </html>
