@@ -10,7 +10,7 @@
   <script src="/js/sentry-config.js"></script>
   <script src="/js/sentry-error-tracking.js"></script>
 
-  <!-- ✅ Supabase (single source of truth) -->
+  <!-- ✅ Supabase -->
   <script type="module" src="/js/supabase-init.js"></script>
 
   <style>
@@ -51,11 +51,10 @@
     .pill.pending { background:#fff3cd; color:#856404; }
     .pill.approved { background:#d1e7dd; color:#0f5132; }
     .pill.rejected { background:#ffebee; color:#c62828; }
+    .pill.suspended { background:#fde2e2; color:#b42318; }
 
     .actions { display:flex; gap: 8px; flex-wrap: wrap; }
-
     .muted { color:#6b7b8a; font-size: 12px; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
   </style>
 </head>
 
@@ -63,7 +62,7 @@
   <div class="wrap">
     <div class="card">
       <h1>Admin: Sellers</h1>
-      <div class="sub">Approve / reject seller accounts.</div>
+      <div class="sub">Approve / reject seller accounts. (Role activation is handled via <code>user_roles.is_active</code>.)</div>
 
       <div class="alert error" id="errorAlert"></div>
       <div class="alert success" id="successAlert"></div>
@@ -76,15 +75,15 @@
           <option value="pending">pending</option>
           <option value="approved">approved</option>
           <option value="rejected">rejected</option>
+          <option value="suspended">suspended</option>
         </select>
-
         <button class="btn gray" id="refreshBtn">Refresh</button>
         <button class="btn red" id="logoutBtn" style="margin-left:auto;">Logout</button>
       </div>
 
       <div class="muted" id="adminHint"></div>
 
-      <div style="overflow:auto; margin-top: 10px;">
+      <div style="overflow:auto; margin-top:10px;">
         <table>
           <thead>
             <tr>
@@ -93,19 +92,20 @@
               <th>Phone</th>
               <th>Region</th>
               <th>Status</th>
+              <th>Seller Role Active</th>
               <th>Updated</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="rows">
-            <tr><td colspan="7" style="padding: 30px; text-align:center;">Loading...</td></tr>
+            <tr><td colspan="8" style="padding: 30px; text-align:center;">Loading...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- ✅ Load the REAL file you have -->
+  <!-- ✅ Use the admin script you already have -->
   <script type="module" src="/admin/admin-sellers.page.js"></script>
 </body>
 </html>
