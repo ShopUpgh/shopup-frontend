@@ -1,4 +1,3 @@
-// /js/core/container.js
 (function () {
   "use strict";
 
