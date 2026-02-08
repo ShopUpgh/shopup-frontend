@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Seller Approvals | ShopUp</title>
+
+  <!-- Sentry -->
+  <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
+  <script src="/js/sentry-config.js"></script>
+  <script src="/js/sentry-error-tracking.js"></script>
+
+  <!-- Supabase -->
+  <script type="module" src="/js/supabase-init.js"></script>
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f5f7fa;}
+    .wrap{max-width:1100px;margin:28px auto;padding:0 16px;}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+    h1{color:#111827;font-size:22px;}
+    .sub{color:#6b7280;font-size:13px;margin-top:6px;}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;}
+    .topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
+    input, select{
+      padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;outline:none;
+    }
+    input:focus, select:focus{border-color:#667eea;}
+    .btn{padding:10px 12px;border:none;border-radius:10px;cursor:pointer;font-weight:700;}
+    .btn.primary{background:#667eea;color:#fff;}
+    .btn.ghost{background:#fff;border:1px solid #e5e7eb;color:#374151;}
+    .btn.ok{background:#16a34a;color:#fff;}
+    .btn.err{background:#ef4444;color:#fff;}
+    .btn.warn{background:#f59e0b;color:#111827;}
+    table{width:100%;border-collapse:collapse;margin-top:8px;}
+    th,td{padding:12px;border-bottom:1px solid #eef2f7;text-align:left;font-size:13px;}
+    th{background:#f8fafc;color:#111827;font-weight:800;}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:800;font-size:12px;}
+    .draft{background:#eef2ff;color:#1e40af;}
+    .pending{background:#fffbeb;color:#92400e;}
+    .approved{background:#ecfdf5;color:#065f46;}
+    .rejected{background:#fff1f2;color:#9f1239;}
+    .suspended{background:#fef3c7;color:#92400e;}
+    .disabled{background:#fee2e2;color:#991b1b;}
+    .muted{color:#6b7280;}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;}
+    .alert{display:none;margin:12px 0;padding:12px;border-radius:10px;border:1px solid transparent;}
+    .alert.show{display:block;}
+    .alert.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46;}
+    .alert.err{background:#fff1f2;border-color:#fecdd3;color:#9f1239;}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Admin — Seller Approvals</h1>
+        <div class="sub">Approve, reject, suspend sellers (status lives in <code>public.sellers</code>).</div>
+      </div>
+      <button class="btn ghost" id="logoutBtn">Logout</button>
+    </header>
+
+    <div class="card">
+      <div class="topbar">
+        <select id="statusFilter">
+          <option value="">All statuses</option>
+          <option value="pending" selected>Pending</option>
+          <option value="draft">Draft</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+          <option value="suspended">Suspended</option>
+          <option value="disabled">Disabled</option>
+        </select>
+
+        <input id="searchBox" type="text" placeholder="Search email / business name / phone..." style="min-width:260px;" />
+
+        <button class="btn primary" id="refreshBtn">Refresh</button>
+      </div>
+
+      <div class="alert ok" id="okAlert"></div>
+      <div class="alert err" id="errAlert"></div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Seller</th>
+            <th>Business</th>
+            <th>Status</th>
+            <th>Updated</th>
+            <th style="width:330px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rows">
+          <tr><td colspan="5" class="muted">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="module" src="/admin/admin-sellers.page.js"></script>
+</body>
+</html>
