@@ -21,7 +21,7 @@ export async function requireSellerSession({ redirectTo = "/seller/seller-login.
     return null;
   }
 
-  // ✅ Check sellers table by user_id
+  // Find seller row
   const { data: seller, error: sellerErr } = await client
     .from("sellers")
     .select("id, user_id, email, status, business_name, store_slug")
@@ -29,29 +29,34 @@ export async function requireSellerSession({ redirectTo = "/seller/seller-login.
     .maybeSingle();
 
   if (sellerErr || !seller) {
-    // Not a registered seller
-    window.location.href = redirectTo;
+    // logged in user is not a seller
+    window.location.href = "/seller/seller-register.html";
     return null;
   }
 
-  const status = String(seller.status || "").toLowerCase();
+  const status = String(seller.status || "draft").toLowerCase();
+
+  // Block hard states
+  if (status === "disabled") {
+    try { await client.auth.signOut(); } catch (_) {}
+    window.location.href = "/seller/seller-login.html?state=disabled";
+    return null;
+  }
+
+  // Not approved yet → verification flow
   if (status !== "approved") {
-    // Seller exists, but not approved yet
-    window.location.href = "/seller/seller-verification.html";
+    const qs = encodeURIComponent(status);
+    window.location.href = `/seller/seller-verification.html?state=${qs}`;
     return null;
   }
 
-  // ✅ Persist role locally (helps your UI + your old checks)
+  // ✅ Approved seller
   localStorage.setItem("role", "seller");
 
-  // ✅ Safe Sentry setUser
+  // Safe Sentry setUser
   try {
     if (window.Sentry && typeof window.Sentry.setUser === "function") {
-      window.Sentry.setUser({
-        id: String(user.id),
-        email: user.email || seller.email || undefined,
-        role: "seller",
-      });
+      window.Sentry.setUser({ id: String(user.id), email: user.email || seller.email || undefined, role: "seller" });
     }
   } catch (_) {}
 
