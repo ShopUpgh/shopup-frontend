@@ -3,10 +3,8 @@
   "use strict";
 
   async function init() {
-    // If already built, reuse
-    if (window.ShopUpConfig && window.ShopUpConfig.storage) return window.ShopUpConfig;
+    if (window.ShopUpConfig) return window.ShopUpConfig;
 
-    // Wait for Supabase module init if available
     if (window.supabaseReady && typeof window.supabaseReady.then === "function") {
       await window.supabaseReady;
     }
@@ -22,8 +20,10 @@
     window.ShopUpConfig = Object.freeze({
       SUPABASE_URL: window.supabase?.supabaseUrl,
       SUPABASE_ANON_KEY: window.supabase?.supabaseKey,
+
       APP_NAME: "ShopUp",
       CURRENCY: "GHS",
+
       storage,
     });
 
