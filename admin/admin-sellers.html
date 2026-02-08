@@ -10,7 +10,7 @@
   <script src="/js/sentry-config.js"></script>
   <script src="/js/sentry-error-tracking.js"></script>
 
-  <!-- ✅ Supabase -->
+  <!-- ✅ Supabase (single source of truth) -->
   <script type="module" src="/js/supabase-init.js"></script>
 
   <style>
@@ -53,6 +53,9 @@
     .pill.rejected { background:#ffebee; color:#c62828; }
 
     .actions { display:flex; gap: 8px; flex-wrap: wrap; }
+
+    .muted { color:#6b7b8a; font-size: 12px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
   </style>
 </head>
 
@@ -74,11 +77,14 @@
           <option value="approved">approved</option>
           <option value="rejected">rejected</option>
         </select>
+
         <button class="btn gray" id="refreshBtn">Refresh</button>
         <button class="btn red" id="logoutBtn" style="margin-left:auto;">Logout</button>
       </div>
 
-      <div style="overflow:auto;">
+      <div class="muted" id="adminHint"></div>
+
+      <div style="overflow:auto; margin-top: 10px;">
         <table>
           <thead>
             <tr>
@@ -99,6 +105,7 @@
     </div>
   </div>
 
-  <script type="module" src="/js/pages/admin-sellers.page.js"></script>
+  <!-- ✅ Load the REAL file you have -->
+  <script type="module" src="/admin/admin-sellers.page.js"></script>
 </body>
 </html>
