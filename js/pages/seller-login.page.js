@@ -14,24 +14,15 @@
     const forgotPasswordBtn = document.getElementById("forgotPasswordBtn");
 
     function showSuccess(message) {
-      if (successAlert) {
-        successAlert.textContent = message || "";
-        successAlert.classList.add("show");
-      }
-      if (errorAlert) errorAlert.classList.remove("show");
+      successAlert.textContent = message;
+      successAlert.classList.add("show");
+      errorAlert.classList.remove("show");
     }
 
     function showError(message) {
-      if (errorAlert) {
-        errorAlert.textContent = message || "Login failed. Please try again.";
-        errorAlert.classList.add("show");
-      }
-      if (successAlert) successAlert.classList.remove("show");
-    }
-
-    function setLoading(isLoading) {
-      if (loginBtn) loginBtn.disabled = !!isLoading;
-      if (loading) loading.classList.toggle("show", !!isLoading);
+      errorAlert.textContent = message;
+      errorAlert.classList.add("show");
+      successAlert.classList.remove("show");
     }
 
     if (forgotPasswordBtn) {
@@ -47,26 +38,24 @@
 
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      setLoading(true);
+
+      loginBtn.disabled = true;
+      loading.classList.add("show");
 
       try {
-        const email = (document.getElementById("email")?.value || "").trim();
-        const password = document.getElementById("password")?.value || "";
-
-        if (!email || !password) {
-          showError("Please enter your email and password.");
-          setLoading(false);
-          return;
-        }
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
 
         logger.info("Seller login attempt", { email });
 
-        const result = await authService.login(email, password);
+        await authService.login(email, password);
 
-        // Optional: if you want to verify token exists in localStorage immediately
-        // (keeps it simple; auth.service.js guarantees it now)
-        if (!result?.token) {
-          throw new Error("Login succeeded but session token missing.");
+        // ✅ Verify storage before redirect
+        const role = localStorage.getItem("role");
+        const token = localStorage.getItem("authToken");
+
+        if (!token || role !== "seller") {
+          throw new Error("Login completed but authToken/role was not saved. Check auth.service.js storage step.");
         }
 
         showSuccess("Login successful! Redirecting to dashboard...");
@@ -79,7 +68,8 @@
         logger.error("Seller login failed", { error: err?.message || String(err) });
 
         showError(err?.message || "Login failed. Please try again.");
-        setLoading(false);
+        loginBtn.disabled = false;
+        loading.classList.remove("show");
       }
     });
   }
