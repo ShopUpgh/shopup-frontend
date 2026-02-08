@@ -1,4 +1,3 @@
-// /js/core/config.js
 (function () {
   "use strict";
 
@@ -20,10 +19,8 @@
     window.ShopUpConfig = Object.freeze({
       SUPABASE_URL: window.supabase?.supabaseUrl,
       SUPABASE_ANON_KEY: window.supabase?.supabaseKey,
-
       APP_NAME: "ShopUp",
       CURRENCY: "GHS",
-
       storage,
     });
 
