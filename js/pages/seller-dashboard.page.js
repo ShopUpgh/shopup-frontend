@@ -42,7 +42,6 @@ import { requireSellerSession } from "/js/core/seller-session.guard.js";
   }
 
   function dayKey(d) {
-    // YYYY-MM-DD in local time
     const x = new Date(d);
     const yyyy = x.getFullYear();
     const mm = String(x.getMonth() + 1).padStart(2, "0");
@@ -61,7 +60,6 @@ import { requireSellerSession } from "/js/core/seller-session.guard.js";
   }
 
   async function loadOrdersSummary(client, sellerId) {
-    // Pull a reasonable recent window for dashboard (last 30 days)
     const since = new Date();
     since.setDate(since.getDate() - 30);
 
@@ -119,7 +117,6 @@ import { requireSellerSession } from "/js/core/seller-session.guard.js";
   function renderSalesChart(orders) {
     if (!salesChartCanvas || typeof Chart === "undefined") return;
 
-    // last 7 days buckets (delivered only)
     const today = new Date();
     const days = [];
     for (let i = 6; i >= 0; i--) {
@@ -128,9 +125,7 @@ import { requireSellerSession } from "/js/core/seller-session.guard.js";
       days.push(d);
     }
 
-    const labels = days.map((d) =>
-      d.toLocaleDateString(undefined, { weekday: "short" })
-    );
+    const labels = days.map((d) => d.toLocaleDateString(undefined, { weekday: "short" }));
 
     const byDay = new Map();
     days.forEach((d) => byDay.set(dayKey(d), 0));
@@ -146,7 +141,6 @@ import { requireSellerSession } from "/js/core/seller-session.guard.js";
 
     const data = days.map((d) => byDay.get(dayKey(d)) || 0);
 
-    // Destroy old chart if re-rendered
     if (window.__sellerSalesChart && typeof window.__sellerSalesChart.destroy === "function") {
       window.__sellerSalesChart.destroy();
     }
@@ -156,35 +150,18 @@ import { requireSellerSession } from "/js/core/seller-session.guard.js";
       type: "line",
       data: {
         labels,
-        datasets: [
-          {
-            label: "Sales (GHS)",
-            data,
-            tension: 0.35,
-            fill: true,
-          },
-        ],
+        datasets: [{ label: "Sales (GHS)", data, tension: 0.35, fill: true }],
       },
       options: {
         responsive: true,
         maintainAspectRatio: true,
         plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true },
-        },
+        scales: { y: { beginAtZero: true } },
       },
     });
   }
 
   async function main() {
-    if (typeof Sentry !== "undefined") {
-      Sentry.addBreadcrumb({
-        category: "navigation",
-        message: "Seller dashboard viewed",
-        level: "info",
-      });
-    }
-
     const auth = await requireSellerSession({ redirectTo: "/seller/seller-login.html" });
     if (!auth) return;
 
@@ -192,17 +169,9 @@ import { requireSellerSession } from "/js/core/seller-session.guard.js";
 
     if (elSellerName) elSellerName.textContent = (user.email || "Seller").split("@")[0];
 
-    try {
-      if (typeof Sentry !== "undefined") {
-        Sentry.setUser({ id: user.id, email: user.email, role: "seller" });
-      }
-    } catch (_) {}
-
-    // Quick actions
     if (addProductBtn) addProductBtn.addEventListener("click", () => (window.location.href = "products.html?action=add"));
     if (viewOrdersBtn) viewOrdersBtn.addEventListener("click", () => (window.location.href = "orders.html"));
 
-    // Load stats + orders
     const [orders] = await Promise.all([
       loadOrdersSummary(client, user.id),
       loadActiveProducts(client, user.id),
@@ -211,30 +180,30 @@ import { requireSellerSession } from "/js/core/seller-session.guard.js";
     renderRecentOrders(orders);
     renderSalesChart(orders);
 
-    // Logout
     if (logoutBtn) {
       logoutBtn.addEventListener("click", async () => {
         try {
           await client.auth.signOut();
+        } catch (_) {}
 
-          localStorage.removeItem("authToken");
-          localStorage.removeItem("currentUser");
-          localStorage.removeItem("sessionExpiry");
-          localStorage.removeItem("role");
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("sessionExpiry");
+        localStorage.removeItem("role");
 
-          if (typeof Sentry !== "undefined") Sentry.setUser(null);
+        try {
+          if (window.Sentry && typeof window.Sentry.setUser === "function") window.Sentry.setUser(null);
+        } catch (_) {}
 
-          window.location.href = "/seller/seller-login.html";
-        } catch (e) {
-          console.error("Logout error:", e);
-          if (typeof Sentry !== "undefined") Sentry.captureException(e);
-        }
+        window.location.href = "/seller/seller-login.html";
       });
     }
   }
 
   main().catch((e) => {
     console.error("Seller dashboard fatal error:", e);
-    if (typeof Sentry !== "undefined") Sentry.captureException(e);
+    try {
+      if (window.Sentry && typeof window.Sentry.captureException === "function") window.Sentry.captureException(e);
+    } catch (_) {}
   });
 })();
