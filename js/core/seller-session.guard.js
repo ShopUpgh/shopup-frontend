@@ -1,18 +1,39 @@
 // /js/core/seller-session.guard.js
-export async function requireSellerSession({ redirectTo = "/seller/seller-login.html" } = {}) {
+export async function requireSellerSession({
+  redirectTo = "/seller/seller-login.html",
+} = {}) {
   const client = await window.supabaseReady;
-  if (!client) {
+  if (!client || !client.auth) {
     window.location.href = redirectTo;
     return null;
   }
 
   const { data, error } = await client.auth.getSession();
-  if (error || !data?.session) {
+  if (error) {
     window.location.href = redirectTo;
     return null;
   }
 
-  // Optional role check (kept simple to avoid breaking you)
-  // If you later store role in user.app_metadata.role, you can enforce it here.
-  return { client, session: data.session, user: data.session.user };
+  const session = data?.session;
+  const user = session?.user;
+
+  if (!user) {
+    window.location.href = redirectTo;
+    return null;
+  }
+
+  const role = localStorage.getItem("role");
+  if (role && role !== "seller") {
+    window.location.href = redirectTo;
+    return null;
+  }
+
+  // Sentry safe setUser
+  try {
+    if (window.Sentry && typeof window.Sentry.setUser === "function") {
+      window.Sentry.setUser({ id: String(user.id), email: user.email || undefined, role: "seller" });
+    }
+  } catch (_) {}
+
+  return { client, session, user };
 }
