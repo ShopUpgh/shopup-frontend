@@ -1,321 +1,111 @@
-// /admin/admin-sellers.page.js
-// Admin Sellers Management (approve/reject) for ShopUp
-// Requires:
-// - window.supabaseReady (from /js/supabase-init.js)
-// - public.user_roles: user_id, role, is_active
-// - public.sellers: status, user_id, email, business_name, phone, region, updated_at
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Sellers - ShopUp</title>
 
-const ADMIN_LOGIN_URL = "/admin/admin-login.html";
-const AFTER_LOGOUT_URL = "/admin/admin-login.html";
+  <!-- ✅ Sentry -->
+  <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
+  <script src="/js/sentry-config.js"></script>
+  <script src="/js/sentry-error-tracking.js"></script>
 
-function qs(id) {
-  return document.getElementById(id);
-}
+  <!-- ✅ Supabase -->
+  <script type="module" src="/js/supabase-init.js"></script>
 
-function safeText(v) {
-  return (v === null || v === undefined) ? "" : String(v);
-}
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:#f5f7fa; padding: 24px; }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    .card { background:#fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(31,45,61,0.08); padding: 22px; }
+    h1 { color:#1f2d3d; margin-bottom: 6px; }
+    .sub { color:#6b7b8a; margin-bottom: 16px; }
 
-function fmtDate(ts) {
-  try {
-    return ts ? new Date(ts).toLocaleString() : "";
-  } catch {
-    return "";
-  }
-}
-
-function statusPill(statusRaw) {
-  const s = (statusRaw || "draft").toLowerCase();
-  const cls = ["draft","pending","approved","rejected"].includes(s) ? s : "draft";
-  return `<span class="pill ${cls}">${cls}</span>`;
-}
-
-function showAlert(kind, msg) {
-  const errorAlert = qs("errorAlert");
-  const successAlert = qs("successAlert");
-
-  if (!errorAlert || !successAlert) return;
-
-  errorAlert.classList.remove("show");
-  successAlert.classList.remove("show");
-
-  if (!msg) return;
-
-  if (kind === "error") {
-    errorAlert.textContent = msg;
-    errorAlert.classList.add("show");
-  } else {
-    successAlert.textContent = msg;
-    successAlert.classList.add("show");
-  }
-}
-
-function redirectToLogin() {
-  window.location.href = ADMIN_LOGIN_URL;
-}
-
-async function getClient() {
-  const client = await window.supabaseReady;
-  return client;
-}
-
-async function requireAdmin(client) {
-  // Must be logged in
-  const { data, error } = await client.auth.getSession();
-  if (error) return { ok: false, reason: error.message };
-  const user = data?.session?.user;
-  if (!user) return { ok: false, reason: "Not logged in" };
-
-  // Must have role admin + active
-  const { data: roles, error: roleErr } = await client
-    .from("user_roles")
-    .select("role,is_active")
-    .eq("user_id", user.id)
-    .eq("role", "admin")
-    .eq("is_active", true)
-    .limit(1);
-
-  if (roleErr) return { ok: false, reason: roleErr.message };
-  if (!roles || roles.length === 0) return { ok: false, reason: "Admin access required" };
-
-  // Sentry safe setUser
-  try {
-    if (window.Sentry && typeof window.Sentry.setUser === "function") {
-      window.Sentry.setUser({ id: String(user.id), email: user.email || undefined, role: "admin" });
+    .toolbar { display:flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+    input, select {
+      padding: 10px 12px; border-radius: 12px; border: 2px solid #e7edf5; outline:none;
     }
-  } catch (_) {}
+    input:focus, select:focus { border-color: #667eea; }
 
-  return { ok: true, user };
-}
+    .btn { border:none; border-radius: 12px; padding: 10px 14px; font-weight: 900; cursor:pointer; }
+    .btn.primary { background:#667eea; color:#fff; }
+    .btn.primary:hover { background:#5568d3; }
+    .btn.gray { background:#eef2f7; color:#1f2d3d; }
+    .btn.gray:hover { background:#e2e8f0; }
+    .btn.green { background:#27ae60; color:#fff; }
+    .btn.green:hover { background:#219150; }
+    .btn.red { background:#e74c3c; color:#fff; }
+    .btn.red:hover { background:#c0392b; }
 
-async function fetchSellers(client) {
-  // Adjust columns as needed; keep minimal and safe
-  const { data, error } = await client
-    .from("sellers")
-    .select("id,user_id,email,business_name,phone,region,status,updated_at")
-    .order("updated_at", { ascending: false });
+    .alert { display:none; margin: 12px 0; padding: 12px 14px; border-radius: 12px; border: 1px solid transparent; }
+    .alert.show { display:block; }
+    .alert.error { background:#ffebee; border-color:#ffcdd2; color:#c62828; }
+    .alert.success { background:#e8f5e9; border-color:#c8e6c9; color:#2e7d32; }
 
-  if (error) throw error;
-  return data || [];
-}
+    table { width:100%; border-collapse: collapse; }
+    th, td { text-align:left; padding: 12px; border-bottom: 1px solid #eef2f7; }
+    th { background:#f6f8fb; color:#1f2d3d; font-weight: 900; font-size: 13px; }
 
-function applyFilters(rows, search, status) {
-  const s = (search || "").trim().toLowerCase();
-  const f = (status || "").trim().toLowerCase();
+    .pill { display:inline-block; padding: 5px 10px; border-radius: 999px; font-weight: 900; font-size: 12px; }
+    .pill.draft { background:#eef2ff; color:#3b5bdb; }
+    .pill.pending { background:#fff3cd; color:#856404; }
+    .pill.approved { background:#d1e7dd; color:#0f5132; }
+    .pill.rejected { background:#ffebee; color:#c62828; }
+    .pill.suspended { background:#fde2e2; color:#b42318; }
 
-  return (rows || []).filter((r) => {
-    const hay = [
-      r.email,
-      r.business_name,
-      r.phone,
-      r.region,
-      r.status,
-      r.user_id,
-    ]
-      .map((x) => safeText(x).toLowerCase())
-      .join(" ");
+    .actions { display:flex; gap: 8px; flex-wrap: wrap; }
+    .muted { color:#6b7b8a; font-size: 12px; }
+  </style>
+</head>
 
-    const matchSearch = !s || hay.includes(s);
-    const matchStatus = !f || safeText(r.status).toLowerCase() === f;
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Admin: Sellers</h1>
+      <div class="sub">Approve / reject seller accounts. (Role activation is handled via <code>user_roles.is_active</code>.)</div>
 
-    return matchSearch && matchStatus;
-  });
-}
+      <div class="alert error" id="errorAlert"></div>
+      <div class="alert success" id="successAlert"></div>
 
-function renderTable(rows) {
-  const tbody = qs("rows");
-  if (!tbody) return;
+      <div class="toolbar">
+        <input id="search" placeholder="Search by email / business name..." />
+        <select id="statusFilter">
+          <option value="">All statuses</option>
+          <option value="draft">draft</option>
+          <option value="pending">pending</option>
+          <option value="approved">approved</option>
+          <option value="rejected">rejected</option>
+          <option value="suspended">suspended</option>
+        </select>
+        <button class="btn gray" id="refreshBtn">Refresh</button>
+        <button class="btn red" id="logoutBtn" style="margin-left:auto;">Logout</button>
+      </div>
 
-  if (!rows || rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="padding: 30px; text-align:center;">No sellers found.</td></tr>`;
-    return;
-  }
+      <div class="muted" id="adminHint"></div>
 
-  tbody.innerHTML = rows
-    .map((r) => {
-      const email = safeText(r.email);
-      const biz = safeText(r.business_name);
-      const phone = safeText(r.phone);
-      const region = safeText(r.region);
-      const updated = fmtDate(r.updated_at);
-      const status = safeText(r.status || "draft").toLowerCase();
-      const userId = safeText(r.user_id);
-      const id = safeText(r.id);
+      <div style="overflow:auto; margin-top:10px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Business</th>
+              <th>Phone</th>
+              <th>Region</th>
+              <th>Status</th>
+              <th>Seller Role Active</th>
+              <th>Updated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rows">
+            <tr><td colspan="8" style="padding: 30px; text-align:center;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-      // Buttons disable when already approved/rejected optionally
-      const approveDisabled = status === "approved" ? "disabled" : "";
-      const rejectDisabled = status === "rejected" ? "disabled" : "";
-
-      return `
-        <tr data-seller-row="1" data-id="${id}" data-user-id="${userId}">
-          <td>
-            <div><strong>${email || "(no email)"}</strong></div>
-            <div class="muted mono">${userId ? `user_id: ${userId}` : ""}</div>
-          </td>
-          <td>${biz || "-"}</td>
-          <td>${phone || "-"}</td>
-          <td>${region || "-"}</td>
-          <td>${statusPill(status)}</td>
-          <td>${updated || "-"}</td>
-          <td>
-            <div class="actions">
-              <button class="btn green" data-action="approve" ${approveDisabled}>Approve</button>
-              <button class="btn red" data-action="reject" ${rejectDisabled}>Reject</button>
-              <button class="btn gray" data-action="pending">Set Pending</button>
-            </div>
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
-}
-
-async function updateSellerStatus(client, sellerId, newStatus) {
-  const status = String(newStatus || "").toLowerCase();
-
-  if (!["draft", "pending", "approved", "rejected"].includes(status)) {
-    throw new Error("Invalid status");
-  }
-
-  const { error } = await client
-    .from("sellers")
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq("id", sellerId);
-
-  if (error) throw error;
-}
-
-async function logout(client) {
-  try {
-    await client.auth.signOut();
-  } catch (_) {}
-
-  // Clear any optional local keys (safe, won't hurt)
-  try {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("currentUser");
-    localStorage.removeItem("sessionExpiry");
-    localStorage.removeItem("role");
-  } catch (_) {}
-
-  try {
-    if (window.Sentry && typeof window.Sentry.setUser === "function") window.Sentry.setUser(null);
-  } catch (_) {}
-
-  window.location.href = AFTER_LOGOUT_URL;
-}
-
-async function main() {
-  const searchEl = qs("search");
-  const statusFilterEl = qs("statusFilter");
-  const refreshBtn = qs("refreshBtn");
-  const logoutBtn = qs("logoutBtn");
-  const adminHint = qs("adminHint");
-
-  const client = await getClient();
-  if (!client) {
-    showAlert("error", "Supabase client not available. Check /js/supabase-init.js");
-    return;
-  }
-
-  const admin = await requireAdmin(client);
-  if (!admin.ok) {
-    // Don’t show internal info on prod; just redirect.
-    redirectToLogin();
-    return;
-  }
-
-  if (adminHint) {
-    adminHint.textContent = `Logged in as admin: ${admin.user.email || admin.user.id}`;
-  }
-
-  let allRows = [];
-
-  async function reload() {
-    showAlert("", "");
-    renderTable([{ loading: true }]); // placeholder row not used, but keeps UI alive
-
-    try {
-      allRows = await fetchSellers(client);
-
-      const search = searchEl ? searchEl.value : "";
-      const status = statusFilterEl ? statusFilterEl.value : "";
-      const filtered = applyFilters(allRows, search, status);
-      renderTable(filtered);
-    } catch (e) {
-      console.error("Admin sellers load error:", e);
-      showAlert("error", e?.message || "Failed to load sellers");
-      renderTable([]);
-      try {
-        if (window.Sentry && typeof window.Sentry.captureException === "function") {
-          window.Sentry.captureException(e);
-        }
-      } catch (_) {}
-    }
-  }
-
-  // Events
-  if (refreshBtn) refreshBtn.addEventListener("click", reload);
-
-  if (searchEl) searchEl.addEventListener("input", () => {
-    const filtered = applyFilters(allRows, searchEl.value, statusFilterEl?.value || "");
-    renderTable(filtered);
-  });
-
-  if (statusFilterEl) statusFilterEl.addEventListener("change", () => {
-    const filtered = applyFilters(allRows, searchEl?.value || "", statusFilterEl.value);
-    renderTable(filtered);
-  });
-
-  // Row action handler (event delegation)
-  document.addEventListener("click", async (ev) => {
-    const btn = ev.target?.closest?.("button[data-action]");
-    if (!btn) return;
-
-    const tr = btn.closest("tr[data-seller-row]");
-    if (!tr) return;
-
-    const sellerId = tr.getAttribute("data-id");
-    const action = btn.getAttribute("data-action");
-
-    if (!sellerId) return;
-
-    let newStatus = null;
-    if (action === "approve") newStatus = "approved";
-    if (action === "reject") newStatus = "rejected";
-    if (action === "pending") newStatus = "pending";
-    if (!newStatus) return;
-
-    btn.disabled = true;
-    showAlert("", "");
-
-    try {
-      await updateSellerStatus(client, sellerId, newStatus);
-      showAlert("success", `Seller updated: ${newStatus}`);
-      await reload();
-    } catch (e) {
-      console.error("Update status error:", e);
-      showAlert("error", e?.message || "Failed to update seller");
-      btn.disabled = false;
-
-      try {
-        if (window.Sentry && typeof window.Sentry.captureException === "function") {
-          window.Sentry.captureException(e);
-        }
-      } catch (_) {}
-    }
-  });
-
-  if (logoutBtn) logoutBtn.addEventListener("click", () => logout(client));
-
-  await reload();
-}
-
-main().catch((e) => {
-  console.error("Admin sellers fatal error:", e);
-  try {
-    if (window.Sentry && typeof window.Sentry.captureException === "function") {
-      window.Sentry.captureException(e);
-    }
-  } catch (_) {}
-});
+  <!-- ✅ Use the admin script you already have -->
+  <script type="module" src="/admin/admin-sellers.page.js"></script>
+</body>
+</html>
