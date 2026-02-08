@@ -1,12 +1,8 @@
-// /js/adapters/auth.supabase.js
 (function () {
   "use strict";
 
   function createAuthAdapter({ supabaseWait }) {
     return {
-      async getClient() {
-        return supabaseWait.waitForSupabase();
-      },
       async signIn(email, password) {
         const supabase = await supabaseWait.waitForSupabase();
         return supabase.auth.signInWithPassword({ email, password });
