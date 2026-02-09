@@ -1,4 +1,4 @@
-import { requireSellerSession } from "/js/core/seller-session.guard.js";
+import { requireSellerApproved } from "/js/core/seller-session.guard.js";
 
 (function () {
   "use strict";
@@ -141,7 +141,12 @@ import { requireSellerSession } from "/js/core/seller-session.guard.js";
     window.__sellerSalesChart = new Chart(ctx, {
       type: "line",
       data: { labels, datasets: [{ label: "Sales (GHS)", data, tension: 0.35, fill: true }] },
-      options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } },
+      },
     });
   }
 
@@ -156,21 +161,26 @@ import { requireSellerSession } from "/js/core/seller-session.guard.js";
   }
 
   async function main() {
-    const auth = await requireSellerSession({
-      redirectTo: "/seller/seller-login.html",
-      verificationUrl: "/seller/seller-verification.html",
-      requireApproved: true,
+    // ✅ This is the correct guard function name
+    const auth = await requireSellerApproved({
+      redirectLogin: "/seller/seller-login.html",
+      redirectVerification: "/seller/seller-verification.html",
+      redirectDashboard: "/seller/seller-dashboard-enhanced.html",
     });
     if (!auth) return;
 
     const { client, user, seller } = auth;
 
-    if (elSellerName) elSellerName.textContent = seller.business_name || (user.email || "Seller").split("@")[0];
+    if (elSellerName) {
+      elSellerName.textContent =
+        seller?.business_name || (user?.email || "Seller").split("@")[0];
+    }
 
     if (addProductBtn) addProductBtn.addEventListener("click", () => (window.location.href = "products.html?action=add"));
     if (viewOrdersBtn) viewOrdersBtn.addEventListener("click", () => (window.location.href = "orders.html"));
 
-    const sellerId = seller.id; // ✅ real seller uuid
+    // ✅ Use seller.id (not user.id)
+    const sellerId = seller.id;
 
     const [orders] = await Promise.all([
       loadOrdersSummary(client, sellerId),
