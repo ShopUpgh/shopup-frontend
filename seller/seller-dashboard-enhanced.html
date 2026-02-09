@@ -1,165 +1,155 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seller Dashboard - ShopUp</title>
+import { ensureSellerAccess } from "/js/core/seller-session.guard.js";
 
-  <!-- ✅ Sentry -->
-  <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
-  <script src="/js/sentry-config.js"></script>
-  <script src="/js/sentry-error-tracking.js"></script>
+function $(id) { return document.getElementById(id); }
+function show(el, msg) { if (!el) return; el.textContent = msg || ""; el.classList.add("show"); }
+function hide(el) { el?.classList.remove("show"); }
 
-  <!-- ✅ Supabase -->
-  <script type="module" src="/js/supabase-init.js"></script>
+function slugify(s) {
+  return String(s || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
 
-  <!-- Chart.js (non-module ok) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+function setPill(status) {
+  const s = String(status || "draft").toLowerCase();
+  const el = $("statusPill");
+  if (!el) return;
+  el.className = `pill ${s}`;
+  el.textContent = s;
+}
 
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f7fa; }
-    .dashboard-container { display: flex; min-height: 100vh; }
-    .sidebar {
-      width: 260px; background: #2c3e50; color: white; padding: 20px 0;
-      position: fixed; height: 100vh; overflow-y: auto;
+function fillForm(seller) {
+  $("business_name").value = seller?.business_name || "";
+  $("business_category").value = seller?.business_category || "";
+  $("store_slug").value = seller?.store_slug || "";
+  $("first_name").value = seller?.first_name || "";
+  $("last_name").value = seller?.last_name || "";
+  $("phone").value = seller?.phone || "";
+  $("region").value = seller?.region || "";
+  $("city").value = seller?.city || "";
+  $("brand_color").value = seller?.brand_color || "";
+  $("store_url").value = seller?.store_url || "";
+}
+
+function readForm() {
+  return {
+    business_name: $("business_name").value.trim(),
+    business_category: $("business_category").value.trim(),
+    store_slug: slugify($("store_slug").value),
+    first_name: $("first_name").value.trim(),
+    last_name: $("last_name").value.trim(),
+    phone: $("phone").value.trim(),
+    region: $("region").value.trim(),
+    city: $("city").value.trim(),
+    brand_color: $("brand_color").value.trim(),
+    store_url: $("store_url").value.trim(),
+  };
+}
+
+async function upsertSeller(client, user, patch) {
+  // IMPORTANT: do NOT send `id`. Let DB default gen_random_uuid() handle it.
+  const payload = {
+    user_id: user.id,
+    email: user.email,
+    ...patch,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await client
+    .from("sellers")
+    .upsert(payload, { onConflict: "user_id" })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+async function main() {
+  const client = await window.supabaseReady;
+
+  const access = await ensureSellerAccess({ client });
+  if (!access?.ok) {
+    window.location.href = access.redirectTo;
+    return;
+  }
+
+  // If already approved, go dashboard
+  if (access.status === "approved") {
+    window.location.href = "/seller/seller-dashboard-enhanced.html";
+    return;
+  }
+
+  const user = access.user;
+  $("who").textContent = `Logged in as ${user.email || ""}`;
+
+  setPill(access.status || "draft");
+  fillForm(access.seller);
+
+  // auto-slug from business name if empty
+  $("business_name").addEventListener("input", () => {
+    if (!$("store_slug").value.trim()) $("store_slug").value = slugify($("business_name").value);
+  });
+
+  $("logoutBtn").addEventListener("click", async () => {
+    try { await client.auth.signOut(); } catch (_) {}
+    localStorage.removeItem("role");
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("sessionExpiry");
+    try { window.Sentry?.setUser?.(null); } catch (_) {}
+    window.location.href = "/seller/seller-login.html";
+  });
+
+  $("saveBtn").addEventListener("click", async () => {
+    hide($("error")); hide($("success"));
+    $("saveBtn").disabled = true;
+
+    try {
+      const patch = readForm();
+      // Keep draft unless already pending/rejected
+      const nextStatus = (access.status === "pending" || access.status === "rejected") ? access.status : "draft";
+      const seller = await upsertSeller(client, user, { ...patch, status: nextStatus });
+      setPill(seller.status);
+      show($("success"), "Saved.");
+      setTimeout(() => hide($("success")), 900);
+    } catch (e) {
+      console.error(e);
+      show($("error"), e?.message || String(e));
+      try { window.Sentry?.captureException?.(e); } catch (_) {}
+    } finally {
+      $("saveBtn").disabled = false;
     }
-    .sidebar-header { padding: 0 20px 30px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .logo { font-size: 1.5em; font-weight: bold; color: #667eea; margin-bottom: 5px; }
-    .sidebar-menu { padding: 20px 0; }
-    .menu-item {
-      padding: 12px 20px; color: rgba(255,255,255,0.8); text-decoration: none;
-      display: block; transition: all 0.3s;
+  });
+
+  $("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    hide($("error")); hide($("success"));
+    $("submitBtn").disabled = true;
+    $("submitBtn").textContent = "Submitting...";
+
+    try {
+      const patch = readForm();
+
+      // status becomes pending on submit
+      const seller = await upsertSeller(client, user, { ...patch, status: "pending" });
+      setPill(seller.status);
+      show($("success"), "Submitted! Your account is pending approval.");
+    } catch (err) {
+      console.error(err);
+      show($("error"), err?.message || String(err));
+      try { window.Sentry?.captureException?.(err); } catch (_) {}
+    } finally {
+      $("submitBtn").disabled = false;
+      $("submitBtn").textContent = "Submit for Approval";
     }
-    .menu-item:hover, .menu-item.active { background: rgba(255,255,255,0.1); color: white; }
-    .main-content { margin-left: 260px; flex: 1; padding: 30px; }
+  });
+}
 
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-    .header h1 { color: #2c3e50; }
-    .user-section { display: flex; align-items: center; gap: 15px; }
-    .btn-logout {
-      padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 6px;
-      cursor: pointer; font-weight: 600;
-    }
-    .btn-logout:hover { background: #c0392b; }
-
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-    .stat-card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .stat-card h3 { color: #7f8c8d; font-size: 0.9em; font-weight: 600; margin-bottom: 10px; text-transform: uppercase; }
-    .stat-value { font-size: 2em; font-weight: bold; color: #2c3e50; }
-    .stat-sub { font-size: 0.9em; margin-top: 10px; color: #7f8c8d; }
-
-    .section { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px; }
-    .section h2 { color: #2c3e50; margin-bottom: 20px; }
-
-    .table { width: 100%; border-collapse: collapse; }
-    .table th { text-align: left; padding: 12px; background: #f8f9fa; font-weight: 600; color: #2c3e50; }
-    .table td { padding: 12px; border-bottom: 1px solid #e9ecef; }
-
-    .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 600; display: inline-block; }
-    .status-pending { background: #fff3cd; color: #856404; }
-    .status-processing { background: #cfe2ff; color: #084298; }
-    .status-shipped { background: #e3f2fd; color: #1976d2; }
-    .status-delivered { background: #d1e7dd; color: #0f5132; }
-    .status-cancelled { background: #ffebee; color: #c62828; }
-
-    .btn-add-product {
-      padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 6px;
-      cursor: pointer; font-weight: 600; margin-right: 10px;
-    }
-    .btn-add-product:hover { background: #5568d3; }
-
-    @media (max-width: 768px) {
-      .sidebar { width: 0; overflow: hidden; }
-      .main-content { margin-left: 0; }
-      .stats-grid { grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
-
-<body>
-  <div class="dashboard-container">
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="logo">🏪 ShopUp</div>
-        <p style="font-size: 0.9em; opacity: 0.7;">Seller Dashboard</p>
-      </div>
-      <nav class="sidebar-menu">
-        <a href="seller-dashboard-enhanced.html" class="menu-item active">📊 Dashboard</a>
-        <a href="products.html" class="menu-item">📦 Products</a>
-        <a href="orders.html" class="menu-item">🛒 Orders</a>
-        <a href="analytics.html" class="menu-item">📈 Analytics</a>
-        <a href="settings.html" class="menu-item">⚙️ Settings</a>
-      </nav>
-    </aside>
-
-    <main class="main-content">
-      <div class="header">
-        <h1>Dashboard Overview</h1>
-        <div class="user-section">
-          <span id="sellerName">Seller</span>
-          <button class="btn-logout" id="logoutBtn">Logout</button>
-        </div>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <h3>Total Revenue</h3>
-          <div class="stat-value" id="totalRevenue">GHS 0.00</div>
-          <div class="stat-sub" id="revenueSub">From delivered orders</div>
-        </div>
-
-        <div class="stat-card">
-          <h3>Total Orders</h3>
-          <div class="stat-value" id="totalOrders">0</div>
-          <div class="stat-sub" id="ordersSub">All statuses</div>
-        </div>
-
-        <div class="stat-card">
-          <h3>Active Products</h3>
-          <div class="stat-value" id="activeProducts">0</div>
-          <div class="stat-sub">Products under your store</div>
-        </div>
-
-        <div class="stat-card">
-          <h3>Pending Orders</h3>
-          <div class="stat-value" id="pendingOrders">0</div>
-          <div class="stat-sub">Needs attention</div>
-        </div>
-      </div>
-
-      <div class="section">
-        <h2>Quick Actions</h2>
-        <button class="btn-add-product" id="addProductBtn">➕ Add New Product</button>
-        <button class="btn-add-product" id="viewOrdersBtn" style="background:#27ae60;">📋 View All Orders</button>
-      </div>
-
-      <div class="section">
-        <h2>Recent Orders</h2>
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Order</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Payment</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody id="recentOrders">
-            <tr><td colspan="5" style="text-align:center; padding:40px;">Loading orders...</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="section">
-        <h2>Sales Overview (Last 7 Days)</h2>
-        <canvas id="salesChart" width="400" height="110"></canvas>
-      </div>
-    </main>
-  </div>
-
-  <!-- ✅ Module controller -->
-  <script type="module" src="/js/pages/seller-dashboard.page.js"></script>
-</body>
-</html>
+main().catch((e) => {
+  console.error("seller-verification fatal:", e);
+  try { window.Sentry?.captureException?.(e); } catch (_) {}
+});
