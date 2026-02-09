@@ -1,228 +1,141 @@
-import { requireSellerSession } from "/js/core/seller-session.guard.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seller Verification - ShopUp</title>
 
-(function () {
-  "use strict";
+  <!-- Sentry -->
+  <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
+  <script src="/js/sentry-config.js"></script>
+  <script src="/js/sentry-error-tracking.js"></script>
 
-  const statusPill = document.getElementById("statusPill");
-  const whoami = document.getElementById("whoami");
+  <!-- Supabase -->
+  <script type="module" src="/js/supabase-init.js"></script>
 
-  const errorAlert = document.getElementById("errorAlert");
-  const successAlert = document.getElementById("successAlert");
-  const infoAlert = document.getElementById("infoAlert");
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f5f7fa;min-height:100vh;padding:24px}
+    .wrap{max-width:760px;margin:0 auto}
+    .card{background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(31,45,61,.10);padding:24px}
+    .top{display:flex;align-items:flex-start;gap:12px;justify-content:space-between;margin-bottom:14px}
+    h1{color:#1f2d3d}
+    .sub{color:#6b7b8a;margin-top:6px}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:900;font-size:12px}
+    .pill.draft{background:#eef2ff;color:#3b5bdb}
+    .pill.pending{background:#fff3cd;color:#856404}
+    .pill.approved{background:#d1e7dd;color:#0f5132}
+    .pill.rejected{background:#ffebee;color:#c62828}
+    .actionsTop{display:flex;gap:10px;align-items:center}
+    .btn{border:none;border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer}
+    .btn.red{background:#e74c3c;color:#fff}
+    .btn.red:hover{background:#c0392b}
+    .btn.primary{background:#667eea;color:#fff}
+    .btn.primary:hover{background:#5568d3}
+    .alert{display:none;margin:12px 0;padding:12px 14px;border-radius:12px;border:1px solid transparent}
+    .alert.show{display:block}
+    .alert.error{background:#ffebee;border-color:#ffcdd2;color:#c62828}
+    .alert.success{background:#e8f5e9;border-color:#c8e6c9;color:#2e7d32}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media (max-width:720px){.grid{grid-template-columns:1fr}}
+    label{display:block;font-weight:900;color:#1f2d3d;margin:12px 0 6px}
+    input,select{width:100%;padding:12px 14px;border-radius:12px;border:2px solid #e7edf5;outline:none}
+    input:focus,select:focus{border-color:#667eea}
+    .muted{color:#6b7b8a;font-size:13px;margin-top:10px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="top">
+        <div>
+          <h1>Seller Verification</h1>
+          <div class="sub">Complete your seller profile and submit for approval.</div>
+        </div>
 
-  const form = document.getElementById("form");
-  const saveDraftBtn = document.getElementById("saveDraftBtn");
-  const submitBtn = document.getElementById("submitBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
+        <div class="actionsTop">
+          <span id="statusPill" class="pill draft">draft</span>
+          <button class="btn red" id="logoutBtn">Logout</button>
+        </div>
+      </div>
 
-  const fields = {
-    business_name: document.getElementById("business_name"),
-    business_category: document.getElementById("business_category"),
-    store_slug: document.getElementById("store_slug"),
-    phone: document.getElementById("phone"),
-    first_name: document.getElementById("first_name"),
-    last_name: document.getElementById("last_name"),
-    region: document.getElementById("region"),
-    city: document.getElementById("city"),
-    brand_color: document.getElementById("brand_color"),
-    store_url: document.getElementById("store_url"),
-  };
+      <div id="error" class="alert error"></div>
+      <div id="success" class="alert success"></div>
 
-  function show(el, msg) {
-    if (!el) return;
-    el.textContent = msg || "";
-    el.classList.add("show");
-  }
-  function hide(el) { el?.classList.remove("show"); }
+      <div class="muted" id="who"></div>
 
-  function setStatusPill(status) {
-    const s = String(status || "draft").toLowerCase();
-    if (!statusPill) return;
-    statusPill.textContent = s;
-    statusPill.className = `pill ${s}`;
-  }
+      <form id="form">
+        <label>Business Name</label>
+        <input id="business_name" placeholder="Your store/business name" required />
 
-  function slugify(s) {
-    return String(s || "")
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "")
-      .slice(0, 60);
-  }
+        <label>Business Category</label>
+        <select id="business_category" required>
+          <option value="">Select...</option>
+          <option>Electronics</option>
+          <option>Fashion</option>
+          <option>Beauty</option>
+          <option>Home & Living</option>
+          <option>Groceries</option>
+          <option>Phones & Accessories</option>
+          <option>Other</option>
+        </select>
 
-  function getStateFromUrl() {
-    const p = new URLSearchParams(window.location.search);
-    return p.get("state");
-  }
+        <label>Store Slug</label>
+        <input id="store_slug" placeholder="e.g. dennis-electronics" required />
 
-  function readForm() {
-    const obj = {};
-    Object.keys(fields).forEach((k) => (obj[k] = (fields[k]?.value || "").trim()));
-    return obj;
-  }
+        <div class="grid">
+          <div>
+            <label>First Name</label>
+            <input id="first_name" placeholder="First name" />
+          </div>
+          <div>
+            <label>Last Name</label>
+            <input id="last_name" placeholder="Last name" />
+          </div>
+        </div>
 
-  function fillForm(seller) {
-    if (!seller) return;
-    Object.keys(fields).forEach((k) => {
-      if (!fields[k]) return;
-      const v = seller[k];
-      if (v !== null && v !== undefined) fields[k].value = String(v);
-    });
-  }
+        <div class="grid">
+          <div>
+            <label>Phone</label>
+            <input id="phone" placeholder="e.g. 0244000000" />
+          </div>
+          <div>
+            <label>Region</label>
+            <input id="region" placeholder="e.g. Greater Accra" />
+          </div>
+        </div>
 
-  async function logout(client) {
-    try { await client.auth.signOut(); } catch (_) {}
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("currentUser");
-    localStorage.removeItem("sessionExpiry");
-    localStorage.removeItem("role");
-    try { window.Sentry?.setUser?.(null); } catch (_) {}
-    window.location.href = "/seller/seller-login.html";
-  }
+        <div class="grid">
+          <div>
+            <label>City</label>
+            <input id="city" placeholder="e.g. Accra" />
+          </div>
+          <div>
+            <label>Brand Color (optional)</label>
+            <input id="brand_color" placeholder="#667eea" />
+          </div>
+        </div>
 
-  async function upsertSeller(client, user, status) {
-    hide(errorAlert); hide(successAlert); hide(infoAlert);
+        <div class="grid">
+          <div>
+            <label>Store URL (optional)</label>
+            <input id="store_url" placeholder="https://..." />
+          </div>
+          <div style="display:flex;align-items:end;gap:10px;">
+            <button class="btn primary" id="saveBtn" type="button" style="width:100%;">Save Draft</button>
+          </div>
+        </div>
 
-    const v = readForm();
+        <div style="margin-top:14px;">
+          <button class="btn primary" id="submitBtn" type="submit" style="width:100%;">Submit for Approval</button>
+          <div class="muted">
+            Submitting sets your status to <strong>pending</strong>. Only admins can approve.
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
 
-    // help user by auto-creating slug if missing
-    if (!v.store_slug) v.store_slug = slugify(v.business_name);
-    else v.store_slug = slugify(v.store_slug);
-
-    // IMPORTANT: include id to avoid "null id" if DB default not set
-    const payload = {
-      id: crypto.randomUUID(),
-      user_id: user.id,
-      email: user.email,
-      status,
-      business_name: v.business_name,
-      business_category: v.business_category,
-      store_slug: v.store_slug,
-      first_name: v.first_name,
-      last_name: v.last_name,
-      phone: v.phone,
-      region: v.region,
-      city: v.city,
-      brand_color: v.brand_color || null,
-      store_url: v.store_url || null,
-      notifications_enabled: true,
-      updated_at: new Date().toISOString(),
-    };
-
-    // If row exists, do update instead of insert to avoid changing id
-    const { data: existing, error: exErr } = await client
-      .from("sellers")
-      .select("id,status")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (exErr) throw exErr;
-
-    if (existing?.id) {
-      delete payload.id;
-      const { error: updErr } = await client
-        .from("sellers")
-        .update(payload)
-        .eq("user_id", user.id);
-
-      if (updErr) throw updErr;
-      return { status };
-    }
-
-    // else insert
-    payload.created_at = new Date().toISOString();
-    const { error: insErr } = await client.from("sellers").insert([payload]);
-    if (insErr) throw insErr;
-
-    return { status };
-  }
-
-  async function loadSeller(client, user) {
-    const { data: seller, error } = await client
-      .from("sellers")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (error) throw error;
-    return seller || null;
-  }
-
-  async function main() {
-    const auth = await requireSellerSession({
-      redirectTo: "/seller/seller-login.html",
-      verificationUrl: "/seller/seller-verification.html",
-      requireApproved: false,
-    });
-    if (!auth) return;
-
-    const { client, user, seller, status } = auth;
-
-    if (whoami) whoami.textContent = `Logged in as ${user.email || user.id}`;
-
-    const forcedState = getStateFromUrl();
-    if (forcedState && infoAlert) {
-      if (forcedState === "pending") show(infoAlert, "Your application is pending review. You can still update details, but approval is required to access the dashboard.");
-      else if (forcedState === "rejected") show(infoAlert, "Your application was rejected. Update your details and re-submit for approval.");
-      else if (forcedState === "missing") show(infoAlert, "Please complete your seller profile to continue.");
-      else if (forcedState === "draft") show(infoAlert, "Your seller profile is in draft. Submit for approval when ready.");
-    }
-
-    // load latest seller row (in case status changed)
-    const freshSeller = await loadSeller(client, user);
-    fillForm(freshSeller);
-
-    const effectiveStatus = String(freshSeller?.status || status || "draft").toLowerCase();
-    setStatusPill(effectiveStatus);
-
-    // auto slug update if business name changes
-    fields.business_name?.addEventListener("input", () => {
-      if (!fields.store_slug?.value) fields.store_slug.value = slugify(fields.business_name.value);
-    });
-
-    if (logoutBtn) logoutBtn.addEventListener("click", () => logout(client));
-
-    if (saveDraftBtn) {
-      saveDraftBtn.addEventListener("click", async () => {
-        try {
-          saveDraftBtn.disabled = true;
-          const res = await upsertSeller(client, user, "draft");
-          setStatusPill(res.status);
-          show(successAlert, "Draft saved.");
-        } catch (e) {
-          console.error(e);
-          show(errorAlert, e?.message || String(e));
-          try { window.Sentry?.captureException?.(e); } catch (_) {}
-        } finally {
-          saveDraftBtn.disabled = false;
-        }
-      });
-    }
-
-    if (form) {
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        try {
-          submitBtn.disabled = true;
-          const res = await upsertSeller(client, user, "pending");
-          setStatusPill(res.status);
-          show(successAlert, "Submitted for approval. Redirecting to seller login...");
-          setTimeout(() => (window.location.href = "/seller/seller-login.html"), 900);
-        } catch (e2) {
-          console.error(e2);
-          show(errorAlert, e2?.message || String(e2));
-          try { window.Sentry?.captureException?.(e2); } catch (_) {}
-        } finally {
-          submitBtn.disabled = false;
-        }
-      });
-    }
-  }
-
-  main().catch((e) => {
-    console.error("Seller verification fatal:", e);
-    show(errorAlert, e?.message || String(e));
-    try { window.Sentry?.captureException?.(e); } catch (_) {}
-  });
-})();
+  <script type="module" src="/js/pages/seller-verification.page.js"></script>
+</body>
+</html>
