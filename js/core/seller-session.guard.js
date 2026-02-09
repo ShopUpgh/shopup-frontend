@@ -1,103 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin - Sellers - ShopUp</title>
+/**
+ * Seller Access Rules:
+ * - must be logged in
+ * - must have sellers row for this auth user_id
+ * - status:
+ *    approved => dashboard
+ *    pending  => verification page (read-only + pending banner)
+ *    draft    => verification page (editable)
+ *    rejected => verification page + rejected banner
+ */
+export async function ensureSellerAccess({
+  client,
+  user,
+  redirectLogin = "/seller/seller-login.html",
+  redirectVerification = "/seller/seller-verification.html",
+  redirectDashboard = "/seller/seller-dashboard-enhanced.html",
+} = {}) {
+  if (!client) client = await window.supabaseReady;
 
-  <!-- ✅ Sentry -->
-  <script src="https://js-de.sentry-cdn.com/c4c92ac8539373f9c497ba50f31a9900.min.js" crossorigin="anonymous"></script>
-  <script src="/js/sentry-config.js"></script>
-  <script src="/js/sentry-error-tracking.js"></script>
+  if (!user) {
+    const sess = await client.auth.getSession();
+    user = sess?.data?.session?.user;
+  }
 
-  <!-- ✅ Supabase -->
-  <script type="module" src="/js/supabase-init.js"></script>
+  if (!user) return { ok: false, redirectTo: redirectLogin };
 
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:#f5f7fa; padding: 24px; }
-    .wrap { max-width: 1100px; margin: 0 auto; }
-    .card { background:#fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(31,45,61,0.08); padding: 22px; }
-    h1 { color:#1f2d3d; margin-bottom: 6px; }
-    .sub { color:#6b7b8a; margin-bottom: 16px; }
+  // Local role guard (optional, but keeps things consistent)
+  const role = localStorage.getItem("role");
+  if (role && role !== "seller") return { ok: false, redirectTo: redirectLogin };
 
-    .toolbar { display:flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
-    input, select { padding: 10px 12px; border-radius: 12px; border: 2px solid #e7edf5; outline:none; }
-    input:focus, select:focus { border-color: #667eea; }
+  const { data: seller, error } = await client
+    .from("sellers")
+    .select("id,user_id,email,status,business_name,store_slug,updated_at")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-    .btn { border:none; border-radius: 12px; padding: 10px 14px; font-weight: 900; cursor:pointer; }
-    .btn.primary { background:#667eea; color:#fff; }
-    .btn.primary:hover { background:#5568d3; }
-    .btn.gray { background:#eef2f7; color:#1f2d3d; }
-    .btn.gray:hover { background:#e2e8f0; }
-    .btn.green { background:#27ae60; color:#fff; }
-    .btn.green:hover { background:#219150; }
-    .btn.red { background:#e74c3c; color:#fff; }
-    .btn.red:hover { background:#c0392b; }
+  if (error) throw error;
 
-    .alert { display:none; margin: 12px 0; padding: 12px 14px; border-radius: 12px; border: 1px solid transparent; }
-    .alert.show { display:block; }
-    .alert.error { background:#ffebee; border-color:#ffcdd2; color:#c62828; }
-    .alert.success { background:#e8f5e9; border-color:#c8e6c9; color:#2e7d32; }
+  if (!seller) {
+    // No seller row yet => start verification
+    return { ok: true, status: "none", seller: null, user, redirectTo: redirectVerification };
+  }
 
-    table { width:100%; border-collapse: collapse; }
-    th, td { text-align:left; padding: 12px; border-bottom: 1px solid #eef2f7; }
-    th { background:#f6f8fb; color:#1f2d3d; font-weight: 900; font-size: 13px; }
+  const status = String(seller.status || "draft").toLowerCase();
 
-    .pill { display:inline-block; padding: 5px 10px; border-radius: 999px; font-weight: 900; font-size: 12px; }
-    .pill.draft { background:#eef2ff; color:#3b5bdb; }
-    .pill.pending { background:#fff3cd; color:#856404; }
-    .pill.approved { background:#d1e7dd; color:#0f5132; }
-    .pill.rejected { background:#ffebee; color:#c62828; }
+  if (status === "approved") return { ok: true, status, seller, user, redirectTo: redirectDashboard };
 
-    .actions { display:flex; gap: 8px; flex-wrap: wrap; }
-  </style>
-</head>
+  // draft/pending/rejected => verification page
+  return { ok: true, status, seller, user, redirectTo: redirectVerification };
+}
 
-<body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Admin: Sellers</h1>
-      <div class="sub">Approve / reject seller accounts.</div>
+export async function requireSellerApproved(opts = {}) {
+  const res = await ensureSellerAccess(opts);
+  if (!res.ok) {
+    window.location.href = res.redirectTo;
+    return null;
+  }
+  if (res.status !== "approved") {
+    window.location.href = res.redirectTo;
+    return null;
+  }
 
-      <div class="alert error" id="errorAlert"></div>
-      <div class="alert success" id="successAlert"></div>
+  // Sentry safe setUser
+  try {
+    if (window.Sentry?.setUser) {
+      window.Sentry.setUser({ id: String(res.user.id), email: res.user.email || undefined, role: "seller" });
+    }
+  } catch (_) {}
 
-      <div class="toolbar">
-        <input id="search" placeholder="Search by email / business name..." />
-        <select id="statusFilter">
-          <option value="">All statuses</option>
-          <option value="draft">draft</option>
-          <option value="pending">pending</option>
-          <option value="approved">approved</option>
-          <option value="rejected">rejected</option>
-        </select>
-        <button class="btn gray" id="refreshBtn">Refresh</button>
-        <button class="btn red" id="logoutBtn" style="margin-left:auto;">Logout</button>
-      </div>
-
-      <div style="overflow:auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>Email</th>
-              <th>Business</th>
-              <th>Phone</th>
-              <th>Region</th>
-              <th>Status</th>
-              <th>Updated</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="rows">
-            <tr><td colspan="7" style="padding: 30px; text-align:center;">Loading...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ✅ IMPORTANT: point to YOUR admin module -->
-  <script type="module" src="/admin/admin-sellers.page.js"></script>
-</body>
-</html>
+  return res;
+}
