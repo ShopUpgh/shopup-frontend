@@ -1,130 +1,75 @@
-(function () {
-  "use strict";
+function showAlert(msg, type = "error") {
+  const container = document.getElementById("alertContainer");
+  const cls = type === "error" ? "alert-error" : "alert-success";
+  const icon = type === "error" ? "❌" : "✅";
+  container.innerHTML = `<div class="alert ${cls}">${icon} ${msg}</div>`;
+}
 
-  const ALERT = document.getElementById("alertContainer");
-  const FORM = document.getElementById("loginForm");
-  const BTN = document.getElementById("loginBtn");
+async function verifyAdminRole(client, userId) {
+  // If user_roles RLS was broken, this used to error.
+  // After the SQL fixes, it will work reliably.
+  const { data, error } = await client
+    .from("user_roles")
+    .select("role,is_active")
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .in("role", ["admin", "moderator"])
+    .maybeSingle();
 
-  function showAlert(message, type = "error") {
-    const cls = type === "success" ? "alert-success" : "alert-error";
-    const icon = type === "success" ? "✅" : "❌";
-    ALERT.innerHTML = `<div class="alert ${cls}">${icon} ${message}</div>`;
-    if (type === "success") {
-      setTimeout(() => (ALERT.innerHTML = ""), 2500);
-    }
-  }
+  if (error) return false;
+  return !!data;
+}
 
-  async function verifyAdminRole(client, userId) {
-    const { data, error } = await client
-      .from("user_roles")
-      .select("role,is_active")
-      .eq("user_id", userId)
-      .eq("is_active", true)
-      .in("role", ["admin", "moderator"])
-      .maybeSingle();
+async function main() {
+  const client = await window.supabaseReady;
 
-    if (error) return false;
-    return !!data;
-  }
-
-  async function safeSignOut(client) {
-    try { await client.auth.signOut(); } catch (_) {}
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("currentUser");
-    localStorage.removeItem("sessionExpiry");
-    localStorage.removeItem("role");
-    try { window.Sentry?.setUser?.(null); } catch (_) {}
-  }
-
-  function setBusy(isBusy) {
-    if (!BTN) return;
-    BTN.disabled = !!isBusy;
-    BTN.textContent = isBusy ? "Signing in..." : "Sign In to Admin Panel";
-  }
-
-  async function routeIfAlreadyLoggedIn(client) {
-    const { data, error } = await client.auth.getSession();
-    if (error) return;
-    const user = data?.session?.user;
-    if (!user) return;
-
+  // Already logged in?
+  const { data } = await client.auth.getSession();
+  const user = data?.session?.user;
+  if (user) {
     const ok = await verifyAdminRole(client, user.id);
     if (ok) {
       localStorage.setItem("role", "admin");
       window.location.href = "/admin/admin-sellers.html";
-    } else {
-      await safeSignOut(client);
+      return;
     }
   }
 
-  async function handleLogin(client, e) {
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
 
-    const email = document.getElementById("email")?.value?.trim();
-    const password = document.getElementById("password")?.value;
-
-    if (!email || !password) {
-      showAlert("Please enter both email and password.", "error");
-      return;
-    }
-
-    setBusy(true);
+    const btn = document.getElementById("loginBtn");
+    btn.disabled = true;
+    btn.textContent = "Signing in...";
 
     try {
       const { data, error } = await client.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
-      const user = data?.user;
-      if (!user) throw new Error("Login succeeded but user missing.");
-
-      const ok = await verifyAdminRole(client, user.id);
+      const ok = await verifyAdminRole(client, data.user.id);
       if (!ok) {
-        await safeSignOut(client);
+        await client.auth.signOut();
         throw new Error("Access denied. Admin privileges required.");
       }
 
-      // mark role locally (helps your guards)
       localStorage.setItem("role", "admin");
-
-      // set Sentry context
-      try {
-        window.Sentry?.setUser?.({ id: user.id, email: user.email, role: "admin" });
-      } catch (_) {}
-
-      showAlert("Login successful! Redirecting…", "success");
-      setTimeout(() => {
-        window.location.href = "/admin/admin-sellers.html";
-      }, 800);
-
+      showAlert("Login successful. Redirecting...", "success");
+      window.location.href = "/admin/admin-sellers.html";
     } catch (err) {
-      console.error("Admin login error:", err);
+      console.error(err);
+      showAlert(err?.message || String(err), "error");
       try { window.Sentry?.captureException?.(err); } catch (_) {}
-      showAlert(err?.message || "Login failed. Please check your credentials.", "error");
-      setBusy(false);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Sign In to Admin Panel";
     }
-  }
-
-  async function main() {
-    // ✅ wait for shared init
-    const client = await window.supabaseReady;
-    if (!client) {
-      showAlert("Supabase init failed. Please refresh.", "error");
-      return;
-    }
-
-    await routeIfAlreadyLoggedIn(client);
-
-    if (!FORM) {
-      showAlert("Page error: login form not found.", "error");
-      return;
-    }
-
-    FORM.addEventListener("submit", (e) => handleLogin(client, e));
-  }
-
-  main().catch((e) => {
-    console.error("Admin login fatal:", e);
-    try { window.Sentry?.captureException?.(e); } catch (_) {}
-    showAlert(e?.message || String(e), "error");
   });
-})();
+}
+
+main().catch((e) => {
+  console.error("admin-login fatal:", e);
+  try { window.Sentry?.captureException?.(e); } catch (_) {}
+  showAlert("Unexpected error. Please refresh.", "error");
+});
