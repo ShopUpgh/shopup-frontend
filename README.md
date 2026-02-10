@@ -6,7 +6,8 @@
 
 > A comprehensive e-commerce platform designed specifically for African markets, enabling small business sellers to transition from social media to professional online storefronts.
 
-**Built by:** Alden's Innovations  
+**Built by:** ALDENS TECH & INNOVATIONS  
+**TIN:** P0060837543  
 **Target Market:** Ghana & West Africa  
 **Launch Date:** 2025
 
@@ -510,7 +511,8 @@ Found a bug? Please report:
 
 ## 👥 Team & Contributors
 
-**Founder:** Al (Alden's Innovations)  
+**Founded by:** ALDENS TECH & INNOVATIONS  
+**TIN:** P0060837543  
 **Development:** Claude AI + Al  
 **Design:** In-house  
 **Testing:** Community testers
@@ -525,7 +527,8 @@ For partnerships: contact@aldensgh.com
 ## 📄 License
 
 **Proprietary Software**  
-Copyright © 2025 Alden's Innovations  
+Copyright © 2025 ALDENS TECH & INNOVATIONS  
+TIN: P0060837543  
 All Rights Reserved
 
 Unauthorized copying, modification, distribution, or use of this software is strictly prohibited.
