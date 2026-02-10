@@ -48,6 +48,7 @@ These steps must be completed in your Supabase project before testing:
   - For `products` table: Add policy `seller_id = auth.uid()`
   - For `orders` table: Add policy `seller_id = auth.uid()`
   - For `order_items` table: Link to orders table with RLS
+  - **Gotcha:** Checkout updates `orders.payment_reference/payment_status/order_status` after Paystack. Add a customer policy (e.g., `customer_id = auth.uid()`) or allow these columns via a secure RPC so this update succeeds.
 
 - [ ] **Create Storage Bucket**
   - Go to Storage in Supabase
