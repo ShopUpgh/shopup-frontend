@@ -87,7 +87,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                 console.log('Attempting to create account...');
                 
                 // Sign up user
-                const { data, error } = await supabase.auth.signUp({
+                const client = await getSupabaseClient();
+
+                const { data, error } = await client.auth.signUp({
                     email: formData.email,
                     password: formData.password,
                     options: {
@@ -139,11 +141,29 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
+async function getSupabaseClient() {
+    try {
+        if (typeof window.ShopUpSupabaseWait === 'function') {
+            return await window.ShopUpSupabaseWait();
+        }
+        if (window.supabaseReady) {
+            return await window.supabaseReady;
+        }
+        throw new Error('Supabase client not available');
+    } catch (err) {
+        console.error('Failed to get Supabase client', err);
+        if (err instanceof Error) throw err;
+        throw new Error('Failed to get Supabase client');
+    }
+}
+
 // Create customer profile in database
 async function createProfile(userId, formData) {
     console.log('Creating customer profile...');
     
-    const { error: profileError } = await supabase
+    const client = await getSupabaseClient();
+
+    const { error: profileError } = await client
         .from('customer_profiles')
         .insert({
             user_id: userId,
